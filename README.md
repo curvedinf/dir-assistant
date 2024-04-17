@@ -55,10 +55,19 @@ Then navigate to the directory you would like your LLM to see and run dir-assist
 dir-assistant
 ```
 
+If you'd like to ignore some files or directories, you can list them with the `--ignore` argument:
+
+```
+dir-assistant --ignore some-project-directory .git .gitignore
+```
+
+There's also a global ignore list in `config.json`.
+
 ## Limitations
 
 - This project uses a naive approach for including files in the current working directory. For this reason, it will only work well with projects that can be contained in your LLM's context window.
 - It only detects and reads text files at this time.
+- This is a personal project that works for my needs but might not work for yours. If you make any adjustments so it works for you, I'd appreciate it if you made a PR.
 
 ## Recommended Models
 
