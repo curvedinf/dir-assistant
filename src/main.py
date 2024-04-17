@@ -1,3 +1,4 @@
+import argparse
 import os
 import json
 import sys
@@ -31,17 +32,18 @@ def is_text_file(filepath):
     except:
         return False
 
-def get_text_files(directory='.'):
+def get_text_files(directory='.', ignore_paths=[]):
     text_files = []
     for root, dirs, files in os.walk(directory):
+        dirs[:] = [d for d in dirs if os.path.join(root, d) not in ignore_paths]
         for filename in files:
             filepath = os.path.join(root, filename)
-            if os.path.isfile(filepath) and is_text_file(filepath):
+            if os.path.isfile(filepath) and not any(ignore_path in filepath for ignore_path in ignore_paths) and is_text_file(filepath):
                 text_files.append(filepath)
     return text_files
 
-def get_files_with_contents(directory='.'):
-    files = get_text_files(directory)
+def get_files_with_contents(directory='.', ignore_paths=[]):
+    files = get_text_files(directory, ignore_paths)
     files_with_contents = []
     for filepath in files:
         with open(filepath, 'r') as file:
@@ -55,8 +57,14 @@ def get_files_with_contents(directory='.'):
 def concatenate_file_info(files_with_contents):
     concatenated_info = ""
     for file_info in files_with_contents:
-        concatenated_info += f"{file_info['filepath']}:\n\n```\n{file_info['contents']}\n```\n\n"
+        concatenated_info += f"User file '{file_info['filepath']}':\n\n```\n{file_info['contents']}\n```\n\n"
     return concatenated_info
+
+# Setup argparse for command line arguments
+parser = argparse.ArgumentParser(description='Process some integers.')
+parser.add_argument('--ignore', metavar='N', type=str, nargs='+',
+                    help='A list of file paths to ignore')
+args = parser.parse_args()
 
 # Get the directory from the environment variable
 dir_assistant_root = os.environ['DIR_ASSISTANT_ROOT']
@@ -77,13 +85,20 @@ llama_cpp_options = config['DIR_ASSISTANT_LLAMA_CPP_OPTIONS']
 # Initialize the AI model
 llm = Llama(
     model_path=model_file,
-    verbose=False,
     **llama_cpp_options
 )
 
-files_with_contents = get_files_with_contents('.')
+# Set up the system instructions
+ignore_paths = args.ignore if args.ignore else []
+ignore_paths.extend(config['DIR_ASSISTANT_GLOBAL_IGNORES'])
+files_with_contents = get_files_with_contents('.', ignore_paths)
 file_info = concatenate_file_info(files_with_contents)
-system_instructions = f"{llama_cpp_instructions}\n\nDo your best to answer questions related to files below:\n\n{file_info}"
+system_instructions = f"{llama_cpp_instructions}\n\nDo your best to answer questions related to the user's files below:\n\n{file_info}"
+
+print("Files loaded into context:")
+for file_info in files_with_contents:
+    print(file_info['filepath'])
+print("")
 
 chat_history = [{"role": "system", "content": system_instructions}]
 

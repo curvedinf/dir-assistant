@@ -21,10 +21,10 @@ case $platform in
         pip install --upgrade --force-reinstall --no-cache-dir -r requirements.txt
         ;;
     2)
-        CMAKE_ARGS="-DCMAKE_HIP_PLATFORM=nvidia" pip install --upgrade --force-reinstall --no-cache-dir -r requirements.txt
+        CMAKE_ARGS="-DLLAMA_CUDA=on" pip install --upgrade --force-reinstall --no-cache-dir -r requirements.txt
         ;;
     3)
-        CMAKE_ARGS="-DCMAKE_HIP_PLATFORM=amd" pip install --upgrade --force-reinstall --no-cache-dir -r requirements.txt
+        CMAKE_ARGS="-DLLAMA_HIPBLAS=ON" pip install --upgrade --force-reinstall --no-cache-dir -r requirements.txt
         ;;
     *)
         echo "Invalid option. Exiting."
