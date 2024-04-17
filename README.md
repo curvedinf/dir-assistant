@@ -1,5 +1,8 @@
 # dir-assistant
-A minimal CLI LLM assistant that allows you to chat with the current directory's files.
+
+Chat with your current directory's files using a local LLM.
+
+![Demo of dir-assistant being run](demo.gif)
 
 This project runs LLMs via the fantastic [llama-cpp-python](https://github.com/abetlen/llama-cpp-python) package.
 
@@ -55,6 +58,7 @@ dir-assistant
 ## Limitations
 
 - This project uses a naive approach for including files in the current working directory. For this reason, it will only work well with projects that can be contained in your LLM's context window.
+- It only detects and reads text files at this time.
 
 ## Recommended Models
 
