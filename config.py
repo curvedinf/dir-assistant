@@ -20,7 +20,7 @@ config = {
     "DIR_ASSISTANT_MODEL": dir_assistant_model,
     "DIR_ASSISTANT_LLAMA_CPP_OPTIONS": dir_assistant_llama_cpp_options,
     "DIR_ASSISTANT_LLAMA_CPP_INSTRUCTIONS": dir_assistant_llama_cpp_instructions,
-    "DIR_ASSISTANT_GLOBAL_IGNORES": ['.git/', '.vscode/', 'node_modules/', 'build/', '.idea/']
+    "DIR_ASSISTANT_GLOBAL_IGNORES": ['.git/', '.vscode/', 'node_modules/', 'build/', '.idea/', '__pycache__']
 }
 
 # Write to config.json file
