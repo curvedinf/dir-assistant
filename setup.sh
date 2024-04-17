@@ -11,7 +11,7 @@ pyenv activate dir-assistant
 pip install --upgrade pip
 
 echo "Select platform to use:"
-echo "1) CPU (most compatible)"
+echo "1) CPU (OpenBLAS, most compatible)"
 echo "2) Cuda"
 echo "3) ROCm"
 echo "4) Metal"
