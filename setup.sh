@@ -11,9 +11,15 @@ pyenv activate dir-assistant
 pip install --upgrade pip
 
 echo "Select platform to use:"
-echo "1) CPU"
-echo "2) Nvidia"
-echo "3) AMD"
+echo "1) CPU (most compatible)"
+echo "2) Cuda"
+echo "3) ROCm"
+echo "4) Metal"
+echo "5) OpenCL"
+echo "6) Vulkan"
+echo "7) Kompute"
+echo "8) SYCL"
+echo "Enter number: "
 read platform
 
 case $platform in
@@ -25,6 +31,21 @@ case $platform in
         ;;
     3)
         CMAKE_ARGS="-DLLAMA_HIPBLAS=ON" pip install --upgrade --force-reinstall --no-cache-dir -r requirements.txt
+        ;;
+    4)
+        CMAKE_ARGS="-DLLAMA_METAL=on" pip install --upgrade --force-reinstall --no-cache-dir -r requirements.txt
+        ;;
+    5)
+        CMAKE_ARGS="-DLLAMA_CLBLAST=on" pip install --upgrade --force-reinstall --no-cache-dir -r requirements.txt
+        ;;
+    6)
+        CMAKE_ARGS="-DLLAMA_VULKAN=on" pip install --upgrade --force-reinstall --no-cache-dir -r requirements.txt
+        ;;
+    7)
+        CMAKE_ARGS="-DLLAMA_KOMPUTE=on" pip install --upgrade --force-reinstall --no-cache-dir -r requirements.txt
+        ;;
+    8)
+        CMAKE_ARGS="-DLLAMA_SYCL=on -DCMAKE_C_COMPILER=icx -DCMAKE_CXX_COMPILER=icpx" pip install --upgrade --force-reinstall --no-cache-dir -r requirements.txt
         ;;
     *)
         echo "Invalid option. Exiting."
