@@ -15,9 +15,10 @@ Clone this repo then run:
 ./setup.sh
 ```
 
-Note: llama-cpp-python's wheel compile was quite buggy for me. You may need to manually change the 
-llama-cpp-python wheel compile options to make it build successfully. To do this, activate the virtualenv 
-(`pyenv activate dir-assistant`) and then run `pip install llama-cpp-python` with the options.
+Note: llama-cpp-python's wheel compile was quite buggy for me on both AMD and Nvidia systems I tested.
+You may need to manually change the llama-cpp-python wheel compile options to make it build successfully. 
+To do this, activate the virtualenv (`pyenv activate dir-assistant`) and then run `pip install llama-cpp-python`
+with the options. Reference the install instructions here for more info: https://github.com/abetlen/llama-cpp-python
 
 Here is my working formula for a 7900XT on ROCM 6.0.2:
 ```
