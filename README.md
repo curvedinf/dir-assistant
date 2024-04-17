@@ -6,6 +6,8 @@ Chat with your current directory's files using a local LLM.
 
 This project runs LLMs via the fantastic [llama-cpp-python](https://github.com/abetlen/llama-cpp-python) package.
 
+Dir-assistant has platform support for CPU (OpenBLAS), Cuda, ROCm, Metal, OpenCL, Vulkan, Kompute, and SYCL.
+
 ## Setup
 
 Install `pyenv` if you have not already: https://github.com/pyenv/pyenv-installer
