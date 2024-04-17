@@ -12,9 +12,6 @@ Then run:
 ./setup.sh
 ```
 
-CMAKE_ARGS="-DCMAKE_HIP_PLATFORM=amd" pip install llama-cpp-python
-CMAKE_ARGS="-DCMAKE_HIP_PLATFORM=nvidia" pip install llama-cpp-python
-
 ## Model Download
 
 Download your favorite LLM gguf and place it in the models directory.
