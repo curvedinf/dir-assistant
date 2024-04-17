@@ -1,0 +1,8 @@
+#!/bin/sh
+
+if command -v pyenv 1>/dev/null 2>&1; then
+    eval "$(pyenv init -)"
+    eval "$(pyenv virtualenv-init -)"
+fi
+pyenv activate dir-assistant
+python $DIR_ASSISTANT_ROOT/src/main.py
