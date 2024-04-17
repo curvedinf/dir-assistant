@@ -50,7 +50,7 @@ chat_history = [{"role": "system", "content": llama_cpp_instructions}]
 
 if __name__ == '__main__':
     display_startup_art()
-    print(Style.BRIGHT + Fore.BLUE + "Type 'exit' to quit the conversation." + Style.RESET_ALL)
+    print(Style.BRIGHT + Fore.BLUE + "Type 'exit' to quit the conversation.\n\n" + Style.RESET_ALL)
     while True:
         # Get user input
         user_input = input(Style.BRIGHT + Fore.RED + 'You       > ' + Style.RESET_ALL)
