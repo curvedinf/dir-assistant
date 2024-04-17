@@ -23,6 +23,41 @@ def display_startup_art():
                                                                  
 """ + Style.RESET_ALL)
 
+def is_text_file(filepath):
+    try:
+        with open(filepath, 'tr') as file:
+            file.read()
+            return True
+    except:
+        return False
+
+def get_text_files(directory='.'):
+    text_files = []
+    for root, dirs, files in os.walk(directory):
+        for filename in files:
+            filepath = os.path.join(root, filename)
+            if os.path.isfile(filepath) and is_text_file(filepath):
+                text_files.append(filepath)
+    return text_files
+
+def get_files_with_contents(directory='.'):
+    files = get_text_files(directory)
+    files_with_contents = []
+    for filepath in files:
+        with open(filepath, 'r') as file:
+            contents = file.read()
+        files_with_contents.append({
+            "filepath": os.path.abspath(filepath),
+            "contents": contents
+        })
+    return files_with_contents
+
+def concatenate_file_info(files_with_contents):
+    concatenated_info = ""
+    for file_info in files_with_contents:
+        concatenated_info += f"{file_info['filepath']}:\n\n```\n{file_info['contents']}\n```\n\n"
+    return concatenated_info
+
 # Get the directory from the environment variable
 dir_assistant_root = os.environ['DIR_ASSISTANT_ROOT']
 
@@ -46,17 +81,22 @@ llm = Llama(
     **llama_cpp_options
 )
 
-chat_history = [{"role": "system", "content": llama_cpp_instructions}]
+files_with_contents = get_files_with_contents('.')
+file_info = concatenate_file_info(files_with_contents)
+system_instructions = f"{llama_cpp_instructions}\n\nDo your best to answer questions related to files below:\n\n{file_info}"
+
+chat_history = [{"role": "system", "content": system_instructions}]
 
 if __name__ == '__main__':
     display_startup_art()
     print(Style.BRIGHT + Fore.BLUE + "Type 'exit' to quit the conversation.\n\n" + Style.RESET_ALL)
     while True:
         # Get user input
-        user_input = input(Style.BRIGHT + Fore.RED + 'You       > ' + Style.RESET_ALL)
+        user_input = input(Style.BRIGHT + Fore.RED + 'You: \n\n' + Style.RESET_ALL)
         if user_input.lower() == 'exit':
             break
-        sys.stdout.write('\r' + Style.BRIGHT + Fore.GREEN + 'Assistant > '  + Fore.WHITE + '(thinking...)' + Style.RESET_ALL)
+        print(Style.BRIGHT + Fore.GREEN + '\nAssistant: \n' + Style.RESET_ALL)
+        sys.stdout.write(Style.BRIGHT + Fore.WHITE + '\r(thinking...)' + Style.RESET_ALL)
         sys.stdout.flush()
         # Get the LLM completion
         chat_history.append({"role": "user", "content": user_input})
@@ -66,5 +106,5 @@ if __name__ == '__main__':
         chat_history.append(output)
 
         # Display chat history
-        sys.stdout.write('\r' + Style.BRIGHT + Fore.GREEN + 'Assistant > ' + Fore.WHITE + output["content"] + Style.RESET_ALL + '\n')
+        sys.stdout.write(Style.BRIGHT + Fore.WHITE + '\r' + output["content"] + Style.RESET_ALL + '\n\n')
         sys.stdout.flush()
