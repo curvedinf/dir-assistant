@@ -10,7 +10,7 @@ This project runs LLMs via the fantastic [llama-cpp-python](https://github.com/a
 
 Install `pyenv` if you have not already: https://github.com/pyenv/pyenv-installer
 
-Then run:
+Clone this repo then run:
 ```
 ./setup.sh
 ```
