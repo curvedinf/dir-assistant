@@ -68,8 +68,8 @@ There's also a global ignore list in `config.json`.
 
 ## Limitations
 
-- This project uses a naive approach for including files in the current working directory. For this reason, it will only work well with projects that can be contained in your LLM's context window.
-- It only detects and reads text files at this time.
+- This project uses a naive approach for including files from the current working directory. It simply pastes them into the system instructions. For this reason, dir-assistant will only work well with projects that can be contained in your LLM's context window.
+- Dir-assistant only detects and reads text files at this time.
 - This is a personal project that works for my needs but might not work for yours. If you make any adjustments so it works for you, I'd appreciate it if you made a PR.
 
 ## Recommended Models
