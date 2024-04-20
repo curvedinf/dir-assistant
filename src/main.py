@@ -2,7 +2,11 @@ import argparse
 import os
 import json
 import sys
+
+import numpy as np
+from faiss import IndexFlatL2
 from llama_cpp import Llama
+
 from colorama import Fore, Style
 
 
@@ -54,6 +58,37 @@ def get_files_with_contents(directory='.', ignore_paths=[]):
         })
     return files_with_contents
 
+def create_file_index(embed, files_with_contents, embed_chunk_size):
+    chunks = []
+    for file_info in files_with_contents:
+        filepath = file_info["filepath"]
+        contents = file_info["contents"]
+        lines = contents.split('\n')
+        current_chunk = ""
+        start_line_number = 1
+        for line_number, line in enumerate(lines, start=start_line_number):
+            line_size = len(line) + 1  # Adding 1 for the newline character
+            if len(current_chunk) + line_size > embed_chunk_size:
+                chunk_header = f"User file '{filepath}' lines {start_line_number}-{line_number-1}:\n\n"
+                chunks.append(chunk_header + current_chunk)
+                current_chunk = ""
+                start_line_number = line_number  # Update start_line_number
+            current_chunk += line + '\n'
+        if current_chunk:  # Add the remaining content as the last chunk
+            chunk_header = f"User file '{filepath}' lines {start_line_number}-{len(lines)}:\n\n"
+            chunks.append(chunk_header + current_chunk)
+
+    embeddings = np.array(embed.create_embedding(chunks))
+    index = IndexFlatL2(embeddings.shape[1])
+    index.add(embeddings)
+    return index, chunks
+
+def search_index(embed, index, query, all_chunks):
+    query_embedding = embed.create_embedding([query])[0]
+    distances, indices = index.search(np.array([query_embedding]), 100)
+    relevant_chunks = [all_chunks[i] for i in indices[0]]
+    return relevant_chunks
+
 def concatenate_file_info(files_with_contents):
     concatenated_info = ""
     for file_info in files_with_contents:
@@ -78,29 +113,46 @@ with open(config_path, 'r') as config_file:
 
 print("Configuration loaded:", config)
 
-model_file = os.path.join(dir_assistant_root, 'models', config['DIR_ASSISTANT_MODEL'])
+llm_model_file = os.path.join(dir_assistant_root, 'models', config['DIR_ASSISTANT_LLM_MODEL'])
+embed_model_file = os.path.join(dir_assistant_root, 'models', config['DIR_ASSISTANT_EMBED_MODEL'])
 llama_cpp_instructions = config['DIR_ASSISTANT_LLAMA_CPP_INSTRUCTIONS']
 llama_cpp_options = config['DIR_ASSISTANT_LLAMA_CPP_OPTIONS']
+llama_cpp_embed_options = config['DIR_ASSISTANT_LLAMA_CPP_OPTIONS']
+llama_cpp_embed_chunk_size = llama_cpp_embed_options['n_ctx']
 
-# Initialize the AI model
+# Initialize the LLM model
 llm = Llama(
-    model_path=model_file,
+    model_path=llm_model_file,
     **llama_cpp_options
+)
+
+# Initialize the embedding model
+embed = Llama(
+    model_path=embed_model_file,
+    embedding=True,
+    pooling_type=1, # Mean
+    **llama_cpp_embed_options
 )
 
 # Set up the system instructions
 ignore_paths = args.ignore if args.ignore else []
 ignore_paths.extend(config['DIR_ASSISTANT_GLOBAL_IGNORES'])
 files_with_contents = get_files_with_contents('.', ignore_paths)
-file_info = concatenate_file_info(files_with_contents)
-system_instructions = f"{llama_cpp_instructions}\n\nDo your best to answer questions related to the user's files below:\n\n{file_info}"
 
-print("Files loaded into context:")
+# Display the files
+print("Files found:")
 for file_info in files_with_contents:
     print(file_info['filepath'])
 print("")
 
-chat_history = [{"role": "system", "content": system_instructions}]
+# Create the file index
+print("Creating file embeddings...")
+index, chunks = create_file_index(embed, files_with_contents, llama_cpp_embed_chunk_size)
+
+# Set up the system instructions
+system_instructions = f"{llama_cpp_instructions}\n\nDo your best to answer questions related to the files below:\n\n"
+
+chat_history = [{"role": "system", "content": None}]
 
 if __name__ == '__main__':
     display_startup_art()
@@ -115,6 +167,11 @@ if __name__ == '__main__':
         sys.stdout.flush()
         # Get the LLM completion
         chat_history.append({"role": "user", "content": user_input})
+
+        relevant_files = search_index(embed, index, user_input, files_with_contents)
+        relevant_full_text = concatenate_file_info(relevant_files)
+
+        chat_history[0]["content"] = system_instructions + relevant_full_text
         output = llm.create_chat_completion(
             messages=chat_history
         )["choices"][0]["message"]

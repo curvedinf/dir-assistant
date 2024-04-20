@@ -1,2 +1,3 @@
 llama-cpp-python
+faiss-cpu
 colorama
