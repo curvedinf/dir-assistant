@@ -30,7 +30,9 @@ CC=/opt/rocm/llvm/bin/clang CXX=/opt/rocm/llvm/bin/clang++ CMAKE_ARGS="-DLLAMA_H
 
 ## Model Download
 
-Download your favorite LLM gguf and place it in the models directory.
+Download your favorite LLM gguf and place it in the models directory. You will also need to download an embedding model
+gguf and place it in the same directory. The embedding model is necessary for the RAG system to identify which 
+information to send to the LLM with your prompt.
 
 ## Configure
 
@@ -74,4 +76,7 @@ There's also a global ignore list in `config.json`.
 
 ## Recommended Models
 
-- [CodeQwen 1.5 7B Chat](https://huggingface.co/Qwen/CodeQwen1.5-7B-Chat-GGUF): This is an excellent coding model with an extremely accurate 64K token context window. It should work well with projects under 5k lines of code.
+- [CodeQwen 1.5 7B Chat](https://huggingface.co/Qwen/CodeQwen1.5-7B-Chat-GGUF): This is an excellent coding model with 
+an extremely accurate 64K token context window. It should work well with projects under 5k lines of code.
+- [Nomic Embed Text v1.5](https://huggingface.co/nomic-ai/nomic-embed-text-v1.5-GGUF/blob/main/nomic-embed-text-v1.5.Q8_0.gguf): A
+good low memory embedding model.
