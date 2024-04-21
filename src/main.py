@@ -74,7 +74,7 @@ def create_file_index(embed, files_with_contents, embed_chunk_size):
         current_chunk = ""
         start_line_number = 1
         for line_number, line in enumerate(lines, start=start_line_number):
-            chunk_header = f"User file '{filepath}' lines {start_line_number}-{line_number}:\n\n"
+            chunk_header = f"@%@%@%@%@%@%\n\nUser file '{filepath}' lines {start_line_number}-{line_number}:\n\n"
             chunk_add_candidate = current_chunk + line + '\n'
             chunk_tokens = count_tokens(embed, chunk_header + chunk_add_candidate)
             if chunk_tokens > embed_chunk_size:
@@ -84,7 +84,7 @@ def create_file_index(embed, files_with_contents, embed_chunk_size):
             else:
                 current_chunk = chunk_add_candidate
         if current_chunk:  # Add the remaining content as the last chunk
-            chunk_header = f"User file '{filepath}' lines {start_line_number}-{len(lines)}:\n\n"
+            chunk_header = f"@%@%@%@%@%@%\n\nUser file '{filepath}' lines {start_line_number}-{len(lines)}:\n\n"
             chunks.append({"tokens": chunk_tokens, "text": chunk_header + current_chunk})
 
     # Create the embeddings
@@ -101,12 +101,6 @@ def search_index(embed, index, query, all_chunks):
     distances, indices = index.search(np.array([query_embedding]), 100)
     relevant_chunks = [all_chunks[i] for i in indices[0] if i != -1]
     return relevant_chunks
-
-def concatenate_file_info(files_with_contents):
-    concatenated_info = ""
-    for file_info in files_with_contents:
-        concatenated_info += f"User file '{file_info['filepath']}':\n\n```\n{file_info['contents']}\n```\n\n"
-    return concatenated_info
 
 if __name__ == '__main__':
     # Setup argparse for command line arguments
@@ -134,6 +128,15 @@ if __name__ == '__main__':
     llama_cpp_options = config['DIR_ASSISTANT_LLAMA_CPP_OPTIONS']
     llama_cpp_embed_options = config['DIR_ASSISTANT_LLAMA_CPP_EMBED_OPTIONS']
 
+    # Find the files to index
+    print("Finding files to index...")
+    ignore_paths = args.ignore if args.ignore else []
+    ignore_paths.extend(config['DIR_ASSISTANT_GLOBAL_IGNORES'])
+    files_with_contents = get_files_with_contents('.', ignore_paths)
+    if len(files_with_contents) == 0:
+        print("No files found to index. Exiting...")
+        exit()
+
     # Initialize the LLM model
     print("Loading LLM model...")
     llm = Llama(
@@ -152,18 +155,13 @@ if __name__ == '__main__':
     )
     llama_cpp_embed_chunk_size = embed.context_params.n_ctx
 
-    # Find the files to index
-    print("Finding files to index...")
-    ignore_paths = args.ignore if args.ignore else []
-    ignore_paths.extend(config['DIR_ASSISTANT_GLOBAL_IGNORES'])
-    files_with_contents = get_files_with_contents('.', ignore_paths)
-
     # Create the file index
     print("Creating file embeddings and index...")
     index, chunks = create_file_index(embed, files_with_contents, llama_cpp_embed_chunk_size)
 
     # Set up the system instructions
-    system_instructions = f"{llama_cpp_instructions}\n\nDo your best to answer questions related to the files below:\n\n"
+    system_instructions = (f"{llama_cpp_instructions}\n\nDo your best to answer questions related to the user's files \
+below. Files are separated with '@%@%@%@%@%@%'. Here are the user's files:\n\n")
     system_instructions_tokens = count_tokens(embed, system_instructions)
 
     chat_history = [{"role": "system", "content": None}]
