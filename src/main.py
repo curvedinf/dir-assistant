@@ -66,7 +66,7 @@ def count_tokens(embed, text):
 def create_file_index(embed, files_with_contents, embed_chunk_size):
     # Split the files into chunks
     chunks = []
-    for i, file_info in enumerate(files_with_contents):
+    for i, file_info in enumerate(files_with_contents, start=1):
         print(f'Indexing file {i}/{len(files_with_contents)}: {file_info["filepath"]}')
         filepath = file_info["filepath"]
         contents = file_info["contents"]
@@ -160,8 +160,9 @@ if __name__ == '__main__':
     index, chunks = create_file_index(embed, files_with_contents, llama_cpp_embed_chunk_size)
 
     # Set up the system instructions
-    system_instructions = (f"{llama_cpp_instructions}\n\nDo your best to answer questions related to the user's files \
-below. Files are separated with '@%@%@%@%@%@%'. Here are the user's files:\n\n")
+    system_instructions = (f"{llama_cpp_instructions}\n\nA set of the user's files are pasted below. Do your best to \
+answer questions related to the these files. When the user is referring to files, always assume it is in context of \
+the files below: \n\n")
     system_instructions_tokens = count_tokens(embed, system_instructions)
 
     chat_history = [{"role": "system", "content": None}]

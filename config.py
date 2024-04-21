@@ -6,7 +6,7 @@ dir_assistant_llm_model = input("Enter the gguf filepath for your LLM model rela
 dir_assistant_embed_model = input("Enter the gguf filepath for your EMBEDDING model relative to dir-assistant/models: ")
 dir_assistant_llama_cpp_instructions = input("Enter the system instructions for your model or press enter for a sane default: ")
 if dir_assistant_llama_cpp_instructions == "":
-    dir_assistant_llama_cpp_instructions = "You are a helpful AI assistant. Do your best to answer questions related to files below:\n\n"
+    dir_assistant_llama_cpp_instructions = "You are a helpful AI assistant."
 
 dir_assistant_llama_cpp_options = {
     "n_ctx": 0,
