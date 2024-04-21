@@ -1,3 +1,4 @@
-llama-cpp-python
+# llama-cpp-python has a regression for embeddings in newer versions
+llama-cpp-python==0.2.56
 faiss-cpu
 colorama
