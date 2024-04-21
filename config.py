@@ -28,7 +28,8 @@ config = {
     "DIR_ASSISTANT_LLAMA_CPP_OPTIONS": dir_assistant_llama_cpp_options,
     "DIR_ASSISTANT_LLAMA_CPP_EMBED_OPTIONS": dir_assistant_llama_cpp_embed_options,
     "DIR_ASSISTANT_LLAMA_CPP_INSTRUCTIONS": dir_assistant_llama_cpp_instructions,
-    "DIR_ASSISTANT_GLOBAL_IGNORES": ['.git/', '.vscode/', 'node_modules/', 'build/', '.idea/', '__pycache__']
+    "DIR_ASSISTANT_GLOBAL_IGNORES": ['.git/', '.vscode/', 'node_modules/', 'build/', '.idea/', '__pycache__'],
+    "DIR_ASSISTANT_CONTEXT_FILE_RATIO": 0.5,
 }
 
 # Write to config.json file
