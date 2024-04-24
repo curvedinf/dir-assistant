@@ -74,7 +74,7 @@ def create_file_index(embed, files_with_contents, embed_chunk_size):
         current_chunk = ""
         start_line_number = 1
         for line_number, line in enumerate(lines, start=start_line_number):
-            chunk_header = f"@%@%@%@%@%@%\n\nUser file '{filepath}' lines {start_line_number}-{line_number}:\n\n"
+            chunk_header = f"---------------\n\nUser file '{filepath}' lines {start_line_number}-{line_number}:\n\n"
             chunk_add_candidate = current_chunk + line + '\n'
             chunk_tokens = count_tokens(embed, chunk_header + chunk_add_candidate)
             if chunk_tokens > embed_chunk_size:
@@ -84,7 +84,7 @@ def create_file_index(embed, files_with_contents, embed_chunk_size):
             else:
                 current_chunk = chunk_add_candidate
         if current_chunk:  # Add the remaining content as the last chunk
-            chunk_header = f"@%@%@%@%@%@%\n\nUser file '{filepath}' lines {start_line_number}-{len(lines)}:\n\n"
+            chunk_header = f"---------------\n\nUser file '{filepath}' lines {start_line_number}-{len(lines)}:\n\n"
             chunks.append({"tokens": chunk_tokens, "text": chunk_header + current_chunk})
 
     # Create the embeddings
@@ -160,12 +160,16 @@ if __name__ == '__main__':
     index, chunks = create_file_index(embed, files_with_contents, llama_cpp_embed_chunk_size)
 
     # Set up the system instructions
-    system_instructions = (f"{llama_cpp_instructions}\n\nA set of the user's files are pasted below. Do your best to \
-answer questions related to the these files. When the user is referring to files, always assume it is in context of \
-the files below: \n\n")
+    system_instructions = (f"{llama_cpp_instructions}\n\nThe user will ask questions relating to files they will \
+provide. Do your best to answer questions related to the these files. When the user is referring to files, always \
+assume it is in context of the files they provided: \n\n")
     system_instructions_tokens = count_tokens(embed, system_instructions)
 
-    chat_history = [{"role": "system", "content": None}]
+    chat_history = [{
+        "role": "system",
+        "content": system_instructions,
+        "tokens": system_instructions_tokens
+    }]
 
     # Display the startup art
     display_startup_art()
@@ -176,37 +180,43 @@ the files below: \n\n")
         user_input = input(Style.BRIGHT + Fore.RED + 'You: \n\n' + Style.RESET_ALL)
         if user_input.lower() == 'exit':
             break
-        print(Style.BRIGHT + Fore.GREEN + '\nAssistant: \n' + Style.RESET_ALL)
-        sys.stdout.write(Style.BRIGHT + Fore.WHITE + '\r(thinking...)' + Style.RESET_ALL)
-        sys.stdout.flush()
-        # Get the LLM completion
-        chat_history.append({"role": "user", "content": user_input, "tokens": count_tokens(embed, user_input)})
 
-        # Get the relevant chunks and concatenate them up to half the LLM context size
+        # Get the relevant chunks and concatenate them. Only use up to the context file ratio of the total tokens
         relevant_chunks = search_index(embed, index, user_input, chunks)
         relevant_full_text = ""
         chunk_total_tokens = 0
         for i, relevant_chunk in enumerate(relevant_chunks, start=1):
             chunk_total_tokens += relevant_chunk['tokens']
-            if chunk_total_tokens + system_instructions_tokens >= llama_cpp_llm_context_size * context_file_ratio:
+            if chunk_total_tokens >= llama_cpp_llm_context_size * context_file_ratio:
                 break
             relevant_full_text += relevant_chunk['text'] + "\n\n"
 
+        # Add the user input to the chat history
+        user_content = relevant_full_text + user_input
+        chat_history.append({"role": "user", "content": user_content, "tokens": count_tokens(embed, user_input)})
+
+        # Remove old message from the chat history if too large for context
+        sum_of_tokens = sum([message["tokens"] for message in chat_history])
+        while sum_of_tokens > llama_cpp_llm_context_size:
+            chat_history = chat_history.pop(1) # First history after the system instructions
+            sum_of_tokens = sum([message["tokens"] for message in chat_history])
+
+        # Display the assistant thinking message
+        print(Style.BRIGHT + Fore.GREEN + '\nAssistant: \n' + Style.RESET_ALL)
+        sys.stdout.write(Style.BRIGHT + Fore.WHITE + '\r(thinking...)' + Style.RESET_ALL)
+        sys.stdout.flush()
+
         # Run the completion
-        chat_history[0]["content"] = system_instructions + relevant_full_text
         output = llm.create_chat_completion(
             messages=chat_history
         )["choices"][0]["message"]
 
-        # Add the completion to the chat history and remove old history if too large
+        # Remove the files from the last user message
+        chat_history[-1]["content"] = user_input
+
+        # Add the completion to the chat history
+        output["tokens"] = count_tokens(embed, output["content"])
         chat_history.append(output)
-        chat_history[-1]["tokens"] = count_tokens(embed, output["content"])
-        sum_of_tokens = sum([
-            message["tokens"] for message in chat_history
-            if message["role"] != "system"
-        ])
-        if sum_of_tokens > llama_cpp_llm_context_size - llama_cpp_llm_context_size * context_file_ratio:
-            chat_history = chat_history.pop(1) # First user message
 
         # Display chat history
         sys.stdout.write(Style.BRIGHT + Fore.WHITE + '\r' + output["content"] + Style.RESET_ALL + '\n\n')

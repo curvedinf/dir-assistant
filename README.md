@@ -38,10 +38,9 @@ files to send to the LLM with your prompt.
 
 ### Recommended Models
 
-- [CodeQwen 1.5 7B Chat](https://huggingface.co/Qwen/CodeQwen1.5-7B-Chat-GGUF): This is an excellent coding model with 
-an extremely accurate 64K token context window. It should work well with projects under 5k lines of code.
-- [Nomic Embed Text v1.5](https://huggingface.co/nomic-ai/nomic-embed-text-v1.5-GGUF): A
-good low memory embedding model.
+- [Llama 3 8B Instruct](https://huggingface.co/QuantFactory/Meta-Llama-3-8B-Instruct-GGUF): The current cutting edge for
+reasoning capabilities in its size class.
+- [Nomic Embed Text v1.5](https://huggingface.co/nomic-ai/nomic-embed-text-v1.5-GGUF): A good low memory embedding model.
 
 ## Configure
 
