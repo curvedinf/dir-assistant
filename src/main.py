@@ -22,7 +22,7 @@ def display_startup_art():
  |_____/_____|_|_ \_\__ _____  _____ _______       _   _ _______ 
      /\    / ____/ ____|_   _|/ ____|__   __|/\   | \ | |__   __|
     /  \  | (___| (___   | | | (___    | |  /  \  |  \| |  | |   
-   / /\ \  \___  \\___ \  | |  \___ \   | | / /\ \ | . ` |  | |   
+   / /\ \  \___ \\\___ \  | |  \___ \   | | / /\ \ | . ` |  | |   
   / ____ \ ____) |___) |_| |_ ____) |  | |/ ____ \| |\  |  | |   
  /_/    \_\_____/_____/|_____|_____/   |_/_/    \_\_| \_|  |_|   
                                                                  
@@ -30,10 +30,11 @@ def display_startup_art():
 """ + Style.RESET_ALL)
     print(Style.BRIGHT + Fore.BLUE + "Type 'exit' to quit the conversation.\n\n" + Style.RESET_ALL)
 
+
 def is_text_file(filepath):
-    textchars = bytearray({7,8,9,10,12,13,27} | set(range(0x20, 0x100)) - {0x7f})
-    is_binary_string = lambda bytes: bool(bytes.translate(None, textchars))
-    return not is_binary_string(open(filepath, 'rb').read(1024))
+    text_chars = bytearray({7, 8, 9, 10, 12, 13, 27} | set(range(0x20, 0x100)) - {0x7f})
+    return not bool(open(filepath, 'rb').read(1024).translate(None, text_chars))
+
 
 def get_text_files(directory='.', ignore_paths=[]):
     text_files = []
@@ -41,9 +42,11 @@ def get_text_files(directory='.', ignore_paths=[]):
         dirs[:] = [d for d in dirs if os.path.join(root, d) not in ignore_paths]
         for i, filename in enumerate(files, start=1):
             filepath = os.path.join(root, filename)
-            if os.path.isfile(filepath) and not any(ignore_path in filepath for ignore_path in ignore_paths) and is_text_file(filepath):
+            if os.path.isfile(filepath) and not any(
+                    ignore_path in filepath for ignore_path in ignore_paths) and is_text_file(filepath):
                 text_files.append(filepath)
     return text_files
+
 
 def get_files_with_contents(directory='.', ignore_paths=[]):
     files = get_text_files(directory, ignore_paths)
@@ -60,8 +63,10 @@ def get_files_with_contents(directory='.', ignore_paths=[]):
         })
     return files_with_contents
 
+
 def count_tokens(embed, text):
     return len(embed.tokenize(bytes(text, 'utf-8')))
+
 
 def create_file_index(embed, files_with_contents, embed_chunk_size):
     # Split the files into chunks
@@ -96,11 +101,13 @@ def create_file_index(embed, files_with_contents, embed_chunk_size):
     index.add(embeddings)
     return index, chunks
 
+
 def search_index(embed, index, query, all_chunks):
     query_embedding = embed.create_embedding([query])['data'][0]['embedding']
     distances, indices = index.search(np.array([query_embedding]), 100)
     relevant_chunks = [all_chunks[i] for i in indices[0] if i != -1]
     return relevant_chunks
+
 
 if __name__ == '__main__':
     # Setup argparse for command line arguments
@@ -144,6 +151,7 @@ if __name__ == '__main__':
         **llama_cpp_options
     )
     llama_cpp_llm_context_size = llm.context_params.n_ctx
+    print(f"LLM context size: {llama_cpp_llm_context_size}")
 
     # Initialize the embedding model
     print("Loading embedding model...")
@@ -160,9 +168,9 @@ if __name__ == '__main__':
     index, chunks = create_file_index(embed, files_with_contents, llama_cpp_embed_chunk_size)
 
     # Set up the system instructions
-    system_instructions = (f"{llama_cpp_instructions}\n\nThe user will ask questions relating to files they will \
-provide. Do your best to answer questions related to the these files. When the user is referring to files, always \
-assume it is in context of the files they provided: \n\n")
+    system_instructions = (f"{llama_cpp_instructions}\n\nThe user will ask questions relating \
+to files they will provide. Do your best to answer questions related to the these files. When \
+the user refers to files, always assume they want to know about the files they provided.")
     system_instructions_tokens = count_tokens(embed, system_instructions)
 
     chat_history = [{
@@ -198,7 +206,7 @@ assume it is in context of the files they provided: \n\n")
         # Remove old message from the chat history if too large for context
         sum_of_tokens = sum([message["tokens"] for message in chat_history])
         while sum_of_tokens > llama_cpp_llm_context_size:
-            chat_history = chat_history.pop(1) # First history after the system instructions
+            chat_history = chat_history.pop(1)  # First history after the system instructions
             sum_of_tokens = sum([message["tokens"] for message in chat_history])
 
         # Display the assistant thinking message
@@ -207,17 +215,26 @@ assume it is in context of the files they provided: \n\n")
         sys.stdout.flush()
 
         # Run the completion
-        output = llm.create_chat_completion(
-            messages=chat_history
-        )["choices"][0]["message"]
+        completion = llm.create_chat_completion(
+            messages=chat_history,
+            stream=True
+        )
 
         # Remove the files from the last user message
         chat_history[-1]["content"] = user_input
 
+        # Display chat history
+        output = {"role": "assistant", "content": "", "tokens": 0}
+        sys.stdout.write(Style.BRIGHT + Fore.WHITE + '\r')
+        for chunk in completion:
+            delta = chunk['choices'][0]['delta']
+            if "content" in delta:
+                output["content"] += delta["content"]
+                sys.stdout.write(delta["content"])
+                sys.stdout.flush()
+        sys.stdout.write(Style.RESET_ALL + '\n\n')
+        sys.stdout.flush()
+
         # Add the completion to the chat history
         output["tokens"] = count_tokens(embed, output["content"])
         chat_history.append(output)
-
-        # Display chat history
-        sys.stdout.write(Style.BRIGHT + Fore.WHITE + '\r' + output["content"] + Style.RESET_ALL + '\n\n')
-        sys.stdout.flush()
