@@ -27,7 +27,7 @@ case $platform in
         pip install --upgrade --force-reinstall --no-cache-dir -r requirements.txt
         ;;
     2)
-        CMAKE_ARGS="-DLLAMA_CUDA=on" pip install --upgrade --force-reinstall --no-cache-dir -r requirements.txt
+        CMAKE_ARGS="-DLLAMA_CUBLAS=on" pip install --upgrade --force-reinstall --no-cache-dir -r requirements.txt
         ;;
     3)
         CMAKE_ARGS="-DLLAMA_HIPBLAS=ON" pip install --upgrade --force-reinstall --no-cache-dir -r requirements.txt
