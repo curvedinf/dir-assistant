@@ -7,7 +7,7 @@ from llama_cpp import Llama
 from colorama import Fore, Style
 
 from index import get_files_with_contents, create_file_index, search_index
-from model_runners import LlamaCppRunner
+from model_runners import LlamaCppRunner, LiteLLMRunner
 
 
 def display_startup_art():
@@ -55,6 +55,14 @@ if __name__ == '__main__':
     llama_cpp_instructions = config['DIR_ASSISTANT_LLAMA_CPP_INSTRUCTIONS']
     llama_cpp_options = config['DIR_ASSISTANT_LLAMA_CPP_OPTIONS']
     llama_cpp_embed_options = config['DIR_ASSISTANT_LLAMA_CPP_EMBED_OPTIONS']
+    active_model_is_local = config['DIR_ASSISTANT_ACTIVE_MODEL_IS_LOCAL']
+    lite_llm_model = config['DIR_ASSISTANT_LITELLM_MODEL']
+    lite_llm_context_size = config['DIR_ASSISTANT_LITELLM_CONTEXT_SIZE']
+    lite_llm_model_uses_system_message = config['DIR_ASSISTANT_LITELLM_MODEL_USES_SYSTEM_MESSAGE']
+
+    if config['DIR_ASSISTANT_EMBED_MODEL'] == "":
+        print("You must specify an embedding model in config.json. See readme for more information. Exiting...")
+        exit(1)
 
     # Find the files to index
     print("Finding files to index...")
@@ -84,16 +92,35 @@ if __name__ == '__main__':
     the user refers to files, always assume they want to know about the files they provided.")
 
     # Initialize the LLM model
-    print("Loading local LLM model...")
-    llm = LlamaCppRunner(
-        model_path=llm_model_file,
-        llama_cpp_options=llama_cpp_options,
-        system_instructions=system_instructions,
-        embed=embed,
-        index=index,
-        chunks=chunks,
-        context_file_ratio=context_file_ratio
-    )
+    if active_model_is_local:
+        print("Loading local LLM model...")
+        if config['DIR_ASSISTANT_LLM_MODEL'] == "":
+            print("You must specify an LLM model in config.json. See readme for more information. Exiting...")
+            exit(1)
+        llm = LlamaCppRunner(
+            model_path=llm_model_file,
+            llama_cpp_options=llama_cpp_options,
+            system_instructions=system_instructions,
+            embed=embed,
+            index=index,
+            chunks=chunks,
+            context_file_ratio=context_file_ratio
+        )
+    else:
+        print("Loading remote LLM model...")
+        if lite_llm_model == "":
+            print("You must specify a LiteLLM model in config.json. See readme for more information. Exiting...")
+            exit(1)
+        llm = LiteLLMRunner(
+            lite_llm_model=lite_llm_model,
+            lite_llm_model_uses_system_message=lite_llm_model_uses_system_message,
+            lite_llm_context_size=lite_llm_context_size,
+            system_instructions=system_instructions,
+            embed=embed,
+            index=index,
+            chunks=chunks,
+            context_file_ratio=context_file_ratio
+        )
 
     # Display the startup art
     display_startup_art()
