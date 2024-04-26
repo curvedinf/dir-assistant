@@ -1,14 +1,18 @@
 # dir-assistant
 
-Chat with your current directory's files using a local LLM.
+Chat with your current directory's files using a local or API LLM.
 
 ![Demo of dir-assistant being run](demo.gif)
 
 *Now with built-in RAG (Retrieval-Augmented Generation) for unlimited file count.*
 
-This project runs LLMs via the fantastic [llama-cpp-python](https://github.com/abetlen/llama-cpp-python) package.
+This project runs local LLMs via the fantastic [llama-cpp-python](https://github.com/abetlen/llama-cpp-python) package.
+It runs API LLMS using the also fantastic [LiteLLM](https://github.com/BerriAI/litellm).
 
-Dir-assistant has platform support for CPU (OpenBLAS), Cuda, ROCm, Metal, OpenCL, Vulkan, Kompute, and SYCL.
+Dir-assistant has local platform support for CPU (OpenBLAS), Cuda, ROCm, Metal, OpenCL, Vulkan, Kompute, and SYCL.
+
+Dir-assistant has API support for all major LLM APIs. More info in the 
+[LiteLLM Docs](https://docs.litellm.ai/docs/providers).
 
 ## Setup
 
@@ -19,7 +23,9 @@ Clone this repo then run:
 ./setup.sh
 ```
 
-Note: llama-cpp-python's wheel compile was quite buggy for me on both AMD and Nvidia systems I tested.
+### For Local LLMs
+
+The llama-cpp-python's wheel compile was quite buggy for me on both AMD and Nvidia systems I tested.
 You may need to manually change the llama-cpp-python wheel compile options to make it build successfully. 
 To do this, activate the virtualenv (`pyenv activate dir-assistant`) and then run `pip install llama-cpp-python==0.2.56`
 with the options. Reference their install instructions for more info: https://github.com/abetlen/llama-cpp-python
@@ -30,11 +36,31 @@ pyenv activate dir-assistant
 CC=/opt/rocm/llvm/bin/clang CXX=/opt/rocm/llvm/bin/clang++ CMAKE_ARGS="-DLLAMA_HIPBLAS=on -DCMAKE_BUILD_TYPE=Release -DLLAMA_HIPBLAS=ON -DLLAMA_CUDA_DMMV_X=64 -DLLAMA_CUDA_MMV_Y=4 -DCMAKE_PREFIX_PATH=/opt/rocm -DAMDGPU_TARGETS=gfx1100" pip install --no-cache-dir --force-reinstall llama-cpp-python==0.2.56
 ```
 
+### For API LLMs
+
+If you are using an API LLM via LiteLLM, you must add your API key as an environment variable. You can find the correct
+environment variable name for your API key in the list of [LiteLLM Providers](https://docs.litellm.ai/docs/providers).
+
+It is convenient if you set the key's environment variable at the bottom of your `.bashrc`:
+
+```
+export GEMINI_API_KEY=your-key-here
+```
+
+However, you can also set the key while running dir-assistant:
+
+```
+GEMINI_API_KEY=your-key-here dir-assistant
+```
+
 ## Model Download
 
 Download your favorite LLM gguf and place it in the models directory. You will also need to download an embedding model
 gguf and place it in the same directory. The embedding model is necessary for the RAG system to identify which 
 files to send to the LLM with your prompt.
+
+Note: You must always download an embedding model even while using an API LLM. The embedding model is fast and always
+runs on your CPU, so you do not need GPU support to run it.
 
 ### Recommended Models
 
@@ -52,6 +78,18 @@ like to modify its configuration:
 ```
 
 Alternatively you can edit `config.json` once it is created.
+
+### Local LLM configuration
+
+Llama.cpp provides a large number of options to customize how your local model is run. Most of these options are
+exposed via `llama-cpp-python`. You can configure them in `config.json` with the `DIR_ASSISTANT_LLAMA_CPP_OPTIONS`
+object.
+
+The options available are documented in the llama-cpp-python
+[Llama constructor documentation](https://llama-cpp-python.readthedocs.io/en/latest/api-reference/#llama_cpp.Llama).
+
+What the options do is also documented in the 
+[llama.cpp CLI documentation](https://github.com/ggerganov/llama.cpp/blob/master/examples/main/README.md).
 
 ## Run
 
