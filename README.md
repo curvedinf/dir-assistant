@@ -125,3 +125,4 @@ There's also a global ignore list in `config.json`.
 - ~~API LLMs~~
 - ~~RAG~~
 - File caching (improve startup time)
+- File watching (automatically reindex changed files)
