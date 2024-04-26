@@ -39,7 +39,7 @@ CC=/opt/rocm/llvm/bin/clang CXX=/opt/rocm/llvm/bin/clang++ CMAKE_ARGS="-DLLAMA_H
 ### For API LLMs
 
 If you are using an API LLM via LiteLLM, you must add your API key as an environment variable. You can find the correct
-environment variable name for your API key in the list of [LiteLLM Providers](https://docs.litellm.ai/docs/providers).
+environment variable name for your API key in the list of [LiteLLM providers](https://docs.litellm.ai/docs/providers).
 
 It is convenient if you set the key's environment variable at the bottom of your `.bashrc`:
 
@@ -85,7 +85,7 @@ Llama.cpp provides a large number of options to customize how your local model i
 exposed via `llama-cpp-python`. You can configure them in `config.json` with the `DIR_ASSISTANT_LLAMA_CPP_OPTIONS`
 object.
 
-The options available are documented in the llama-cpp-python
+The options available are documented in the `llama-cpp-python`
 [Llama constructor documentation](https://llama-cpp-python.readthedocs.io/en/latest/api-reference/#llama_cpp.Llama).
 
 What the options do is also documented in the 
