@@ -73,7 +73,7 @@ def create_file_index(embed, files_with_contents, embed_chunk_size):
     print("Creating embeddings...")
     embeddings_list = []
     for i, chunk in enumerate(chunks, start=1):
-        print(f'Embedding chunk {i}/{len(files_with_contents)}')
+        print(f'Embedding chunk {i}/{len(chunks)}')
         embedding = embed.create_embedding(chunk['text'])['data'][0]['embedding']
         embeddings_list.append(embedding)
     print("Indexing embeddings...")
