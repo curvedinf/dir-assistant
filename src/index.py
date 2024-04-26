@@ -66,7 +66,7 @@ def create_file_index(embed, files_with_contents, embed_chunk_size):
             chunks.append({"tokens": chunk_tokens, "text": chunk_header + current_chunk})
 
     # Create the embeddings
-    print("File embeddings created. Total chunks:", len(chunks))
+    print("File embedding chunks created:", len(chunks))
     print("Max size of an embedding chunk:", embed_chunk_size)
 
     # Create the index
