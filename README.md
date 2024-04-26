@@ -119,3 +119,9 @@ There's also a global ignore list in `config.json`.
 - Only tested on Ubuntu 22.04. If you get it working on another platform, let me know.
 - Dir-assistant only detects and reads text files at this time.
 - This is a personal project that works for my needs but might not work for yours. If you make any adjustments so it works for you, I'd appreciate it if you made a PR.
+
+## Todos
+
+- ~~API LLMs~~
+- ~~RAG~~
+- File caching (improve startup time)
