@@ -6,8 +6,8 @@ Chat with your current directory's files using a local or API LLM.
 
 *Now with built-in RAG (Retrieval-Augmented Generation) for unlimited file count.*
 
-This project runs local LLMs via the fantastic [llama-cpp-python](https://github.com/abetlen/llama-cpp-python) package.
-It runs API LLMS using the also fantastic [LiteLLM](https://github.com/BerriAI/litellm).
+This project runs local LLMs via the fantastic [llama-cpp-python](https://github.com/abetlen/llama-cpp-python) package
+and runs API LLMS using the also fantastic [LiteLLM](https://github.com/BerriAI/litellm) package.
 
 Dir-assistant has local platform support for CPU (OpenBLAS), Cuda, ROCm, Metal, OpenCL, Vulkan, Kompute, and SYCL.
 
