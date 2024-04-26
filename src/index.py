@@ -45,7 +45,7 @@ def create_file_index(embed, files_with_contents, embed_chunk_size):
     # Split the files into chunks
     chunks = []
     for i, file_info in enumerate(files_with_contents, start=1):
-        print(f'Indexing file {i}/{len(files_with_contents)}: {file_info["filepath"]}')
+        print(f'Embedding file {i}/{len(files_with_contents)}: {file_info["filepath"]}')
         filepath = file_info["filepath"]
         contents = file_info["contents"]
         lines = contents.split('\n')
@@ -69,6 +69,8 @@ def create_file_index(embed, files_with_contents, embed_chunk_size):
     print("File embeddings created. Total chunks:", len(chunks))
     print("Max size of an embedding chunk:", embed_chunk_size)
 
+    # Create the index
+    print("Indexing embeddings...")
     embeddings = np.array([embed.create_embedding(chunk['text'])['data'][0]['embedding'] for chunk in chunks])
     index = IndexFlatL2(embeddings.shape[1])
     index.add(embeddings)
