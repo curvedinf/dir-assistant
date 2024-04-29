@@ -36,30 +36,14 @@ pyenv activate dir-assistant
 CC=/opt/rocm/llvm/bin/clang CXX=/opt/rocm/llvm/bin/clang++ CMAKE_ARGS="-DLLAMA_HIPBLAS=on -DCMAKE_BUILD_TYPE=Release -DLLAMA_HIPBLAS=ON -DLLAMA_CUDA_DMMV_X=64 -DLLAMA_CUDA_MMV_Y=4 -DCMAKE_PREFIX_PATH=/opt/rocm -DAMDGPU_TARGETS=gfx1100" pip install --no-cache-dir --force-reinstall llama-cpp-python==0.2.56
 ```
 
-### For API LLMs
-
-If you are using an API LLM via LiteLLM, you must add your API key as an environment variable. You can find the correct
-environment variable name for your API key in the list of [LiteLLM providers](https://docs.litellm.ai/docs/providers).
-
-It is convenient if you set the key's environment variable at the bottom of your `.bashrc`:
-
-```
-export GEMINI_API_KEY=your-key-here
-```
-
-However, you can also set the key while running dir-assistant:
-
-```
-GEMINI_API_KEY=your-key-here dir-assistant
-```
-
 ## Model Download
 
-Download your favorite LLM gguf and place it in the models directory. You will also need to download an embedding model
-gguf and place it in the same directory. The embedding model is necessary for the RAG system to identify which 
-files to send to the LLM with your prompt.
+Download your favorite LLM gguf and place it in the models directory.
 
-Note: You must always download an embedding model even while using an API LLM. The embedding model is fast and always
+You will also need to download an embedding model gguf and place it in the same directory. The embedding model is 
+necessary for the RAG system to identify which files to send to the LLM with your prompt.
+
+Note: You must always download an embedding model even while using an API LLM. The embedding model is fast and by default
 runs on your CPU, so you do not need GPU support to run it.
 
 ### Recommended Models
@@ -90,6 +74,37 @@ The options available are documented in the `llama-cpp-python`
 
 What the options do is also documented in the 
 [llama.cpp CLI documentation](https://github.com/ggerganov/llama.cpp/blob/master/examples/main/README.md).
+
+### API LLM Configuration
+
+If you are using an API LLM via LiteLLM, you must add your API key as an environment variable. You can find the correct
+environment variable name for your API key in the list of [LiteLLM providers](https://docs.litellm.ai/docs/providers).
+
+It is convenient if you set the key's environment variable at the bottom of your `.bashrc`:
+
+```
+export GEMINI_API_KEY=your-key-here
+```
+
+However, you can also set the key while running dir-assistant:
+
+```
+GEMINI_API_KEY=your-key-here dir-assistant
+```
+
+#### Recommended API LLMs
+
+- [Anthropic Claude 3 Haiku](https://console.anthropic.com/dashboard): Currently the best cost to performance ratio
+of models with a large context size. In my testing it works quite well and costs under a cent per prompt with 30k token
+context window.
+  - `DIR_ASSISTANT_LITELLM_MODEL`: `anthropic/claude-3-haiku-20240307`,
+  - `DIR_ASSISTANT_LITELLM_CONTEXT_SIZE`: `200000`,
+  - API key environment variable: `ANTHROPIC_API_KEY`
+- [Gemini 1.5 Pro](https://ai.google.dev/pricing): Currently free, but limited to two prompts per minute. One of the 
+top tier models with the largest context window of 1M tokens.
+  - `DIR_ASSISTANT_LITELLM_MODEL`: `gemini/gemini-1.5-pro-latest`,
+  - `DIR_ASSISTANT_LITELLM_CONTEXT_SIZE`: `1000000`,
+  - API key environment variable: `GEMINI_API_KEY`
 
 ## Run
 
@@ -126,3 +141,4 @@ There's also a global ignore list in `config.json`.
 - ~~RAG~~
 - File caching (improve startup time)
 - File watching (automatically reindex changed files)
+- Background indexing
