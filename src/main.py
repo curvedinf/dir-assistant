@@ -6,7 +6,7 @@ from llama_cpp import Llama
 
 from colorama import Fore, Style
 
-from index import get_files_with_contents, create_file_index, search_index
+from index import create_file_index
 from model_runners import LlamaCppRunner, LiteLLMRunner
 
 
@@ -59,18 +59,14 @@ if __name__ == '__main__':
     lite_llm_model = config['DIR_ASSISTANT_LITELLM_MODEL']
     lite_llm_context_size = config['DIR_ASSISTANT_LITELLM_CONTEXT_SIZE']
     lite_llm_model_uses_system_message = config['DIR_ASSISTANT_LITELLM_MODEL_USES_SYSTEM_MESSAGE']
+    index_cache_file = os.path.join(dir_assistant_root, 'index-cache.sqlite')
 
     if config['DIR_ASSISTANT_EMBED_MODEL'] == "":
         print("You must specify an embedding model in config.json. See readme for more information. Exiting...")
         exit(1)
 
-    # Find the files to index
-    print("Finding files to index...")
     ignore_paths = args.ignore if args.ignore else []
     ignore_paths.extend(config['DIR_ASSISTANT_GLOBAL_IGNORES'])
-    files_with_contents = get_files_with_contents('.', ignore_paths)
-    if len(files_with_contents) == 0:
-        print("No files found to index. Running anyway...")
 
     # Initialize the embedding model
     print("Loading embedding model...")
@@ -84,7 +80,7 @@ if __name__ == '__main__':
 
     # Create the file index
     print("Creating file embeddings and index...")
-    index, chunks = create_file_index(embed, files_with_contents, llama_cpp_embed_chunk_size)
+    index, chunks = create_file_index(embed, ignore_paths, llama_cpp_embed_chunk_size, index_cache_file)
 
     # Set up the system instructions
     system_instructions = (f"{llama_cpp_instructions}\n\nThe user will ask questions relating \
