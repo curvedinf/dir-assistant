@@ -142,3 +142,4 @@ There's also a global ignore list in `config.json`.
 - File caching (improve startup time)
 - File watching (automatically reindex changed files)
 - Background indexing
+- CGRAG (Contextually-Guided Retrieval-Augmented Generation)
