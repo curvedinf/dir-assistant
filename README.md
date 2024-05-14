@@ -112,7 +112,7 @@ First export the necessary environment variables at the start of every terminal 
 (this script can be added to your `.bashrc`):
 
 ```
-soruce /path-to/dir-assistant/export.sh
+source /path-to/dir-assistant/export.sh
 ```
 
 Then navigate to the directory you would like your LLM to see and run dir-assistant:
@@ -128,6 +128,22 @@ dir-assistant --ignore some-project-directory .git .gitignore
 ```
 
 There's also a global ignore list in `config.json`.
+
+### Running via an API LLM
+
+On your first run using an API LLM, you may receive an error asking for an API-specific python package.
+In order to install the package LiteLLM needs to run the API you have selected, you must first enter
+the dir-assistant virtualenv:
+
+```
+pyenv activate dir-assistant
+```
+
+After activating the virtualenv, enter the `pip` command the error showed. For example:
+
+```
+pip install -q google-generativeai
+```
 
 ## Limitations
 
