@@ -61,6 +61,7 @@ if __name__ == '__main__':
     lite_llm_model_uses_system_message = config['DIR_ASSISTANT_LITELLM_MODEL_USES_SYSTEM_MESSAGE']
     index_cache_file = os.path.join(dir_assistant_root, 'index-cache.sqlite')
     use_cgrag = config['DIR_ASSISTANT_USE_CGRAG']
+    print_cgrag = config['DIR_ASSISTANT_PRINT_CGRAG']
 
     if config['DIR_ASSISTANT_EMBED_MODEL'] == "":
         print("You must specify an embedding model in config.json. See readme for more information. Exiting...")
@@ -102,7 +103,8 @@ the user refers to files, always assume they want to know about the files they p
             index=index,
             chunks=chunks,
             context_file_ratio=context_file_ratio,
-            use_cgrag=use_cgrag
+            use_cgrag=use_cgrag,
+            print_cgrag=print_cgrag
         )
     else:
         print("Loading remote LLM model...")
@@ -118,7 +120,8 @@ the user refers to files, always assume they want to know about the files they p
             index=index,
             chunks=chunks,
             context_file_ratio=context_file_ratio,
-            use_cgrag=use_cgrag
+            use_cgrag=use_cgrag,
+            print_cgrag=print_cgrag
         )
 
     # Display the startup art
