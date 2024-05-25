@@ -99,7 +99,7 @@ information to work with. If the prompt is referencing code, list specific class
             if self.print_cgrag:
                 sys.stdout.write(Style.BRIGHT + Fore.WHITE + '\r' + (' '*36))
                 sys.stdout.write(Style.BRIGHT + Fore.WHITE + f'\r{output_message["content"]}\n' + Style.RESET_ALL)
-                sys.stdout.write(Style.BRIGHT + Fore.GREEN + '\nAssistant: \n\n' + Style.RESET_ALL)
+                sys.stdout.write(Style.BRIGHT + Fore.GREEN + 'Assistant: \n\n' + Style.RESET_ALL)
             else:
                 sys.stdout.write(Style.BRIGHT + Fore.WHITE + '\r' + (' '*36))
             sys.stdout.write('\r(thinking...)' + Style.RESET_ALL)
