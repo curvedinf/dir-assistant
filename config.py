@@ -58,6 +58,8 @@ config = {
     "DIR_ASSISTANT_LITELLM_MODEL": dir_assistant_litellm_model,
     "DIR_ASSISTANT_LITELLM_CONTEXT_SIZE": dir_assistant_litellm_context_size,
     "DIR_ASSISTANT_LITELLM_MODEL_USES_SYSTEM_MESSAGE": dir_assistant_litellm_model_uses_system_message,
+    "DIR_ASSISTANT_USE_CGRAG": True,
+    "DIR_ASSISTANT_PRINT_CGRAG": False,
 }
 
 # Write to config.json file
@@ -66,4 +68,3 @@ with open(os.path.join(dir_assistant_root, "config.json"), "w") as config_file:
     json.dump(config, config_file, indent=2)
 
 print("- Configuration saved to config.json.")
-print("- For more options view ")
