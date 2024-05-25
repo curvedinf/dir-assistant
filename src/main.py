@@ -60,6 +60,8 @@ if __name__ == '__main__':
     lite_llm_context_size = config['DIR_ASSISTANT_LITELLM_CONTEXT_SIZE']
     lite_llm_model_uses_system_message = config['DIR_ASSISTANT_LITELLM_MODEL_USES_SYSTEM_MESSAGE']
     index_cache_file = os.path.join(dir_assistant_root, 'index-cache.sqlite')
+    use_cgrag = config['DIR_ASSISTANT_USE_CGRAG']
+    print_cgrag = config['DIR_ASSISTANT_PRINT_CGRAG']
 
     if config['DIR_ASSISTANT_EMBED_MODEL'] == "":
         print("You must specify an embedding model in config.json. See readme for more information. Exiting...")
@@ -83,9 +85,9 @@ if __name__ == '__main__':
     index, chunks = create_file_index(embed, ignore_paths, llama_cpp_embed_chunk_size, index_cache_file)
 
     # Set up the system instructions
-    system_instructions = (f"{llama_cpp_instructions}\n\nThe user will ask questions relating \
-    to files they will provide. Do your best to answer questions related to the these files. When \
-    the user refers to files, always assume they want to know about the files they provided.")
+    system_instructions = f"{llama_cpp_instructions}\n\nThe user will ask questions relating \
+to files they will provide. Do your best to answer questions related to the these files. When \
+the user refers to files, always assume they want to know about the files they provided."
 
     # Initialize the LLM model
     if active_model_is_local:
@@ -100,7 +102,9 @@ if __name__ == '__main__':
             embed=embed,
             index=index,
             chunks=chunks,
-            context_file_ratio=context_file_ratio
+            context_file_ratio=context_file_ratio,
+            use_cgrag=use_cgrag,
+            print_cgrag=print_cgrag
         )
     else:
         print("Loading remote LLM model...")
@@ -115,7 +119,9 @@ if __name__ == '__main__':
             embed=embed,
             index=index,
             chunks=chunks,
-            context_file_ratio=context_file_ratio
+            context_file_ratio=context_file_ratio,
+            use_cgrag=use_cgrag,
+            print_cgrag=print_cgrag
         )
 
     # Display the startup art
