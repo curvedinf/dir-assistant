@@ -156,7 +156,8 @@ pip install -q google-generativeai
 - ~~API LLMs~~
 - ~~RAG~~
 - ~~File caching (improve startup time)~~
+- ~~CGRAG (Contextually-Guided Retrieval-Augmented Generation)~~
 - File watching (automatically reindex changed files)
 - Background indexing
-- CGRAG (Contextually-Guided Retrieval-Augmented Generation)
 - Web search
+- API Embedding models

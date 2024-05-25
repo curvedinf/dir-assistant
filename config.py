@@ -58,7 +58,8 @@ config = {
     "DIR_ASSISTANT_LITELLM_MODEL": dir_assistant_litellm_model,
     "DIR_ASSISTANT_LITELLM_CONTEXT_SIZE": dir_assistant_litellm_context_size,
     "DIR_ASSISTANT_LITELLM_MODEL_USES_SYSTEM_MESSAGE": dir_assistant_litellm_model_uses_system_message,
-    "DIR_ASSISTANT_USE_CGRAG": False,
+    "DIR_ASSISTANT_USE_CGRAG": True,
+    "DIR_ASSISTANT_PRINT_CGRAG": False,
 }
 
 # Write to config.json file
