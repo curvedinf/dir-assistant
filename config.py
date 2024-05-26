@@ -7,7 +7,9 @@ dir_assistant_active_model_is_local = input(
 ).lower() == "y"
 
 if dir_assistant_active_model_is_local:
-    dir_assistant_llm_model = input("Enter the gguf filepath for your LLM model relative to dir-assistant/models: ")
+    dir_assistant_llm_model = input(
+        "Enter the gguf filepath for your LLM model relative to dir-assistant/models (e.g. llama3-instruct.gguf): "
+    )
     dir_assistant_litellm_model = "gemini/gemini-1.0-pro-latest"
     dir_assistant_litellm_context_size = 32000
     dir_assistant_litellm_model_uses_system_message = False
@@ -26,7 +28,9 @@ else:
         dir_assistant_litellm_context_size = int(dir_assistant_litellm_context_size)
     dir_assistant_litellm_model_uses_system_message = input("Does your API model use a system message? (most do not) (y/n): ").lower() == "y"
     local_llm_on_gpu = False
-dir_assistant_embed_model = input("Enter the gguf filepath for your EMBEDDING model relative to dir-assistant/models: ")
+dir_assistant_embed_model = input(
+    "Enter the gguf filepath for your EMBEDDING model relative to dir-assistant/models (e.g. mxbai-embed-large-latest.gguf): "
+)
 dir_assistant_llama_cpp_instructions = input("Enter the system instructions for your model or press enter for a sane default: ")
 if dir_assistant_llama_cpp_instructions == "":
     dir_assistant_llama_cpp_instructions = "You are a helpful AI assistant."
@@ -52,7 +56,16 @@ config = {
     "DIR_ASSISTANT_LLAMA_CPP_OPTIONS": dir_assistant_llama_cpp_options,
     "DIR_ASSISTANT_LLAMA_CPP_EMBED_OPTIONS": dir_assistant_llama_cpp_embed_options,
     "DIR_ASSISTANT_LLAMA_CPP_INSTRUCTIONS": dir_assistant_llama_cpp_instructions,
-    "DIR_ASSISTANT_GLOBAL_IGNORES": ['.git/', '.vscode/', 'node_modules/', 'build/', '.idea/', '__pycache__'],
+    "DIR_ASSISTANT_GLOBAL_IGNORES": [
+        ".git/",
+        ".vscode/",
+        "node_modules/",
+        "build/",
+        ".idea/",
+        "__pycache__",
+        ".venv",
+        ".gguf",
+    ],
     "DIR_ASSISTANT_CONTEXT_FILE_RATIO": 0.5,
     "DIR_ASSISTANT_ACTIVE_MODEL_IS_LOCAL": dir_assistant_active_model_is_local,
     "DIR_ASSISTANT_LITELLM_MODEL": dir_assistant_litellm_model,
