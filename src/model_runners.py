@@ -115,14 +115,16 @@ information to work with. If the prompt is referencing code, list specific class
 
         # Remove old messages from the chat history if too large for context
         sum_of_tokens = sum([message["tokens"] for message in self.chat_history])
+        did_pop = True if sum_of_tokens > self.context_size else False
         while sum_of_tokens > self.context_size:
             self.chat_history.pop(0)
             sum_of_tokens = sum([message["tokens"] for message in self.chat_history])
 
         completion_output = self.call_completion(self.chat_history)
 
-        # Remove the files from the last user message
-        self.chat_history[-1]["content"] = user_input
+        if(did_pop):
+            # Remove the files from the last user message
+            self.chat_history[-1]["content"] = user_input
 
         # Display chat history
         output_message = {"role": "assistant", "content": "", "tokens": 0}
@@ -214,7 +216,8 @@ class LiteLLMRunner(BaseRunner):
             model=self.lite_llm_model,
             messages=chat_history,
             stream=True,
-            timeout=600
+            timeout=600,
+            num_ctx=self.context_size,
         )
 
     def write_chunks(self, completion_output, output_message, write_to_stdout=True):
