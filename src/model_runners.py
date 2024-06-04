@@ -55,13 +55,13 @@ class BaseRunner:
 
         # Display the assistant thinking message
         if self.print_cgrag:
-            sys.stdout.write(Style.BRIGHT + Fore.BLUE + '\nCGRAG Guidance: \n\n' + Style.RESET_ALL)
+            sys.stdout.write(f'{Style.BRIGHT}{Fore.BLUE}\nCGRAG Guidance: \n\n{Style.RESET_ALL}')
         else:
-            sys.stdout.write(Style.BRIGHT + Fore.GREEN + '\nAssistant: \n\n' + Style.RESET_ALL)
+            sys.stdout.write(f'{Style.BRIGHT}{Fore.GREEN}\nAssistant: \n\n{Style.RESET_ALL}')
         if self.use_cgrag:
-            sys.stdout.write(Style.BRIGHT + Fore.WHITE + '\r(generating contextual guidance...)' + Style.RESET_ALL)
+            sys.stdout.write(f'{Style.BRIGHT}{Fore.WHITE}\r(generating contextual guidance...){Style.RESET_ALL}')
         else:
-            sys.stdout.write(Style.BRIGHT + Fore.WHITE + '\r(thinking...)' + Style.RESET_ALL)
+            sys.stdout.write(f'{Style.BRIGHT}{Fore.WHITE}\r(thinking...){Style.RESET_ALL}')
         sys.stdout.flush()
 
         relevant_chunks = search_index(self.embed, self.index, user_input, self.chunks)
@@ -188,6 +188,7 @@ class LiteLLMRunner(BaseRunner):
             lite_llm_model,
             lite_llm_model_uses_system_message,
             lite_llm_context_size,
+            lite_llm_pass_through_context_size,
             system_instructions,
             embed,
             index,
@@ -207,18 +208,27 @@ class LiteLLMRunner(BaseRunner):
         )
         self.lite_llm_model = lite_llm_model
         self.context_size = lite_llm_context_size
+        self.pass_through_context_size = lite_llm_pass_through_context_size
         print(f"LiteLLM context size: {self.context_size}")
         if not lite_llm_model_uses_system_message:
             self.chat_history[0]['role'] = 'user'
 
     def call_completion(self, chat_history):
-        return completion(
-            model=self.lite_llm_model,
-            messages=chat_history,
-            stream=True,
-            timeout=600,
-            num_ctx=self.context_size,
-        )
+        if self.pass_through_context_size:
+            return completion(
+                model=self.lite_llm_model,
+                messages=chat_history,
+                stream=True,
+                timeout=600,
+                num_ctx=self.context_size
+            )
+        else:
+            return completion(
+                model=self.lite_llm_model,
+                messages=chat_history,
+                stream=True,
+                timeout=600
+            )
 
     def write_chunks(self, completion_output, output_message, write_to_stdout=True):
         for chunk in completion_output:
