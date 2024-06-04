@@ -157,6 +157,8 @@ pip install -q google-generativeai
 - ~~RAG~~
 - ~~File caching (improve startup time)~~
 - ~~CGRAG (Contextually-Guided Retrieval-Augmented Generation)~~
+- ~~Multi-line input~~
+- Single-step pip install
 - File watching (automatically reindex changed files)
 - Background indexing
 - Web search
