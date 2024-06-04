@@ -5,13 +5,14 @@ import json
 from llama_cpp import Llama
 
 from colorama import Fore, Style
+from prompt_toolkit import prompt
 
 from index import create_file_index
 from model_runners import LlamaCppRunner, LiteLLMRunner
 
 
 def display_startup_art():
-    print(Style.BRIGHT + Fore.GREEN + """
+    print(f"""{Style.BRIGHT}{Fore.GREEN}
 
   _____ _____ _____                                              
  |  __ \_   _|  __ \                                             
@@ -26,8 +27,8 @@ def display_startup_art():
  /_/    \_\_____/_____/|_____|_____/   |_/_/    \_\_| \_|  |_|   
                                                                  
                                                                  
-""" + Style.RESET_ALL)
-    print(Style.BRIGHT + Fore.BLUE + "Type 'exit' to quit the conversation.\n\n" + Style.RESET_ALL)
+{Style.RESET_ALL}""")
+    print(f"{Style.BRIGHT}{Fore.BLUE}Type 'exit' to quit the conversation.\n\n{Style.RESET_ALL}")
 
 
 if __name__ == '__main__':
@@ -49,22 +50,28 @@ if __name__ == '__main__':
 
     print("Configuration loaded:", config)
 
-    llm_model_file = os.path.join(dir_assistant_root, 'models', config['DIR_ASSISTANT_LLM_MODEL'])
-    embed_model_file = os.path.join(dir_assistant_root, 'models', config['DIR_ASSISTANT_EMBED_MODEL'])
-    context_file_ratio = config['DIR_ASSISTANT_CONTEXT_FILE_RATIO']
-    llama_cpp_instructions = config['DIR_ASSISTANT_LLAMA_CPP_INSTRUCTIONS']
-    llama_cpp_options = config['DIR_ASSISTANT_LLAMA_CPP_OPTIONS']
-    llama_cpp_embed_options = config['DIR_ASSISTANT_LLAMA_CPP_EMBED_OPTIONS']
-    active_model_is_local = config['DIR_ASSISTANT_ACTIVE_MODEL_IS_LOCAL']
-    lite_llm_model = config['DIR_ASSISTANT_LITELLM_MODEL']
-    lite_llm_context_size = config['DIR_ASSISTANT_LITELLM_CONTEXT_SIZE']
-    lite_llm_model_uses_system_message = config['DIR_ASSISTANT_LITELLM_MODEL_USES_SYSTEM_MESSAGE']
-    index_cache_file = os.path.join(dir_assistant_root, 'index-cache.sqlite')
-    use_cgrag = config['DIR_ASSISTANT_USE_CGRAG']
-    print_cgrag = config['DIR_ASSISTANT_PRINT_CGRAG']
+    llm_model_file = os.path.join(dir_assistant_root, 'models', config.get('DIR_ASSISTANT_LLM_MODEL', ''))
+    embed_model_file = os.path.join(dir_assistant_root, 'models', config.get('DIR_ASSISTANT_EMBED_MODEL', ''))
+    context_file_ratio = config.get('DIR_ASSISTANT_CONTEXT_FILE_RATIO', 0.5)
+    llama_cpp_instructions = config.get('DIR_ASSISTANT_LLAMA_CPP_INSTRUCTIONS', 'You are a helpful AI assistant.')
+    llama_cpp_options = config.get('DIR_ASSISTANT_LLAMA_CPP_OPTIONS', {})
+    llama_cpp_embed_options = config.get('DIR_ASSISTANT_LLAMA_CPP_EMBED_OPTIONS', {})
+    active_model_is_local = config.get('DIR_ASSISTANT_ACTIVE_MODEL_IS_LOCAL', False)
+    lite_llm_model = config.get('DIR_ASSISTANT_LITELLM_MODEL', 'gemini/gemini-1.5-flash-latest')
+    lite_llm_context_size = config.get('DIR_ASSISTANT_LITELLM_CONTEXT_SIZE', 500000)
+    lite_llm_model_uses_system_message = config.get('DIR_ASSISTANT_LITELLM_MODEL_USES_SYSTEM_MESSAGE', False)
+    lite_llm_pass_through_context_size = config.get('DIR_ASSISTANT_LITELLM_PASS_THROUGH_CONTEXT_SIZE', False)
+    use_cgrag = config.get('DIR_ASSISTANT_USE_CGRAG', True)
+    print_cgrag = config.get('DIR_ASSISTANT_PRINT_CGRAG', False)
 
-    if config['DIR_ASSISTANT_EMBED_MODEL'] == "":
+    index_cache_file = os.path.join(dir_assistant_root, 'index-cache.sqlite')
+
+    if embed_model_file == '':
         print("You must specify an embedding model in config.json. See readme for more information. Exiting...")
+        exit(1)
+
+    if active_model_is_local and llm_model_file == '':
+        print("You must specify an local LLM model in config.json. See readme for more information. Exiting...")
         exit(1)
 
     ignore_paths = args.ignore if args.ignore else []
@@ -115,6 +122,7 @@ the user refers to files, always assume they want to know about the files they p
             lite_llm_model=lite_llm_model,
             lite_llm_model_uses_system_message=lite_llm_model_uses_system_message,
             lite_llm_context_size=lite_llm_context_size,
+            lite_llm_pass_through_context_size=lite_llm_pass_through_context_size,
             system_instructions=system_instructions,
             embed=embed,
             index=index,
@@ -127,10 +135,13 @@ the user refers to files, always assume they want to know about the files they p
     # Display the startup art
     display_startup_art()
 
+
+
     # Begin the conversation
     while True:
         # Get user input
-        user_input = input(Style.BRIGHT + Fore.RED + 'You: \n\n' + Style.RESET_ALL)
-        if user_input.lower() == 'exit':
+        print(f'{Style.BRIGHT}{Fore.RED}You (Press ALT-Enter to submit): \n{Style.RESET_ALL}')
+        user_input = prompt('',multiline=True)
+        if user_input.strip().lower() == 'exit':
             break
         llm.stream_chat(user_input)
