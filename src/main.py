@@ -50,22 +50,28 @@ if __name__ == '__main__':
 
     print("Configuration loaded:", config)
 
-    llm_model_file = os.path.join(dir_assistant_root, 'models', config['DIR_ASSISTANT_LLM_MODEL'])
-    embed_model_file = os.path.join(dir_assistant_root, 'models', config['DIR_ASSISTANT_EMBED_MODEL'])
-    context_file_ratio = config['DIR_ASSISTANT_CONTEXT_FILE_RATIO']
-    llama_cpp_instructions = config['DIR_ASSISTANT_LLAMA_CPP_INSTRUCTIONS']
-    llama_cpp_options = config['DIR_ASSISTANT_LLAMA_CPP_OPTIONS']
-    llama_cpp_embed_options = config['DIR_ASSISTANT_LLAMA_CPP_EMBED_OPTIONS']
-    active_model_is_local = config['DIR_ASSISTANT_ACTIVE_MODEL_IS_LOCAL']
-    lite_llm_model = config['DIR_ASSISTANT_LITELLM_MODEL']
-    lite_llm_context_size = config['DIR_ASSISTANT_LITELLM_CONTEXT_SIZE']
-    lite_llm_model_uses_system_message = config['DIR_ASSISTANT_LITELLM_MODEL_USES_SYSTEM_MESSAGE']
-    index_cache_file = os.path.join(dir_assistant_root, 'index-cache.sqlite')
-    use_cgrag = config['DIR_ASSISTANT_USE_CGRAG']
-    print_cgrag = config['DIR_ASSISTANT_PRINT_CGRAG']
+    llm_model_file = os.path.join(dir_assistant_root, 'models', config.get('DIR_ASSISTANT_LLM_MODEL', ''))
+    embed_model_file = os.path.join(dir_assistant_root, 'models', config.get('DIR_ASSISTANT_EMBED_MODEL', ''))
+    context_file_ratio = config.get('DIR_ASSISTANT_CONTEXT_FILE_RATIO', 0.5)
+    llama_cpp_instructions = config.get('DIR_ASSISTANT_LLAMA_CPP_INSTRUCTIONS', 'You are a helpful AI assistant.')
+    llama_cpp_options = config.get('DIR_ASSISTANT_LLAMA_CPP_OPTIONS', {})
+    llama_cpp_embed_options = config.get('DIR_ASSISTANT_LLAMA_CPP_EMBED_OPTIONS', {})
+    active_model_is_local = config.get('DIR_ASSISTANT_ACTIVE_MODEL_IS_LOCAL', False)
+    lite_llm_model = config.get('DIR_ASSISTANT_LITELLM_MODEL', 'gemini/gemini-1.5-flash-latest')
+    lite_llm_context_size = config.get('DIR_ASSISTANT_LITELLM_CONTEXT_SIZE', 500000)
+    lite_llm_model_uses_system_message = config.get('DIR_ASSISTANT_LITELLM_MODEL_USES_SYSTEM_MESSAGE', False)
+    lite_llm_pass_through_context_size = config.get('DIR_ASSISTANT_LITELLM_PASS_THROUGH_CONTEXT_SIZE', False)
+    use_cgrag = config.get('DIR_ASSISTANT_USE_CGRAG', True)
+    print_cgrag = config.get('DIR_ASSISTANT_PRINT_CGRAG', False)
 
-    if config['DIR_ASSISTANT_EMBED_MODEL'] == "":
+    index_cache_file = os.path.join(dir_assistant_root, 'index-cache.sqlite')
+
+    if embed_model_file == '':
         print("You must specify an embedding model in config.json. See readme for more information. Exiting...")
+        exit(1)
+
+    if active_model_is_local and llm_model_file == '':
+        print("You must specify an local LLM model in config.json. See readme for more information. Exiting...")
         exit(1)
 
     ignore_paths = args.ignore if args.ignore else []
@@ -116,6 +122,7 @@ the user refers to files, always assume they want to know about the files they p
             lite_llm_model=lite_llm_model,
             lite_llm_model_uses_system_message=lite_llm_model_uses_system_message,
             lite_llm_context_size=lite_llm_context_size,
+            lite_llm_pass_through_context_size=lite_llm_pass_through_context_size,
             system_instructions=system_instructions,
             embed=embed,
             index=index,
