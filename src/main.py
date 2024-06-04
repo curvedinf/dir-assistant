@@ -5,13 +5,14 @@ import json
 from llama_cpp import Llama
 
 from colorama import Fore, Style
+from prompt_toolkit import prompt
 
 from index import create_file_index
 from model_runners import LlamaCppRunner, LiteLLMRunner
 
 
 def display_startup_art():
-    print(Style.BRIGHT + Fore.GREEN + """
+    print(f"""{Style.BRIGHT}{Fore.GREEN}
 
   _____ _____ _____                                              
  |  __ \_   _|  __ \                                             
@@ -26,8 +27,8 @@ def display_startup_art():
  /_/    \_\_____/_____/|_____|_____/   |_/_/    \_\_| \_|  |_|   
                                                                  
                                                                  
-""" + Style.RESET_ALL)
-    print(Style.BRIGHT + Fore.BLUE + "Type 'exit' to quit the conversation.\n\n" + Style.RESET_ALL)
+{Style.RESET_ALL}""")
+    print(f"{Style.BRIGHT}{Fore.BLUE}Type 'exit' to quit the conversation.\n\n{Style.RESET_ALL}")
 
 
 if __name__ == '__main__':
@@ -127,10 +128,13 @@ the user refers to files, always assume they want to know about the files they p
     # Display the startup art
     display_startup_art()
 
+
+
     # Begin the conversation
     while True:
         # Get user input
-        user_input = input(Style.BRIGHT + Fore.RED + 'You: \n\n' + Style.RESET_ALL)
-        if user_input.lower() == 'exit':
+        print(f'{Style.BRIGHT}{Fore.RED}You (Press ALT-Enter to submit): \n{Style.RESET_ALL}')
+        user_input = prompt('',multiline=True)
+        if user_input.strip().lower() == 'exit':
             break
         llm.stream_chat(user_input)
