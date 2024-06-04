@@ -55,13 +55,13 @@ class BaseRunner:
 
         # Display the assistant thinking message
         if self.print_cgrag:
-            sys.stdout.write(Style.BRIGHT + Fore.BLUE + '\nCGRAG Guidance: \n\n' + Style.RESET_ALL)
+            sys.stdout.write(f'{Style.BRIGHT}{Fore.BLUE}\nCGRAG Guidance: \n\n{Style.RESET_ALL}')
         else:
-            sys.stdout.write(Style.BRIGHT + Fore.GREEN + '\nAssistant: \n\n' + Style.RESET_ALL)
+            sys.stdout.write(f'{Style.BRIGHT}{Fore.GREEN}\nAssistant: \n\n{Style.RESET_ALL}')
         if self.use_cgrag:
-            sys.stdout.write(Style.BRIGHT + Fore.WHITE + '\r(generating contextual guidance...)' + Style.RESET_ALL)
+            sys.stdout.write(f'{Style.BRIGHT}{Fore.WHITE}\r(generating contextual guidance...){Style.RESET_ALL}')
         else:
-            sys.stdout.write(Style.BRIGHT + Fore.WHITE + '\r(thinking...)' + Style.RESET_ALL)
+            sys.stdout.write(f'{Style.BRIGHT}{Fore.WHITE}\r(thinking...){Style.RESET_ALL}')
         sys.stdout.flush()
 
         relevant_chunks = search_index(self.embed, self.index, user_input, self.chunks)
@@ -216,8 +216,7 @@ class LiteLLMRunner(BaseRunner):
             model=self.lite_llm_model,
             messages=chat_history,
             stream=True,
-            timeout=600,
-            num_ctx=self.context_size,
+            timeout=600
         )
 
     def write_chunks(self, completion_output, output_message, write_to_stdout=True):
