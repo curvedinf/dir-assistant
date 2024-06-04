@@ -4,3 +4,4 @@ faiss-cpu
 litellm
 colorama
 sqlitedict
+llamacpp
