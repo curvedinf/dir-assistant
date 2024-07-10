@@ -1,6 +1,7 @@
 import copy
 import sys
 
+import numpy as np
 from colorama import Style, Fore
 from llama_cpp import Llama
 from litellm import completion
@@ -52,7 +53,6 @@ class BaseRunner:
         return relevant_full_text
 
     def stream_chat(self, user_input):
-
         # Display the assistant thinking message
         if self.print_cgrag:
             sys.stdout.write(f'{Style.BRIGHT}{Fore.BLUE}\nCGRAG Guidance: \n\n{Style.RESET_ALL}')
@@ -136,6 +136,26 @@ information to work with. If the prompt is referencing code, list specific class
         # Add the completion to the chat history
         output_message["tokens"] = count_tokens(self.embed, output_message["content"])
         self.chat_history.append(output_message)
+
+    def update_index_and_chunks(self, file_path, new_chunks, new_embeddings):
+        # Remove old chunks and embeddings for this file
+        self.chunks = [chunk for chunk in self.chunks if chunk['filepath'] != file_path]
+        self.chunks.extend(new_chunks)
+
+        # Find indices of old embeddings
+        old_embedding_indices = [i for i, chunk in enumerate(self.chunks) if chunk['filepath'] == file_path]
+
+        if old_embedding_indices:
+            # Convert list to numpy array
+            old_embedding_indices = np.array(old_embedding_indices, dtype=np.int64)
+
+            # Remove old embeddings from the index
+            self.index.remove_ids(old_embedding_indices)
+
+        # Add new embeddings to the index
+        if new_embeddings:
+            self.index.add(np.array(new_embeddings))
+
 
 class LlamaCppRunner(BaseRunner):
     def __init__(

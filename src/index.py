@@ -113,7 +113,8 @@ def process_file(embed, filepath, contents, embed_chunk_size):
                     # Save the current chunk as it is, and start a new one
                     chunks.append({
                         "tokens": count_tokens(embed, chunk_header + current_chunk),
-                        "text": chunk_header + current_chunk
+                        "text": chunk_header + current_chunk,
+                        "filepath": filepath,
                     })
                     embedding = embed.create_embedding(chunk_header + current_chunk)['data'][0]['embedding']
                     embeddings_list.append(embedding)
@@ -126,7 +127,8 @@ def process_file(embed, filepath, contents, embed_chunk_size):
         chunk_header = f"---------------\n\nUser file '{filepath}' lines {start_line_number}-{len(lines)}:\n\n"
         chunks.append({
             "tokens": count_tokens(embed, chunk_header + current_chunk),
-            "text": chunk_header + current_chunk
+            "text": chunk_header + current_chunk,
+            "filepath": filepath,
         })
         embedding = embed.create_embedding(chunk_header + current_chunk)['data'][0]['embedding']
         embeddings_list.append(embedding)

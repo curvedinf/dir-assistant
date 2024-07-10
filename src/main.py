@@ -1,6 +1,7 @@
 import argparse
 import os
 import json
+import signal
 
 from llama_cpp import Llama
 
@@ -9,7 +10,7 @@ from prompt_toolkit import prompt
 
 from index import create_file_index
 from model_runners import LlamaCppRunner, LiteLLMRunner
-
+from file_watcher import start_file_watcher
 
 def display_startup_art():
     print(f"""{Style.BRIGHT}{Fore.GREEN}
@@ -131,6 +132,16 @@ the user refers to files, always assume they want to know about the files they p
             use_cgrag=use_cgrag,
             print_cgrag=print_cgrag
         )
+
+    # Start file watcher
+    watcher = start_file_watcher(
+        '.',
+        embed,
+        ignore_paths,
+        llama_cpp_embed_chunk_size,
+        index_cache_file,
+        llm.update_index_and_chunks
+    )
 
     # Display the startup art
     display_startup_art()

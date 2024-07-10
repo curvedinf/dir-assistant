@@ -5,3 +5,4 @@ litellm
 colorama
 sqlitedict
 prompt-toolkit
+watchdog

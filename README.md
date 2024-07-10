@@ -14,6 +14,12 @@ Dir-assistant has local platform support for CPU (OpenBLAS), Cuda, ROCm, Metal, 
 Dir-assistant has API support for all major LLM APIs. More info in the 
 [LiteLLM Docs](https://docs.litellm.ai/docs/providers).
 
+## New Features
+
+* File watching: While running, dir-assistant keeps track of changes to files and updates its index, so now you
+no longer need to restart dir-assistant refresh your changed files. Note: If updating dir-assistant from a previous
+version, you must delete your `index-cache.sqlite` file.
+
 ## Setup
 
 Install `pyenv` if you have not already: https://github.com/pyenv/pyenv-installer
@@ -158,8 +164,7 @@ pip install -q google-generativeai
 - ~~File caching (improve startup time)~~
 - ~~CGRAG (Contextually-Guided Retrieval-Augmented Generation)~~
 - ~~Multi-line input~~
+- ~~File watching (automatically reindex changed files)~~
 - Single-step pip install
-- File watching (automatically reindex changed files)
-- Background indexing
 - Web search
 - API Embedding models
