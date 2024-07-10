@@ -184,7 +184,7 @@ class LlamaCppRunner(BaseRunner):
             **llama_cpp_options
         )
         self.context_size = self.llm.context_params.n_ctx
-        print(f"LLM context size: {self.context_size}")
+        print(f"{Fore.LIGHTBLACK_EX}LLM context size: {self.context_size}{Style.RESET_ALL}")
 
     def call_completion(self, chat_history):
         return self.llm.create_chat_completion(
@@ -229,7 +229,7 @@ class LiteLLMRunner(BaseRunner):
         self.lite_llm_model = lite_llm_model
         self.context_size = lite_llm_context_size
         self.pass_through_context_size = lite_llm_pass_through_context_size
-        print(f"LiteLLM context size: {self.context_size}")
+        print(f"{Fore.LIGHTBLACK_EX}LiteLLM context size: {self.context_size}{Style.RESET_ALL}")
         if not lite_llm_model_uses_system_message:
             self.chat_history[0]['role'] = 'user'
 

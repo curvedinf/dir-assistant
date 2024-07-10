@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+from colorama import Fore, Style
 from faiss import IndexFlatL2
 from sqlitedict import SqliteDict
 
@@ -40,7 +41,7 @@ def get_files_with_contents(directory='.', ignore_paths=[], cache_db='file_cache
                     with open(filepath, 'r') as file:
                         contents = file.read()
                 except UnicodeDecodeError:
-                    print(f"Skipping {filepath} because it is not a text file.")
+                    print(f"{Fore.LIGHTBLACK_EX}Skipping {filepath} because it is not a text file.{Style.RESET_ALL}")
                 file_info = {
                     "filepath": os.path.abspath(filepath),
                     "contents": contents,
@@ -52,7 +53,7 @@ def get_files_with_contents(directory='.', ignore_paths=[], cache_db='file_cache
 
 
 def create_file_index(embed, ignore_paths, embed_chunk_size, cache_db):
-    print("Finding files to index...")
+    print(f"{Fore.LIGHTBLACK_EX}Finding files to index...{Style.RESET_ALL}")
     files_with_contents = get_files_with_contents('.', ignore_paths, cache_db)
     chunks = []
     embeddings_list = []
@@ -61,7 +62,7 @@ def create_file_index(embed, ignore_paths, embed_chunk_size, cache_db):
             filepath = file_info['filepath']
             cached_chunks = cache.get(f"{filepath}_chunks")
             if cached_chunks and cached_chunks['mtime'] == file_info['mtime']:
-                print(f"Using cached embeddings for {filepath}")
+                print(f"{Fore.LIGHTBLACK_EX}Using cached embeddings for {filepath}{Style.RESET_ALL}")
                 chunks.extend(cached_chunks['chunks'])
                 embeddings_list.extend(cached_chunks['embeddings'])
                 continue
@@ -76,7 +77,7 @@ def create_file_index(embed, ignore_paths, embed_chunk_size, cache_db):
                 'mtime': file_info['mtime']
             }
 
-    print("Creating index from embeddings...")
+    print(f"{Fore.LIGHTBLACK_EX}Creating index from embeddings...{Style.RESET_ALL}")
     embeddings = np.array(embeddings_list)
     index = IndexFlatL2(embeddings.shape[1])
     index.add(embeddings)
@@ -90,7 +91,7 @@ def process_file(embed, filepath, contents, embed_chunk_size):
     chunks = []
     embeddings_list = []
 
-    print(f'Creating embeddings for {filepath}')
+    print(f'{Fore.LIGHTBLACK_EX}Creating embeddings for {filepath}{Style.RESET_ALL}')
     for line_number, line in enumerate(lines, start=1):
         # Process each line individually if needed
         line_content = line

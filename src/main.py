@@ -49,7 +49,7 @@ if __name__ == '__main__':
     with open(config_path, 'r') as config_file:
         config = json.load(config_file)
 
-    print("Configuration loaded:", config)
+    print(f"{Fore.LIGHTBLACK_EX}Configuration loaded: {config}{Style.RESET_ALL}")
 
     llm_model_file = os.path.join(dir_assistant_root, 'models', config.get('DIR_ASSISTANT_LLM_MODEL', ''))
     embed_model_file = os.path.join(dir_assistant_root, 'models', config.get('DIR_ASSISTANT_EMBED_MODEL', ''))
@@ -79,7 +79,7 @@ if __name__ == '__main__':
     ignore_paths.extend(config['DIR_ASSISTANT_GLOBAL_IGNORES'])
 
     # Initialize the embedding model
-    print("Loading embedding model...")
+    print(f"{Fore.LIGHTBLACK_EX}Loading embedding model...{Style.RESET_ALL}")
     embed = Llama(
         model_path=embed_model_file,
         embedding=True,
@@ -89,7 +89,7 @@ if __name__ == '__main__':
     llama_cpp_embed_chunk_size = embed.context_params.n_ctx
 
     # Create the file index
-    print("Creating file embeddings and index...")
+    print(f"{Fore.LIGHTBLACK_EX}Creating file embeddings and index...{Style.RESET_ALL}")
     index, chunks = create_file_index(embed, ignore_paths, llama_cpp_embed_chunk_size, index_cache_file)
 
     # Set up the system instructions
@@ -99,7 +99,7 @@ the user refers to files, always assume they want to know about the files they p
 
     # Initialize the LLM model
     if active_model_is_local:
-        print("Loading local LLM model...")
+        print(f"{Fore.LIGHTBLACK_EX}Loading local LLM model...{Style.RESET_ALL}")
         if config['DIR_ASSISTANT_LLM_MODEL'] == "":
             print("You must specify an LLM model in config.json. See readme for more information. Exiting...")
             exit(1)
@@ -115,7 +115,7 @@ the user refers to files, always assume they want to know about the files they p
             print_cgrag=print_cgrag
         )
     else:
-        print("Loading remote LLM model...")
+        print(f"{Fore.LIGHTBLACK_EX}Loading remote LLM model...{Style.RESET_ALL}")
         if lite_llm_model == "":
             print("You must specify a LiteLLM model in config.json. See readme for more information. Exiting...")
             exit(1)
