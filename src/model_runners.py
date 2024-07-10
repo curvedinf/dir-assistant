@@ -108,8 +108,8 @@ information to work with. If the prompt is referencing code, list specific class
         user_content = relevant_full_text + user_input
         self.chat_history.append({
             "role": "user",
-            "content": user_content,
-            "tokens": count_tokens(self.embed, user_input)
+            "content": user_content, # content will be replaced with user_input a few lines below
+            "tokens": count_tokens(self.embed, user_input) # we will be using user_input in the final history object
         })
 
         # Remove old messages from the chat history if too large for context
@@ -120,7 +120,7 @@ information to work with. If the prompt is referencing code, list specific class
 
         completion_output = self.call_completion(self.chat_history)
 
-        # Replace the RAG output with the user input
+        # Replace the RAG output with the user input. This reduces the size of the history for future prompts.
         self.chat_history[-1]["content"] = user_input
 
         # Display chat history
