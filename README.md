@@ -17,7 +17,7 @@ Dir-assistant has API support for all major LLM APIs. More info in the
 ## New Features
 
 * File watching: While running, dir-assistant keeps track of changes to files and updates its index, so now you
-no longer need to restart dir-assistant refresh your changed files. Note: If updating dir-assistant from a previous
+no longer need to restart dir-assistant to refresh your changed files. Note: If updating dir-assistant from a previous
 version, you must delete your `index-cache.sqlite` file.
 
 ## Setup
