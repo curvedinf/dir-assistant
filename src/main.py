@@ -83,7 +83,7 @@ if __name__ == '__main__':
     embed = Llama(
         model_path=embed_model_file,
         embedding=True,
-        pooling_type=2,  # CLS
+        # pooling_type=2,  # CLS
         **llama_cpp_embed_options
     )
     llama_cpp_embed_chunk_size = embed.context_params.n_ctx

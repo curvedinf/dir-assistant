@@ -8,9 +8,10 @@ dir_assistant_active_model_is_local = input(
 
 if dir_assistant_active_model_is_local:
     dir_assistant_llm_model = input("Enter the gguf filepath for your LLM model relative to dir-assistant/models: ")
-    dir_assistant_litellm_model = "gemini/gemini-1.0-pro-latest"
-    dir_assistant_litellm_context_size = 32000
+    dir_assistant_litellm_model = "gemini/gemini-1.5-flash-latest"
+    dir_assistant_litellm_context_size = 500000
     dir_assistant_litellm_model_uses_system_message = False
+    dir_assistant_litellm_pass_through_context_size = False
     local_llm_on_gpu = input("Would you like your LLM model to run on your GPU? (y/n): ").lower() == "y"
 else:
     dir_assistant_llm_model = ""
@@ -41,7 +42,7 @@ if local_llm_on_gpu:
     dir_assistant_llama_cpp_options["n_gpu_layers"] = -1
 dir_assistant_llama_cpp_embed_options = {
     "n_ctx": 8192,
-    "n_batch": 8192,
+    "n_batch": 512,
     "verbose": False,
     "rope_scaling_type": 2,
     "rope_freq_scale": 0.75

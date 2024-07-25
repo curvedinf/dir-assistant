@@ -9,7 +9,7 @@ Chat with your current directory's files using a local or API LLM.
 This project runs local LLMs via the fantastic [llama-cpp-python](https://github.com/abetlen/llama-cpp-python) package
 and runs API LLMS using the also fantastic [LiteLLM](https://github.com/BerriAI/litellm) package.
 
-Dir-assistant has local platform support for CPU (OpenBLAS), Cuda, ROCm, Metal, OpenCL, Vulkan, Kompute, and SYCL.
+Dir-assistant has local platform support for CPU (OpenBLAS), Cuda, ROCm, Metal, Vulkan, and SYCL.
 
 Dir-assistant has API support for all major LLM APIs. More info in the 
 [LiteLLM Docs](https://docs.litellm.ai/docs/providers).
@@ -29,18 +29,15 @@ Clone this repo then run:
 ./setup.sh
 ```
 
+### Setup Notes 
+
+* Check the log after setup.py runs for any errors. You may need to install 
+dependencies unique to your system's C/C++ environment.
+
 ### For Local LLMs
 
-The llama-cpp-python's wheel compile was quite buggy for me on both AMD and Nvidia systems I tested.
-You may need to manually change the llama-cpp-python wheel compile options to make it build successfully. 
-To do this, activate the virtualenv (`pyenv activate dir-assistant`) and then run `pip install llama-cpp-python==0.2.56`
-with the options. Reference their install instructions for more info: https://github.com/abetlen/llama-cpp-python
-
-Here is my working formula for a 7900XT on ROCM 6.0.2:
-```
-pyenv activate dir-assistant
-CC=/opt/rocm/llvm/bin/clang CXX=/opt/rocm/llvm/bin/clang++ CMAKE_ARGS="-DLLAMA_HIPBLAS=on -DCMAKE_BUILD_TYPE=Release -DLLAMA_HIPBLAS=ON -DLLAMA_CUDA_DMMV_X=64 -DLLAMA_CUDA_MMV_Y=4 -DCMAKE_PREFIX_PATH=/opt/rocm -DAMDGPU_TARGETS=gfx1100" pip install --no-cache-dir --force-reinstall llama-cpp-python==0.2.56
-```
+If you have any issues building llama-cpp-python, reference the project's install 
+instructions for more info: https://github.com/abetlen/llama-cpp-python
 
 ## Model Download
 
