@@ -1,7 +1,5 @@
-import argparse
 import os
 import json
-import signal
 
 from llama_cpp import Llama
 
@@ -11,6 +9,7 @@ from prompt_toolkit import prompt
 from index import create_file_index
 from model_runners import LlamaCppRunner, LiteLLMRunner
 from file_watcher import start_file_watcher
+
 
 def display_startup_art():
     print(f"""{Style.BRIGHT}{Fore.GREEN}
@@ -26,19 +25,13 @@ def display_startup_art():
    / /\ \  \___ \\\___ \  | |  \___ \   | | / /\ \ | . ` |  | |   
   / ____ \ ____) |___) |_| |_ ____) |  | |/ ____ \| |\  |  | |   
  /_/    \_\_____/_____/|_____|_____/   |_/_/    \_\_| \_|  |_|   
-                                                                 
-                                                                 
+
+
 {Style.RESET_ALL}""")
     print(f"{Style.BRIGHT}{Fore.BLUE}Type 'exit' to quit the conversation.\n\n{Style.RESET_ALL}")
 
 
-if __name__ == '__main__':
-    # Setup argparse for command line arguments
-    parser = argparse.ArgumentParser(description='Process some integers.')
-    parser.add_argument('--ignore', metavar='N', type=str, nargs='+',
-                        help='A list of file paths to ignore')
-    args = parser.parse_args()
-
+def start(args):
     # Get the directory from the environment variable
     dir_assistant_root = os.environ['DIR_ASSISTANT_ROOT']
 
@@ -75,7 +68,7 @@ if __name__ == '__main__':
         print("You must specify an local LLM model in config.json. See readme for more information. Exiting...")
         exit(1)
 
-    ignore_paths = args.ignore if args.ignore else []
+    ignore_paths = args.i__ignore if args.i__ignore else []
     ignore_paths.extend(config['DIR_ASSISTANT_GLOBAL_IGNORES'])
 
     # Initialize the embedding model
@@ -90,12 +83,12 @@ if __name__ == '__main__':
 
     # Create the file index
     print(f"{Fore.LIGHTBLACK_EX}Creating file embeddings and index...{Style.RESET_ALL}")
-    index, chunks = create_file_index(embed, ignore_paths, llama_cpp_embed_chunk_size, index_cache_file)
+    index, chunks = create_file_index(embed, ignore_paths, llama_cpp_embed_chunk_size)
 
     # Set up the system instructions
     system_instructions = f"{llama_cpp_instructions}\n\nThe user will ask questions relating \
-to files they will provide. Do your best to answer questions related to the these files. When \
-the user refers to files, always assume they want to know about the files they provided."
+    to files they will provide. Do your best to answer questions related to the these files. When \
+    the user refers to files, always assume they want to know about the files they provided."
 
     # Initialize the LLM model
     if active_model_is_local:
@@ -146,13 +139,11 @@ the user refers to files, always assume they want to know about the files they p
     # Display the startup art
     display_startup_art()
 
-
-
     # Begin the conversation
     while True:
         # Get user input
         print(f'{Style.BRIGHT}{Fore.RED}You (Press ALT-Enter to submit): \n{Style.RESET_ALL}')
-        user_input = prompt('',multiline=True)
+        user_input = prompt('', multiline=True)
         if user_input.strip().lower() == 'exit':
             break
         llm.stream_chat(user_input)

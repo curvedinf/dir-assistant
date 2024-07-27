@@ -5,6 +5,14 @@ from colorama import Fore, Style
 from faiss import IndexFlatL2
 from sqlitedict import SqliteDict
 
+INDEX_CACHE_FILENAME = 'index_cache.sqlite'
+INDEX_CACHE_PATH = '~/.cache/dir-assistant'
+
+def get_file_path(path, filename):
+    expanded_path = os.path.expanduser(path)
+    os.makedirs(expanded_path, exist_ok=True)
+    return os.path.join(expanded_path, filename)
+
 
 def count_tokens(embed, text):
     return len(embed.tokenize(bytes(text, 'utf-8')))
@@ -27,7 +35,7 @@ def get_text_files(directory='.', ignore_paths=[]):
     return text_files
 
 
-def get_files_with_contents(directory='.', ignore_paths=[], cache_db='file_cache.sqlite'):
+def get_files_with_contents(directory, ignore_paths, cache_db):
     text_files = get_text_files(directory, ignore_paths)
     files_with_contents = []
     with SqliteDict(cache_db, autocommit=True) as cache:
@@ -52,7 +60,9 @@ def get_files_with_contents(directory='.', ignore_paths=[], cache_db='file_cache
     return files_with_contents
 
 
-def create_file_index(embed, ignore_paths, embed_chunk_size, cache_db):
+def create_file_index(embed, ignore_paths, embed_chunk_size):
+    cache_db = get_file_path()
+
     print(f"{Fore.LIGHTBLACK_EX}Finding files to index...{Style.RESET_ALL}")
     files_with_contents = get_files_with_contents('.', ignore_paths, cache_db)
     chunks = []
