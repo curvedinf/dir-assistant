@@ -31,32 +31,23 @@ def display_startup_art():
     print(f"{Style.BRIGHT}{Fore.BLUE}Type 'exit' to quit the conversation.\n\n{Style.RESET_ALL}")
 
 
-def start(args):
+def start(args, config_dict):
     # Get the directory from the environment variable
     dir_assistant_root = os.environ['DIR_ASSISTANT_ROOT']
 
-    # Path to the config.json file
-    config_path = os.path.join(dir_assistant_root, 'config.json')
-
-    # Open and read the config.json file
-    with open(config_path, 'r') as config_file:
-        config = json.load(config_file)
-
-    print(f"{Fore.LIGHTBLACK_EX}Configuration loaded: {config}{Style.RESET_ALL}")
-
-    llm_model_file = os.path.join(dir_assistant_root, 'models', config.get('DIR_ASSISTANT_LLM_MODEL', ''))
-    embed_model_file = os.path.join(dir_assistant_root, 'models', config.get('DIR_ASSISTANT_EMBED_MODEL', ''))
-    context_file_ratio = config.get('DIR_ASSISTANT_CONTEXT_FILE_RATIO', 0.5)
-    llama_cpp_instructions = config.get('DIR_ASSISTANT_LLAMA_CPP_INSTRUCTIONS', 'You are a helpful AI assistant.')
-    llama_cpp_options = config.get('DIR_ASSISTANT_LLAMA_CPP_OPTIONS', {})
-    llama_cpp_embed_options = config.get('DIR_ASSISTANT_LLAMA_CPP_EMBED_OPTIONS', {})
-    active_model_is_local = config.get('DIR_ASSISTANT_ACTIVE_MODEL_IS_LOCAL', False)
-    lite_llm_model = config.get('DIR_ASSISTANT_LITELLM_MODEL', 'gemini/gemini-1.5-flash-latest')
-    lite_llm_context_size = config.get('DIR_ASSISTANT_LITELLM_CONTEXT_SIZE', 500000)
-    lite_llm_model_uses_system_message = config.get('DIR_ASSISTANT_LITELLM_MODEL_USES_SYSTEM_MESSAGE', False)
-    lite_llm_pass_through_context_size = config.get('DIR_ASSISTANT_LITELLM_PASS_THROUGH_CONTEXT_SIZE', False)
-    use_cgrag = config.get('DIR_ASSISTANT_USE_CGRAG', True)
-    print_cgrag = config.get('DIR_ASSISTANT_PRINT_CGRAG', False)
+    llm_model_file = os.path.join(dir_assistant_root, 'models', config_dict['LLM_MODEL'])
+    embed_model_file = os.path.join(dir_assistant_root, 'models', config_dict['EMBED_MODEL'])
+    context_file_ratio = config_dict['CONTEXT_FILE_RATIO']
+    llama_cpp_instructions = config_dict['LLAMA_CPP_INSTRUCTIONS']
+    llama_cpp_options = config_dict['LLAMA_CPP_OPTIONS']
+    llama_cpp_embed_options = config_dict['LLAMA_CPP_EMBED_OPTIONS']
+    active_model_is_local = config_dict['ACTIVE_MODEL_IS_LOCAL']
+    lite_llm_model = config_dict['LITELLM_MODEL']
+    lite_llm_context_size = config_dict['LITELLM_CONTEXT_SIZE']
+    lite_llm_model_uses_system_message = config_dict['LITELLM_MODEL_USES_SYSTEM_MESSAGE']
+    lite_llm_pass_through_context_size = config_dict['LITELLM_PASS_THROUGH_CONTEXT_SIZE']
+    use_cgrag = config_dict['USE_CGRAG']
+    print_cgrag = config_dict['PRINT_CGRAG']
 
     index_cache_file = os.path.join(dir_assistant_root, 'index-cache.sqlite')
 
@@ -69,7 +60,7 @@ def start(args):
         exit(1)
 
     ignore_paths = args.i__ignore if args.i__ignore else []
-    ignore_paths.extend(config['DIR_ASSISTANT_GLOBAL_IGNORES'])
+    ignore_paths.extend(config_dict['GLOBAL_IGNORES'])
 
     # Initialize the embedding model
     print(f"{Fore.LIGHTBLACK_EX}Loading embedding model...{Style.RESET_ALL}")
@@ -93,7 +84,7 @@ def start(args):
     # Initialize the LLM model
     if active_model_is_local:
         print(f"{Fore.LIGHTBLACK_EX}Loading local LLM model...{Style.RESET_ALL}")
-        if config['DIR_ASSISTANT_LLM_MODEL'] == "":
+        if config_dict['LLM_MODEL'] == "":
             print("You must specify an LLM model in config.json. See readme for more information. Exiting...")
             exit(1)
         llm = LlamaCppRunner(

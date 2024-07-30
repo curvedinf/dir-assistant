@@ -1,9 +1,7 @@
 import argparse
-import os
 
-from config import check_config_file
 from platform_setup import platform
-from config import config
+from config import config, load_config
 from start import start
 
 
@@ -21,6 +19,7 @@ if __name__ == '__main__':
 
     subparsers = parser.add_subparsers(dest='mode', help='Subcommand help')
 
+    # Start
     main_parser = subparsers.add_parser(
         'start',
         help='Run dir-assistant in regular mode (Default if no subcommand is specified.)'
@@ -33,6 +32,7 @@ if __name__ == '__main__':
         help='A list of space-separated filepaths to ignore.'
     )
 
+    # Platform
     setup_parser = subparsers.add_parser(
         'platform',
         help='Setup dir-assistant for a given hardware platform.',
@@ -55,23 +55,21 @@ sycl      - Intel
 vulkan    - Vulkan'''
     )
 
-    config_parser = subparsers.add_parser('config', help='Configure dir-assistant settings.')
-    config_parser.add_argument('option', help='Some option to configure.')
+    config_parser = subparsers.add_parser('config', help='Print current configuration.')
 
     args = parser.parse_args()
 
-    # Always create the config file if it doesn't exist
-    check_config_file()
+    config_dict = load_config()
 
     # Run the user's selected mode
     if args.mode == 'start' or args.mode is None:
-        start(args)
+        start(args, config_dict['DIR_ASSISTANT'])
 
     elif args.mode == 'platform':
-        platform(args)
+        platform(args, config_dict['DIR_ASSISTANT'])
 
     elif args.mode == 'config':
-        config(args)
+        config(args, config_dict)
 
     else:
         parser.print_help()
