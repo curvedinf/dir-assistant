@@ -5,7 +5,7 @@ from colorama import Fore, Style
 from faiss import IndexFlatL2
 from sqlitedict import SqliteDict
 
-from config import get_file_path
+from dir_assistant.config import get_file_path
 
 INDEX_CACHE_FILENAME = 'index_cache.sqlite'
 INDEX_CACHE_PATH = '~/.cache/dir-assistant'

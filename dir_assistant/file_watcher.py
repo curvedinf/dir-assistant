@@ -1,12 +1,10 @@
-import threading
-import time
 from logging import info
 from traceback import print_exc
 
 from colorama import Fore, Style
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler, FileSystemEvent
-from index import process_file, get_text_files
+from dir_assistant.index import process_file, get_text_files
 
 
 class FileChangeHandler(FileSystemEventHandler):

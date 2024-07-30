@@ -1,8 +1,0 @@
-# llama-cpp-python has a regression for embeddings in newer versions
-llama-cpp-python
-faiss-cpu
-litellm
-colorama
-sqlitedict
-prompt-toolkit
-watchdog

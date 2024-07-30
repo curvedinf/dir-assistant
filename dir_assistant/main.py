@@ -1,12 +1,11 @@
 import argparse
 
-from platform_setup import platform
-from config import config, load_config
-from start import start
+from dir_assistant.platform_setup import platform
+from dir_assistant.config import config, load_config
+from dir_assistant.start import start
 
-
-if __name__ == '__main__':
-    # Handle command line arguments
+def main():
+	# Handle command line arguments
     parser = argparse.ArgumentParser(description="Chat with your current directory's files using a local or API LLM.")
 
     parser.add_argument(
@@ -73,3 +72,7 @@ vulkan    - Vulkan'''
 
     else:
         parser.print_help()
+
+
+if __name__ == '__main__':
+    main()
