@@ -4,8 +4,6 @@ import os
 import toml
 from dynaconf import Dynaconf
 
-from index import get_file_path
-
 CONFIG_FILENAME = 'config.toml'
 CONFIG_PATH = os.path.expanduser('~/.config/dir-assistant')
 CONFIG_DEFAULTS = {
@@ -42,16 +40,16 @@ CONFIG_DEFAULTS = {
 }
 
 
-def save_config(config_object):
+def save_config(config_dict):
     with open(get_file_path(CONFIG_PATH, CONFIG_FILENAME), 'w') as config_file:
-        toml.dump(config_object.as_dict(), config_file)
+        toml.dump(config_dict, config_file)
 
 
 def load_config():
     config_object = Dynaconf(settings_files=[get_file_path(CONFIG_PATH, CONFIG_FILENAME)])
     if not config_object.as_dict().keys():
         config_object.DIR_ASSISTANT = CONFIG_DEFAULTS
-        save_config(config_object)
+        save_config(config_object.as_dict())
     return config_object.as_dict()
 
 
@@ -60,3 +58,9 @@ def config(args, config_dict):
     config_file_path = get_file_path(CONFIG_PATH, CONFIG_FILENAME)
     print(f"Configuration file: {config_file_path}\n")
     print(toml.dumps(config_dict))
+
+
+def get_file_path(path, filename):
+    expanded_path = os.path.expanduser(path)
+    os.makedirs(expanded_path, exist_ok=True)
+    return os.path.join(expanded_path, filename)

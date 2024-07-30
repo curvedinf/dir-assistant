@@ -15,6 +15,7 @@ setup(
         "google-generativeai",
         "openai",
         "boto3",
+        "dynaconf",
     ],
     entry_points={
         "console_scripts": [

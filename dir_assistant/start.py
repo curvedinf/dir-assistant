@@ -9,6 +9,10 @@ from prompt_toolkit import prompt
 from index import create_file_index
 from model_runners import LlamaCppRunner, LiteLLMRunner
 from file_watcher import start_file_watcher
+from config import get_file_path
+
+
+MODELS_PATH = os.path.expanduser('~/.local/share/dir-assistant/models')
 
 
 def display_startup_art():
@@ -32,11 +36,9 @@ def display_startup_art():
 
 
 def start(args, config_dict):
-    # Get the directory from the environment variable
-    dir_assistant_root = os.environ['DIR_ASSISTANT_ROOT']
-
-    llm_model_file = os.path.join(dir_assistant_root, 'models', config_dict['LLM_MODEL'])
-    embed_model_file = os.path.join(dir_assistant_root, 'models', config_dict['EMBED_MODEL'])
+    # Load settings
+    llm_model_file = get_file_path(MODELS_PATH, config_dict['LLM_MODEL'])
+    embed_model_file = get_file_path(MODELS_PATH, config_dict['EMBED_MODEL'])
     context_file_ratio = config_dict['CONTEXT_FILE_RATIO']
     llama_cpp_instructions = config_dict['LLAMA_CPP_INSTRUCTIONS']
     llama_cpp_options = config_dict['LLAMA_CPP_OPTIONS']
@@ -48,8 +50,6 @@ def start(args, config_dict):
     lite_llm_pass_through_context_size = config_dict['LITELLM_PASS_THROUGH_CONTEXT_SIZE']
     use_cgrag = config_dict['USE_CGRAG']
     print_cgrag = config_dict['PRINT_CGRAG']
-
-    index_cache_file = os.path.join(dir_assistant_root, 'index-cache.sqlite')
 
     if embed_model_file == '':
         print("You must specify an embedding model in config.json. See readme for more information. Exiting...")
@@ -123,7 +123,6 @@ def start(args, config_dict):
         embed,
         ignore_paths,
         llama_cpp_embed_chunk_size,
-        index_cache_file,
         llm.update_index_and_chunks
     )
 

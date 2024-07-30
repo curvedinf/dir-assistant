@@ -5,13 +5,10 @@ from colorama import Fore, Style
 from faiss import IndexFlatL2
 from sqlitedict import SqliteDict
 
+from config import get_file_path
+
 INDEX_CACHE_FILENAME = 'index_cache.sqlite'
 INDEX_CACHE_PATH = '~/.cache/dir-assistant'
-
-def get_file_path(path, filename):
-    expanded_path = os.path.expanduser(path)
-    os.makedirs(expanded_path, exist_ok=True)
-    return os.path.join(expanded_path, filename)
 
 
 def count_tokens(embed, text):

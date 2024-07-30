@@ -10,11 +10,10 @@ from index import process_file, get_text_files
 
 
 class FileChangeHandler(FileSystemEventHandler):
-    def __init__(self, embed, ignore_paths, embed_chunk_size, index_cache_file, llm_updated_index_callback):
+    def __init__(self, embed, ignore_paths, embed_chunk_size, llm_updated_index_callback):
         self.embed = embed
         self.ignore_paths = ignore_paths
         self.embed_chunk_size = embed_chunk_size
-        self.index_cache_file = index_cache_file
         self.llm_updated_index_callback = llm_updated_index_callback
 
     def reindex_file(self, file_path):
@@ -39,12 +38,11 @@ class FileChangeHandler(FileSystemEventHandler):
         self.reindex_file(event.dest_path)
 
 
-def start_file_watcher(directory, embed, ignore_paths, embed_chunk_size, index_cache_file, llm_updated_index_callback):
+def start_file_watcher(directory, embed, ignore_paths, embed_chunk_size, llm_updated_index_callback):
     event_handler = FileChangeHandler(
         embed,
         ignore_paths,
         embed_chunk_size,
-        index_cache_file,
         llm_updated_index_callback
     )
     observer = Observer()
