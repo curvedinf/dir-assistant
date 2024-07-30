@@ -6,17 +6,17 @@ from dir_assistant.config import save_config
 def platform(args, config_dict):
     is_cpu = False
     cmake_args = ''
-    if args.selection == 'cpu':
+    if args.selection.lower() == 'cpu':
         is_cpu = True
-    elif args.selection == 'cuda':
+    elif args.selection.lower() == 'cuda':
         cmake_args = '-DGGML_CUDA=on'
-    elif args.selection == 'rocm':
+    elif args.selection.lower() == 'rocm':
         cmake_args = '-DGGML_HIPBLAS=ON'
-    elif args.selection == 'metal':
+    elif args.selection.lower() == 'metal':
         cmake_args = '-DGGML_METAL=on'
-    elif args.selection == 'vulkan':
+    elif args.selection.lower() == 'vulkan':
         cmake_args = '-DGGML_VULKAN=on'
-    elif args.selection == 'sycl':
+    elif args.selection.lower() == 'sycl':
         cmake_args = '-DGGML_SYCL=on -DCMAKE_C_COMPILER=icx -DCMAKE_CXX_COMPILER=icpx'
     else:
         raise ValueError("Invalid platform selection.")

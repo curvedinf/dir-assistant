@@ -16,25 +16,31 @@ Dir-assistant has API support for all major LLM APIs. More info in the
 
 ## New Features
 
+* Now installable via pip
+* CLI functionality for `-h`, installing correct hardware support, viewing config files, and downloading default models
 * File watching: While running, dir-assistant keeps track of changes to files and updates its index, so now you
 no longer need to restart dir-assistant to refresh your changed files. Note: If updating dir-assistant from a previous
 version, you must delete your `index-cache.sqlite` file.
 
-## Setup
+## Install
 
-Install `pyenv` if you have not already: https://github.com/pyenv/pyenv-installer
-
-Clone this repo then run:
 ```
-./setup.sh
+pip install dir-assistant
 ```
 
-### Setup Notes 
+## Select Platform
 
-* Check the log after setup.py runs for any errors. You may need to install 
-dependencies unique to your system's C/C++ environment.
+By default `dir-assistant` is installed with CPU-only compute support. It will work properly without this step,
+but if you would like to hardware accelerate `dir-assistant`, use the command below to compile 
+`llama-cpp-python` with your hardware's support.
 
-### For Local LLMs
+```
+dir-assistant platform cuda
+```
+
+Available options: `cpu`, `cuda`, `rocm`, `metal`, `vulkan`, `sycl`
+
+### For Platform Install Issues
 
 If you have any issues building llama-cpp-python, reference the project's install 
 instructions for more info: https://github.com/abetlen/llama-cpp-python
