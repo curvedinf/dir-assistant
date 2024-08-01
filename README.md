@@ -52,7 +52,16 @@ dir-assistant models
 Note: The embedding model will be hardware accelerated after using the `platform` subcommand. To change whether it is
 hardware accelerated, change `n_gpu_layers = -1` to `n_gpu_layers = 0` in the config.
 
-## Select A Hardware Platform
+## Run
+
+```
+dir-assistant
+```
+
+Running `dir-assistant` will scan all files recursively from in your current directory. Files will be included
+automatically when you enter a prompt for the LLM.
+
+## Optional: Select A Hardware Platform
 
 By default `dir-assistant` is installed with CPU-only compute support. It will work properly without this step,
 but if you would like to hardware accelerate `dir-assistant`, use the command below to compile 
@@ -73,8 +82,9 @@ info: https://github.com/abetlen/llama-cpp-python
 
 ## API Configuration
 
-To configure which LLM API dir-assistant uses, you must edit `LITELLM_MODEL` and the appropriate API key in 
-your configuration. To open your configuration file, enter:
+If you do not wish to use a local LLM model, you will need to configure an API LLM. To configure which LLM API 
+dir-assistant uses, you must edit `LITELLM_MODEL` and the appropriate API key in your configuration. To open 
+your configuration file, enter:
 
 `dir-assistant config open`
 
@@ -94,7 +104,8 @@ LiteLLM supports all major LLM APIs, including APIs hosted locally. View the ava
 
 ## Local LLM Model Download
 
-You can download a low requirements default local LLM model (Phi 3 128k) with:
+If you do not want to use an API for your main LLM, you can download a low requirements default local LLM model 
+(Phi 3 128k) with:
 
 ```
 dir-assistant models download-llm
