@@ -1,6 +1,6 @@
 import argparse
 
-from dir_assistant.models import models_cd, models_open, models_download_embed, models_download_llm
+from dir_assistant.models import models_open, models_download_embed, models_download_llm, models_print
 from dir_assistant.platform_setup import platform
 from dir_assistant.config import config, load_config, config_open
 from dir_assistant.start import start
@@ -66,20 +66,16 @@ vulkan    - Vulkan'''
     config_print_parser = config_subparsers.add_parser('print', help='Print the current configuration')
     config_open_parser = config_subparsers.add_parser('open', help='Open the configuration file in an editor.')
 
-    args = parser.parse_args()
-
-    config_dict = load_config()
-
     # Models
     models_parser = mode_subparsers.add_parser(
         'models',
         help='Download or configure models for dir-assistant.',
     )
-    models_subparsers = models_parser.add_subparsers(dest='model_mode', help='Operation mode for the model subcommand.')
+    models_subparsers = models_parser.add_subparsers(dest='models_mode', help='Operation mode for the model subcommand.')
 
     models_default_parser = models_subparsers.add_parser('', help='Open the models directory in a file browser.')
     models_open_parser = models_subparsers.add_parser('open', help='Open the models directory in a file browser.')
-    models_cd_parser = models_subparsers.add_parser('cd', help='Change directory to the models directory.')
+    models_print_parser = models_subparsers.add_parser('print', help='Print the models directory.')
     models_download_embed_parser = models_subparsers.add_parser(
         'download-embed',
         help='Download a local embedding model. (nomic-embed-text-v1.5.Q5_K_M.gguf)'
@@ -89,8 +85,10 @@ vulkan    - Vulkan'''
         help='Download a local LLM model. (Phi-3.1-mini-128k-instruct-Q5_K_L.gguf)'
     )
 
-    # https://huggingface.co/nomic-ai/nomic-embed-text-v1.5-GGUF/resolve/main/nomic-embed-text-v1.5.Q5_K_M.gguf?download=true
-    # https://huggingface.co/bartowski/Phi-3.1-mini-128k-instruct-GGUF/resolve/main/Phi-3.1-mini-128k-instruct-Q5_K_L.gguf?download=true
+
+    # Parse the arguments
+    args = parser.parse_args()
+    config_dict = load_config()
 
     # Run the user's selected mode
     if args.mode == 'start' or args.mode is None:
@@ -105,10 +103,10 @@ vulkan    - Vulkan'''
         else:
             config_parser.print_help()
     elif args.mode == 'models':
-        if args.models_mode == 'cd' or args.models_mode is None:
-            models_cd(args, config_dict)
-        elif args.models_mode == 'open':
+        if args.models_mode == 'open' or args.models_mode is None:
             models_open(args, config_dict)
+        elif args.models_mode == 'print':
+            models_print(args, config_dict)
         elif args.models_mode == 'download-embed':
             models_download_embed(args, config_dict)
         elif args.models_mode == 'download-llm':
