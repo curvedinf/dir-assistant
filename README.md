@@ -133,6 +133,8 @@ To open the config file:
 
 `dir-assistant config open`
 
+### Llama.cpp Options
+
 Llama.cpp provides a large number of options to customize how your local model is run. Most of these options are
 exposed via `llama-cpp-python`. You can configure them with the `[DIR_ASSISTANT.LLAMA_CPP_OPTIONS]`, 
 `[DIR_ASSISTANT.LLAMA_CPP_EMBED_OPTIONS]`, and `[DIR_ASSISTANT.LLAMA_CPP_COMPLETION_OPTIONS]` sections in the 
