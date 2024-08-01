@@ -36,8 +36,8 @@ def display_startup_art():
 
 def start(args, config_dict):
     # Load settings
-    llm_model_file = get_file_path(MODELS_PATH, config_dict['LLM_MODEL'])
-    embed_model_file = get_file_path(MODELS_PATH, config_dict['EMBED_MODEL'])
+    llm_model_file = get_file_path(config_dict['MODELS_PATH'], config_dict['LLM_MODEL'])
+    embed_model_file = get_file_path(config_dict['MODELS_PATH'], config_dict['EMBED_MODEL'])
     context_file_ratio = config_dict['CONTEXT_FILE_RATIO']
     system_instructions = config_dict['SYSTEM_INSTRUCTIONS']
     llama_cpp_options = config_dict['LLAMA_CPP_OPTIONS']

@@ -98,7 +98,7 @@ vulkan    - Vulkan'''
     elif args.mode == 'config':
         if args.config_mode == 'print' or args.config_mode is None:
             config(args, config_dict)
-        if args.config_mode == 'open':
+        elif args.config_mode == 'open':
             config_open(args, config_dict)
         else:
             config_parser.print_help()

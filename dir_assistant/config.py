@@ -21,10 +21,11 @@ CONFIG_DEFAULTS = {
     'ACTIVE_MODEL_IS_LOCAL': False,
     'USE_CGRAG': True,
     'PRINT_CGRAG': False,
+    'MODELS_PATH': '~/.local/share/dir-assistant/models/',
     'EMBED_MODEL': '',
     'LLM_MODEL': '',
     'LLAMA_CPP_OPTIONS': {
-        'n_ctx': 0,
+        'n_ctx': 8192,
         'verbose': False,
     },
     'LLAMA_CPP_EMBED_OPTIONS': {
