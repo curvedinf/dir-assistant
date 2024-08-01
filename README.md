@@ -66,9 +66,9 @@ Available options: `cpu`, `cuda`, `rocm`, `metal`, `vulkan`, `sycl`
 
 ### For Platform Install Issues
 
-System dependencies may be required for the `platform` step and are outside the scope of these instructions.
+System dependencies may be required for the `platform` command and are outside the scope of these instructions.
 
-If you have any issues building llama-cpp-python, the project's install instructions may offer more 
+If you have any issues building `llama-cpp-python`, the project's install instructions may offer more 
 info: https://github.com/abetlen/llama-cpp-python
 
 ## API Configuration
