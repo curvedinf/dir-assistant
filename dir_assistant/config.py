@@ -77,7 +77,6 @@ def load_config():
     # Check for missing config options (maybe after a version upgrade)
     for key, value in CONFIG_DEFAULTS.items():
         if key not in config_dict['DIR_ASSISTANT'].keys():
-            print(f"inserting default {key} = {value}")
             config_dict['DIR_ASSISTANT'][key] = value
     save_config(config_dict)
     # Set OpenAI API key
