@@ -156,3 +156,11 @@ def search_index(embed, index, query, all_chunks):
     distances, indices = index.search(np.array([query_embedding]), 100)
     relevant_chunks = [all_chunks[i] for i in indices[0] if i != -1]
     return relevant_chunks
+
+def clear(args, config_dict):
+    cache_db = get_file_path(INDEX_CACHE_PATH, INDEX_CACHE_FILENAME)
+    if os.path.exists(cache_db):
+        os.remove(cache_db)
+        print(f"Deleted {cache_db}")
+    else:
+        print(f"{cache_db} does not exist.")

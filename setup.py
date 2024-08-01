@@ -1,8 +1,23 @@
+from pathlib import Path
+
 from setuptools import setup, find_packages
+
+# The directory containing this file
+HERE = Path(__file__).parent
+
+# The text of the README file
+README = (HERE / "README.md").read_text()
 
 setup(
     name="dir-assistant",
-    version="0.0.5",
+    version="0.0.6",
+    description="Chat with your current directory's files using a local or API LLM.",
+    long_description=README,
+    long_description_content_type='text/markdown',
+    url='https://github.com/curvedinf/dir-assistant',
+    author='Chase Adams',
+    author_email='chase.adams@gmail.com',
+    license='MIT',
     packages=find_packages(),
     install_requires=[
         "llama-cpp-python",

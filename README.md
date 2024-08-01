@@ -2,7 +2,7 @@
 
 Chat with your current directory's files using a local or API LLM.
 
-![Demo of dir-assistant being run](demo.gif)
+![(Demo GIF of dir-assistant being run)](demo.gif)
 
 *Now with [CGRAG (Contextually Guided Retrieval-Augmented Generation)](https://medium.com/@djangoist/how-to-create-accurate-llm-responses-on-large-code-repositories-presenting-cgrag-a-new-feature-of-e77c0ffe432d).*
 
@@ -17,18 +17,41 @@ Dir-assistant has API support for all major LLM APIs. More info in the
 ## New Features
 
 * Now installable via pip
-* CLI functionality for `-h`, installing correct hardware support, viewing config files, and downloading default models
-* File watching: While running, dir-assistant keeps track of changes to files and updates its index, so now you
-no longer need to restart dir-assistant to refresh your changed files. Note: If updating dir-assistant from a previous
-version, you must delete your `index-cache.sqlite` file.
+* Thorough CLI functionality including platform installation, model downloading, and config editing. 
+User `dir-assistant -h` for more info.
+* User files have been moved to appropriate linux hidden home directories.
+* Config now has llama.cpp completion options exposed (top_k, frequency_penalty, etc.)
 
 ## Install
+
+Install with pip:
 
 ```
 pip install dir-assistant
 ```
 
-## Select Platform
+The default configuration for `dir-assistant` is API-mode. If you download an LLM model with `download-llm` below, 
+local-mode will automatically be set. To change from API-mode to local-mode, set the `ACTIVE_MODEL_IS_LOCAL` setting.
+
+## Embedding Model Download
+
+You must download an embedding model regardless of whether you are running in local or API mode. You can
+download a good default embedding model with:
+
+```
+dir-assistant models download-embed
+```
+
+If you would like to use another embedding model, open the models directory with:
+
+```
+dir-assistant models
+```
+
+Note: The embedding model will be hardware accelerated after using the `platform` subcommand. To change whether it is
+hardware accelerated, change `n_gpu_layers = -1` to `n_gpu_layers = 0` in the config.
+
+## Select A Hardware Platform
 
 By default `dir-assistant` is installed with CPU-only compute support. It will work properly without this step,
 but if you would like to hardware accelerate `dir-assistant`, use the command below to compile 
@@ -45,114 +68,77 @@ Available options: `cpu`, `cuda`, `rocm`, `metal`, `vulkan`, `sycl`
 If you have any issues building llama-cpp-python, reference the project's install 
 instructions for more info: https://github.com/abetlen/llama-cpp-python
 
-## Model Download
+## API Configuration
 
-Download your favorite LLM gguf and place it in the models directory.
+To configure which LLM API dir-assistant uses, you must edit `LITELLM_MODEL` and the appropriate API key in 
+your configuration. To open your configuration file, enter:
 
-You will also need to download an embedding model gguf and place it in the same directory. The embedding model is 
-necessary for the RAG system to identify which files to send to the LLM with your prompt.
+`dir-assistant config open`
 
-Note: You must always download an embedding model even while using an API LLM. The embedding model is fast and by default
-runs on your CPU, so you do not need GPU support to run it.
-
-### Recommended Models
-
-- [Llama 3 8B Instruct](https://huggingface.co/QuantFactory/Meta-Llama-3-8B-Instruct-GGUF): The current cutting edge for
-reasoning capabilities in its size class.
-- [Nomic Embed Text v1.5](https://huggingface.co/nomic-ai/nomic-embed-text-v1.5-GGUF): A good low memory embedding model.
-
-## Configure
-
-This script should be run once when you first install `dir-assistant`, and then again whenever you would
-like to modify its configuration:
+Once editing the file, change:
 
 ```
-./config.sh
+[DIR_ASSISTANT]
+LITELLM_MODEL = "gemini/gemini-1.5-flash-latest"
+LITELLM_CONTEXT_SIZE = 500000
+...
+[DIR_ASSISTANT.LITELLM_API_KEYS]
+GEMINI_API_KEY = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 ```
 
-Alternatively you can edit `config.json` once it is created.
+LiteLLM supports all major LLM APIs, including APIs hosted locally. View the available options in the 
+[LiteLLM providers list](https://docs.litellm.ai/docs/providers).
 
-### Local LLM configuration
+## Local LLM Model Download
+
+You can download a low requirements default local LLM model (Phi 3 128k) with:
+
+```
+dir-assistant models download-llm
+```
+
+If you would like to use another local LLM model, open the models directory with:
+
+```
+dir-assistant models
+```
+
+Note: The local LLM model will be hardware accelerated after using the `platform` subcommand. To change whether it is
+hardware accelerated, change `n_gpu_layers = -1` to `n_gpu_layers = 0` in the config.
+
+## Configure Settings
+
+To print current configs:
+
+`dir-assistant config`
+
+To open the config file:
+
+`dir-assistant config open`
 
 Llama.cpp provides a large number of options to customize how your local model is run. Most of these options are
-exposed via `llama-cpp-python`. You can configure them in `config.json` with the `DIR_ASSISTANT_LLAMA_CPP_OPTIONS`
-object.
+exposed via `llama-cpp-python`. You can configure them with the `[DIR_ASSISTANT.LLAMA_CPP_OPTIONS]`, 
+`[DIR_ASSISTANT.LLAMA_CPP_EMBED_OPTIONS]`, and `[DIR_ASSISTANT.LLAMA_CPP_COMPLETION_OPTIONS]` sections in the 
+config file.
 
-The options available are documented in the `llama-cpp-python`
+The options available for `llama-cpp-python` are documented in the
 [Llama constructor documentation](https://llama-cpp-python.readthedocs.io/en/latest/api-reference/#llama_cpp.Llama).
 
 What the options do is also documented in the 
 [llama.cpp CLI documentation](https://github.com/ggerganov/llama.cpp/blob/master/examples/main/README.md).
 
-### API LLM Configuration
+## Upgrading
 
-If you are using an API LLM via LiteLLM, you must add your API key as an environment variable. You can find the correct
-environment variable name for your API key in the list of [LiteLLM providers](https://docs.litellm.ai/docs/providers).
-
-It is convenient if you set the key's environment variable at the bottom of your `.bashrc`:
+Some version upgrades may have incompatibility issues in the embedding index cache. Use this command to delete the
+index cache so it may be regenerated:
 
 ```
-export GEMINI_API_KEY=your-key-here
+dir-assistant clear
 ```
 
-However, you can also set the key while running dir-assistant:
+## Additional Help
 
-```
-GEMINI_API_KEY=your-key-here dir-assistant
-```
-
-#### Recommended API LLMs
-
-- [Anthropic Claude 3 Haiku](https://console.anthropic.com/dashboard): Currently the best cost to performance ratio
-of models with a large context size. In my testing it works quite well and costs under a cent per prompt with 30k token
-context window.
-  - `DIR_ASSISTANT_LITELLM_MODEL`: `anthropic/claude-3-haiku-20240307`,
-  - `DIR_ASSISTANT_LITELLM_CONTEXT_SIZE`: `200000`,
-  - API key environment variable: `ANTHROPIC_API_KEY`
-- [Gemini 1.5 Pro](https://ai.google.dev/pricing): Currently free, but limited to two prompts per minute. One of the 
-top tier models with the largest context window of 1M tokens.
-  - `DIR_ASSISTANT_LITELLM_MODEL`: `gemini/gemini-1.5-pro-latest`,
-  - `DIR_ASSISTANT_LITELLM_CONTEXT_SIZE`: `1000000`,
-  - API key environment variable: `GEMINI_API_KEY`
-
-## Run
-
-First export the necessary environment variables at the start of every terminal session
-(this script can be added to your `.bashrc`):
-
-```
-source /path-to/dir-assistant/export.sh
-```
-
-Then navigate to the directory you would like your LLM to see and run dir-assistant:
-
-```
-dir-assistant
-```
-
-If you'd like to ignore some files or directories, you can list them with the `--ignore` argument:
-
-```
-dir-assistant --ignore some-project-directory .git .gitignore
-```
-
-There's also a global ignore list in `config.json`.
-
-### Running via an API LLM
-
-On your first run using an API LLM, you may receive an error asking for an API-specific python package.
-In order to install the package LiteLLM needs to run the API you have selected, you must first enter
-the dir-assistant virtualenv:
-
-```
-pyenv activate dir-assistant
-```
-
-After activating the virtualenv, enter the `pip` command the error showed. For example:
-
-```
-pip install -q google-generativeai
-```
+Use the `-h` argument with any command or subcommand to view more information.
 
 ## Limitations
 
@@ -168,6 +154,7 @@ pip install -q google-generativeai
 - ~~CGRAG (Contextually-Guided Retrieval-Augmented Generation)~~
 - ~~Multi-line input~~
 - ~~File watching (automatically reindex changed files)~~
-- Single-step pip install
+- ~~Single-step pip install~~
+- ~~Model download~~
 - Web search
 - API Embedding models

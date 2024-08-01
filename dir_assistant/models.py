@@ -1,4 +1,4 @@
-from os import chdir, startfile
+import os
 from platform import system
 from subprocess import run
 
@@ -12,7 +12,7 @@ MODELS_DEFAULT_LLM_URL = f'https://huggingface.co/bartowski/Phi-3.1-mini-128k-in
 def open_directory(path):
     system_name = system()
     if system_name == 'Windows':
-        startfile(path)
+        os.startfile(path)
     elif system_name == 'Darwin':  # macOS
         run(['open', path])
     elif system_name == 'Linux':

@@ -1,4 +1,4 @@
-from os import makedirs, getenv
+from os import makedirs, getenv, environ
 from os.path import expanduser, join
 from subprocess import run
 
@@ -42,6 +42,11 @@ CONFIG_DEFAULTS = {
     'LITELLM_CONTEXT_SIZE': 500000,
     'LITELLM_MODEL_USES_SYSTEM_MESSAGE': False,
     'LITELLM_PASS_THROUGH_CONTEXT_SIZE': False,
+    'LITELLM_API_KEYS': {
+        'GEMINI_API_KEY': '',
+        'OPENAI_API_KEY': '',
+        'ANTHROPIC_API_KEY': '',
+    }
 }
 
 
@@ -58,12 +63,13 @@ def save_config(config_dict):
 def check_defaults(config_dict, defaults_dict):
     for key, value in defaults_dict.items():
         if key not in config_dict.keys():
-            print(f"inserting default {key} = {value}")
             config_dict[key] = value
     return config_dict
 
 def load_config():
-    config_object = Dynaconf(settings_files=[get_file_path(CONFIG_PATH, CONFIG_FILENAME)])
+    config_object = Dynaconf(
+        settings_files=[get_file_path(CONFIG_PATH, CONFIG_FILENAME)]
+    )
     config_dict = config_object.as_dict()
     # If the config file is malformed, insert the DIR_ASSISTANT key
     if 'DIR_ASSISTANT' not in config_dict.keys():
@@ -74,6 +80,10 @@ def load_config():
             print(f"inserting default {key} = {value}")
             config_dict['DIR_ASSISTANT'][key] = value
     save_config(config_dict)
+    # Set OpenAI API key
+    for key, value in config_dict['DIR_ASSISTANT']['LITELLM_API_KEYS'].items():
+        if key.endswith('_API_KEY'):
+            environ[key] = value
     return config_dict
 
 

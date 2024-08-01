@@ -1,5 +1,6 @@
 import argparse
 
+from dir_assistant.index import clear
 from dir_assistant.models import models_open, models_download_embed, models_download_llm, models_print
 from dir_assistant.platform_setup import platform
 from dir_assistant.config import config, load_config, config_open
@@ -85,6 +86,12 @@ vulkan    - Vulkan'''
         help='Download a local LLM model. (Phi-3.1-mini-128k-instruct-Q5_K_L.gguf)'
     )
 
+    # Clear
+    clear_parser = mode_subparsers.add_parser(
+        'clear',
+        help='Clear the index cache. (Useful if upgrading to a new version of dir-assistant)'
+    )
+
 
     # Parse the arguments
     args = parser.parse_args()
@@ -113,6 +120,8 @@ vulkan    - Vulkan'''
             models_download_llm(args, config_dict)
         else:
             models_parser.print_help()
+    elif args.mode == 'clear':
+        clear(args, config_dict)
     else:
         parser.print_help()
 
