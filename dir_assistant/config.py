@@ -35,8 +35,7 @@ CONFIG_DEFAULTS = {
         'rope_freq_scale': 0.75,
     },
     'LLAMA_CPP_COMPLETION_OPTIONS': {
-        'frequency_penalty': 0.1,
-        'presence_penalty': 0.1,
+        'frequency_penalty': 1.1,
     },
     'LITELLM_MODEL': 'gemini/gemini-1.5-flash-latest',
     'LITELLM_CONTEXT_SIZE': 500000,
