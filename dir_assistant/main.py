@@ -1,7 +1,7 @@
 import argparse
 
 from dir_assistant.platform_setup import platform
-from dir_assistant.config import config, load_config
+from dir_assistant.config import config, load_config, config_open
 from dir_assistant.start import start
 
 def main():
@@ -16,10 +16,10 @@ def main():
         help='A list of space-separated filepaths to ignore.'
     )
 
-    subparsers = parser.add_subparsers(dest='mode', help='Subcommand help')
+    mode_subparsers = parser.add_subparsers(dest='mode', help='Dir-assistant run mode')
 
     # Start
-    main_parser = subparsers.add_parser(
+    main_parser = mode_subparsers.add_parser(
         'start',
         help='Run dir-assistant in regular mode (Default if no subcommand is specified.)'
     )
@@ -32,7 +32,7 @@ def main():
     )
 
     # Platform
-    setup_parser = subparsers.add_parser(
+    setup_parser = mode_subparsers.add_parser(
         'platform',
         help='Setup dir-assistant for a given hardware platform.',
         formatter_class=argparse.RawTextHelpFormatter
@@ -54,7 +54,11 @@ sycl      - Intel
 vulkan    - Vulkan'''
     )
 
-    config_parser = subparsers.add_parser('config', help='Print current configuration.')
+    config_parser = mode_subparsers.add_parser('config', help='Print current configuration.')
+    config_subparsers = config_parser.add_subparsers(dest='config_mode', help='Config subcommands.')
+
+    config_open_parser = config_subparsers.add_parser('open', help='Open the configuration file in an editor.')
+
 
     args = parser.parse_args()
 
@@ -68,7 +72,10 @@ vulkan    - Vulkan'''
         platform(args, config_dict['DIR_ASSISTANT'])
 
     elif args.mode == 'config':
-        config(args, config_dict)
+        if args.config_mode == 'open':
+            config_open(args, config_dict)
+        else:
+            config(args, config_dict)
 
     else:
         parser.print_help()

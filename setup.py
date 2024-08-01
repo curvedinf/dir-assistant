@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="dir-assistant",
-    version="0.0.4",
+    version="0.0.5",
     packages=find_packages(),
     install_requires=[
         "llama-cpp-python",
@@ -16,6 +16,7 @@ setup(
         "openai",
         "boto3",
         "dynaconf",
+        "toml",
     ],
     entry_points={
         "console_scripts": [

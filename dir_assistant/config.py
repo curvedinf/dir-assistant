@@ -1,4 +1,5 @@
 import os
+import subprocess
 
 import toml
 from dynaconf import Dynaconf
@@ -39,6 +40,12 @@ CONFIG_DEFAULTS = {
 }
 
 
+def get_file_path(path, filename):
+    expanded_path = os.path.expanduser(path)
+    os.makedirs(expanded_path, exist_ok=True)
+    return os.path.join(expanded_path, filename)
+
+
 def save_config(config_dict):
     with open(get_file_path(CONFIG_PATH, CONFIG_FILENAME), 'w') as config_file:
         toml.dump(config_dict, config_file)
@@ -59,7 +66,7 @@ def config(args, config_dict):
     print(toml.dumps(config_dict))
 
 
-def get_file_path(path, filename):
-    expanded_path = os.path.expanduser(path)
-    os.makedirs(expanded_path, exist_ok=True)
-    return os.path.join(expanded_path, filename)
+def config_open(args, config_dict):
+    config_file_path = get_file_path(CONFIG_PATH, CONFIG_FILENAME)
+    editor = os.getenv("VISUAL") or os.getenv("EDITOR")  or "nano" # Default to nano if EDITOR not set
+    subprocess.run([editor, config_file_path])
