@@ -58,7 +58,7 @@ hardware accelerated, change `n_gpu_layers = -1` to `n_gpu_layers = 0` in the co
 dir-assistant
 ```
 
-Running `dir-assistant` will scan all files recursively from in your current directory. Files will be included
+Running `dir-assistant` will scan all files recursively in your current directory. Files will be included
 automatically when you enter a prompt for the LLM.
 
 ## Optional: Select A Hardware Platform
