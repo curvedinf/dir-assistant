@@ -73,6 +73,9 @@ dir-assistant platform cuda
 
 Available options: `cpu`, `cuda`, `rocm`, `metal`, `vulkan`, `sycl`
 
+Note: The embedding model and the local llm model will be run with acceleration after selecting a platform. To disable 
+hardware acceleration change `n_gpu_layers = -1` to `n_gpu_layers = 0` in the config.
+
 ### For Platform Install Issues
 
 System dependencies may be required for the `platform` command and are outside the scope of these instructions.
