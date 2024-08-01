@@ -39,9 +39,10 @@ def start(args, config_dict):
     llm_model_file = get_file_path(MODELS_PATH, config_dict['LLM_MODEL'])
     embed_model_file = get_file_path(MODELS_PATH, config_dict['EMBED_MODEL'])
     context_file_ratio = config_dict['CONTEXT_FILE_RATIO']
-    llama_cpp_instructions = config_dict['LLAMA_CPP_INSTRUCTIONS']
+    system_instructions = config_dict['SYSTEM_INSTRUCTIONS']
     llama_cpp_options = config_dict['LLAMA_CPP_OPTIONS']
     llama_cpp_embed_options = config_dict['LLAMA_CPP_EMBED_OPTIONS']
+    llama_cpp_completion_options = config_dict['LLAMA_CPP_COMPLETION_OPTIONS']
     active_model_is_local = config_dict['ACTIVE_MODEL_IS_LOCAL']
     lite_llm_model = config_dict['LITELLM_MODEL']
     lite_llm_context_size = config_dict['LITELLM_CONTEXT_SIZE']
@@ -76,7 +77,7 @@ def start(args, config_dict):
     index, chunks = create_file_index(embed, ignore_paths, llama_cpp_embed_chunk_size)
 
     # Set up the system instructions
-    system_instructions = f"{llama_cpp_instructions}\n\nThe user will ask questions relating \
+    system_instructions_full = f"{system_instructions}\n\nThe user will ask questions relating \
     to files they will provide. Do your best to answer questions related to the these files. When \
     the user refers to files, always assume they want to know about the files they provided."
 
@@ -89,13 +90,14 @@ def start(args, config_dict):
         llm = LlamaCppRunner(
             model_path=llm_model_file,
             llama_cpp_options=llama_cpp_options,
-            system_instructions=system_instructions,
+            system_instructions=system_instructions_full,
             embed=embed,
             index=index,
             chunks=chunks,
             context_file_ratio=context_file_ratio,
             use_cgrag=use_cgrag,
-            print_cgrag=print_cgrag
+            print_cgrag=print_cgrag,
+            completion_options=llama_cpp_completion_options,
         )
     else:
         print(f"{Fore.LIGHTBLACK_EX}Loading remote LLM model...{Style.RESET_ALL}")
@@ -107,13 +109,13 @@ def start(args, config_dict):
             lite_llm_model_uses_system_message=lite_llm_model_uses_system_message,
             lite_llm_context_size=lite_llm_context_size,
             lite_llm_pass_through_context_size=lite_llm_pass_through_context_size,
-            system_instructions=system_instructions,
+            system_instructions=system_instructions_full,
             embed=embed,
             index=index,
             chunks=chunks,
             context_file_ratio=context_file_ratio,
             use_cgrag=use_cgrag,
-            print_cgrag=print_cgrag
+            print_cgrag=print_cgrag,
         )
 
     # Start file watcher

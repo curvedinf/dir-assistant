@@ -1,11 +1,12 @@
 import argparse
 
+from dir_assistant.models import models_cd, models_open, models_download_embed, models_download_llm
 from dir_assistant.platform_setup import platform
 from dir_assistant.config import config, load_config, config_open
 from dir_assistant.start import start
 
 def main():
-	# Handle command line arguments
+	# Setup argument parsing
     parser = argparse.ArgumentParser(description="Chat with your current directory's files using a local or API LLM.")
 
     parser.add_argument(
@@ -16,20 +17,23 @@ def main():
         help='A list of space-separated filepaths to ignore.'
     )
 
-    mode_subparsers = parser.add_subparsers(dest='mode', help='Dir-assistant run mode')
+    mode_subparsers = parser.add_subparsers(dest='mode', help='Run dir-assistant in regular mode')
 
     # Start
-    main_parser = mode_subparsers.add_parser(
+    start_parser = mode_subparsers.add_parser(
         'start',
-        help='Run dir-assistant in regular mode (Default if no subcommand is specified.)'
+        help='Run dir-assistant in regular mode.',
     )
-    main_parser.add_argument(
+    start_parser.add_argument(
         '-i'
         '--ignore',
         type=str,
         nargs='+',
         help='A list of space-separated filepaths to ignore.'
     )
+    start_subparsers = start_parser.add_subparsers(dest='start_mode', help='Operation mode for the config subcommand.')
+    start_default_parser = start_subparsers.add_parser('', help='Run dir-assistant in regular mode.')
+    start_regular_parser = start_subparsers.add_parser('regular', help='Run dir-assistant in regular mode.')
 
     # Platform
     setup_parser = mode_subparsers.add_parser(
@@ -37,16 +41,16 @@ def main():
         help='Setup dir-assistant for a given hardware platform.',
         formatter_class=argparse.RawTextHelpFormatter
     )
+    setup_choices = ['cpu', 'cuda', 'rocm', 'metal', 'sycl', 'vulkan']
     setup_parser.add_argument(
         'selection',
         type=str,
-        choices=['cpu', 'cuda', 'rocm', 'metal', 'sycl', 'vulkan'],
-        help='''The hardware acceleration platform to compile llama-cpp-python
-for. System dependencies are required. Refer to 
-https://github.com/abetlen/llama-cpp-python for system
-dependency information.
+        choices=setup_choices,
+        help='''The hardware acceleration platform to compile llama-cpp-python \
+for. System dependencies may be required. Refer to \
+https://github.com/abetlen/llama-cpp-python for system dependency information.
 
-cpu       - OpenBLAS (Most compatible)
+cpu       - OpenBLAS (Most compatible, default)
 cuda      - Nvidia
 rocm      - AMD
 metal     - Apple
@@ -54,29 +58,63 @@ sycl      - Intel
 vulkan    - Vulkan'''
     )
 
-    config_parser = mode_subparsers.add_parser('config', help='Print current configuration.')
-    config_subparsers = config_parser.add_subparsers(dest='config_mode', help='Config subcommands.')
+    # Config
+    config_parser = mode_subparsers.add_parser('config', help='Configuration-related options.')
+    config_subparsers = config_parser.add_subparsers(dest='config_mode', help='Operation mode for the config subcommand.')
 
+    config_default_parser = config_subparsers.add_parser('', help='Print the current configuration')
+    config_print_parser = config_subparsers.add_parser('print', help='Print the current configuration')
     config_open_parser = config_subparsers.add_parser('open', help='Open the configuration file in an editor.')
-
 
     args = parser.parse_args()
 
     config_dict = load_config()
 
+    # Models
+    models_parser = mode_subparsers.add_parser(
+        'models',
+        help='Download or configure models for dir-assistant.',
+    )
+    models_subparsers = models_parser.add_subparsers(dest='model_mode', help='Operation mode for the model subcommand.')
+
+    models_default_parser = models_subparsers.add_parser('', help='Open the models directory in a file browser.')
+    models_open_parser = models_subparsers.add_parser('open', help='Open the models directory in a file browser.')
+    models_cd_parser = models_subparsers.add_parser('cd', help='Change directory to the models directory.')
+    models_download_embed_parser = models_subparsers.add_parser(
+        'download-embed',
+        help='Download a local embedding model. (nomic-embed-text-v1.5.Q5_K_M.gguf)'
+    )
+    models_download_llm_parser = models_subparsers.add_parser(
+        'download-llm',
+        help='Download a local LLM model. (Phi-3.1-mini-128k-instruct-Q5_K_L.gguf)'
+    )
+
+    # https://huggingface.co/nomic-ai/nomic-embed-text-v1.5-GGUF/resolve/main/nomic-embed-text-v1.5.Q5_K_M.gguf?download=true
+    # https://huggingface.co/bartowski/Phi-3.1-mini-128k-instruct-GGUF/resolve/main/Phi-3.1-mini-128k-instruct-Q5_K_L.gguf?download=true
+
     # Run the user's selected mode
     if args.mode == 'start' or args.mode is None:
         start(args, config_dict['DIR_ASSISTANT'])
-
     elif args.mode == 'platform':
         platform(args, config_dict['DIR_ASSISTANT'])
-
     elif args.mode == 'config':
+        if args.config_mode == 'print' or args.config_mode is None:
+            config(args, config_dict)
         if args.config_mode == 'open':
             config_open(args, config_dict)
         else:
-            config(args, config_dict)
-
+            config_parser.print_help()
+    elif args.mode == 'models':
+        if args.models_mode == 'cd' or args.models_mode is None:
+            models_cd(args, config_dict)
+        elif args.models_mode == 'open':
+            models_open(args, config_dict)
+        elif args.models_mode == 'download-embed':
+            models_download_embed(args, config_dict)
+        elif args.models_mode == 'download-llm':
+            models_download_llm(args, config_dict)
+        else:
+            models_parser.print_help()
     else:
         parser.print_help()
 
