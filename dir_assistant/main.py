@@ -4,6 +4,7 @@ from dir_assistant.index import clear
 from dir_assistant.models import models_open, models_download_embed, models_download_llm, models_print
 from dir_assistant.platform_setup import platform
 from dir_assistant.config import config, load_config, config_open
+from dir_assistant.setkey import setkey
 from dir_assistant.start import start
 
 def main():
@@ -92,6 +93,13 @@ vulkan    - Vulkan'''
         help='Clear the index cache. (Useful if upgrading to a new version of dir-assistant)'
     )
 
+    # Setkey
+    setkey_parser = mode_subparsers.add_parser(
+        'setkey',
+        help='''Set an API key.'''
+    )
+    setkey_parser.add_argument('api_name', type=str, help='The API name (e.g., GEMINI_API_KEY).')
+    setkey_parser.add_argument('api_key', type=str, help='The API key to set.')
 
     # Parse the arguments
     args = parser.parse_args()
@@ -122,6 +130,8 @@ vulkan    - Vulkan'''
             models_parser.print_help()
     elif args.mode == 'clear':
         clear(args, config_dict)
+    elif args.mode == 'setkey':
+        setkey(args, config_dict)
     else:
         parser.print_help()
 
