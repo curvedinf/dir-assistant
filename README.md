@@ -25,7 +25,7 @@ and runs API LLMS using the also fantastic [LiteLLM](https://github.com/BerriAI/
 
 ## Quickstart
 
-Here a couple recipes for different usecases to get you going quickly.
+In this section are recipes to run `dir-assistant` in basic capacity to get you started quickly.
 
 ### Quickstart with Local Default Model (Phi 3 128k)
 
@@ -93,7 +93,7 @@ Install with pip:
 pip install dir-assistant
 ```
 
-The default configuration for `dir-assistant` is API-mode. If you download an LLM model with `download-llm` below, 
+The default configuration for `dir-assistant` is API-mode. If you download an LLM model with `download-llm`, 
 local-mode will automatically be set. To change from API-mode to local-mode, set the `ACTIVE_MODEL_IS_LOCAL` setting.
 
 ## Embedding Model Download
@@ -111,8 +111,8 @@ If you would like to use another embedding model, open the models directory with
 dir-assistant models
 ```
 
-Note: The embedding model will be hardware accelerated after using the `platform` subcommand. To change whether it is
-hardware accelerated, change `n_gpu_layers = -1` to `n_gpu_layers = 0` in the config.
+Note: The embedding model will be hardware accelerated after using the `platform` subcommand. To disable
+hardware acceleration, change `n_gpu_layers = -1` to `n_gpu_layers = 0` in the config.
 
 ## Optional: Select A Hardware Platform
 
@@ -138,7 +138,7 @@ info: https://github.com/abetlen/llama-cpp-python
 
 ## API Configuration
 
-If you do not wish to use a local LLM model, you will need to configure an API LLM. To configure which LLM API 
+If you wish to use an API LLM, you will need to configure it. To configure which LLM API 
 dir-assistant uses, you must edit `LITELLM_MODEL` and the appropriate API key in your configuration. To open 
 your configuration file, enter:
 
@@ -160,21 +160,28 @@ GEMINI_API_KEY = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 LiteLLM supports all major LLM APIs, including APIs hosted locally. View the available options in the 
 [LiteLLM providers list](https://docs.litellm.ai/docs/providers).
 
+There is a convenience subcommand for modifying and adding API keys:
+
+```shell
+dir-assistant setkey GEMINI_API_KEY xxxxxYOURAPIKEYHERExxxxx
+```
+
+However, in most cases you will need to modify other options when changing APIs.
+
 ## Local LLM Model Download
 
-If you do not want to use an API for your main LLM, you can download a low requirements default local LLM model 
-(Phi 3 128k) with:
+If you want to use a local LLM, you can download a low requirements default model (Phi 3 128k) with:
 
 ```shell
 dir-assistant models download-llm
 ```
 
-Note: The local LLM model will be hardware accelerated after using the `platform` subcommand. To change whether it is
-hardware accelerated, change `n_gpu_layers = -1` to `n_gpu_layers = 0` in the config.
+Note: The local LLM model will be hardware accelerated after using the `platform` subcommand. To disable hardware
+acceleration, change `n_gpu_layers = -1` to `n_gpu_layers = 0` in the config.
 
 ### Configuring A Custom Local Model
 
-If you would like to use another local LLM model, download a GGUF model and place it in your models
+If you would like to use a custom local LLM model, download a GGUF model and place it in your models
 directory. [Huggingface](https://huggingface.co/models) has numerous GGUF models to choose from. The models 
 directory can be opened in a file browser using this command:
 
@@ -182,20 +189,18 @@ directory can be opened in a file browser using this command:
 dir-assistant models
 ```
 
-Then set which model file you wish to use by opening the config:
+After putting your gguf in the models directory, you must configure dir-assistant to use it:
 
 ```shell
 dir-assistant config open
 ```
 
-And edit the following setting:
+Edit the following setting:
 
 ```shell
 [DIR_ASSISTANT]
 LLM_MODEL = "Mistral-Nemo-Instruct-2407.Q6_K.gguf"
 ```
-
-You may wish to edit llama.cpp settings to optimize your experience.
 
 ### Llama.cpp Options
 
@@ -216,8 +221,8 @@ What the options do is also documented in the
 dir-assistant
 ```
 
-Running `dir-assistant` will scan all files recursively in your current directory. Files will be included
-automatically when you enter a prompt for the LLM.
+Running `dir-assistant` will scan all files recursively in your current directory. The most relevant files will 
+automatically be sent to the LLM when you enter a prompt.
 
 ## Upgrading
 
