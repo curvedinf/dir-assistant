@@ -29,8 +29,8 @@ In this section are recipes to run `dir-assistant` in basic capacity to get you 
 
 ### Quickstart with Local Default Model (Phi 3 128k)
 
-To get started locally, you can download a default llm model. This model requires approximately 6GB of
-memory to run effectively. To run via CPU:
+To get started locally, you can download a default llm model. Default configuration with this model requires 
+14GB of memory, but you will be able to adjust the configuration to fit lower memory requirements. To run via CPU:
 
 ```shell
 pip install dir-assistant
@@ -214,6 +214,22 @@ The options available for `llama-cpp-python` are documented in the
 
 What the options do is also documented in the 
 [llama.cpp CLI documentation](https://github.com/ggerganov/llama.cpp/blob/master/examples/main/README.md).
+
+The most important `llama-cpp-python` options are related to tuning the LLM to your system's VRAM:
+
+* Setting `n_ctx` lower will reduce the amount of VRAM required to run, but will decrease the amount of 
+file text that can be included when running a prompt.
+* `CONTEXT_FILE_RATIO` sets the proportion of prompt history to file text to be included when sent to the LLM. 
+Higher ratios mean more file text and less prompt history. More file text generally improves comprehension.
+* If your llm `n_ctx` is smaller than your embed `n_ctx` times `CONTEXT_FILE_RATIO`, your file text chunks 
+have the potential to be larger than your llm context, and thus will not be included. To ensure all files 
+can be included, make sure your embed context is smaller than `n_ctx` times `CONTEXT_FILE_RATIO`.
+* Larger embed `n_ctx` will chunk your files into larger sizes, which allows LLMs to understand them more
+easily.
+* `n_batch` must be smaller than the `n_ctx` of a model, but setting it higher will probably improve
+performance.
+
+For other tips about tuning Llama.cpp, explore their documentation and do some google searches.
 
 ## Running
 

@@ -16,8 +16,9 @@ CONFIG_DEFAULTS = {
         'build/',
         '.idea/',
         '__pycache__',
+        'dist/',
     ],
-    'CONTEXT_FILE_RATIO': 0.5,
+    'CONTEXT_FILE_RATIO': 0.9,
     'ACTIVE_MODEL_IS_LOCAL': False,
     'USE_CGRAG': True,
     'PRINT_CGRAG': False,
@@ -25,7 +26,7 @@ CONFIG_DEFAULTS = {
     'EMBED_MODEL': '',
     'LLM_MODEL': '',
     'LLAMA_CPP_OPTIONS': {
-        'n_ctx': 8192,
+        'n_ctx': 12000,
         'verbose': False,
     },
     'LLAMA_CPP_EMBED_OPTIONS': {

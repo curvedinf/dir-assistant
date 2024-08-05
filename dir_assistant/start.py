@@ -51,12 +51,18 @@ def start(args, config_dict):
     use_cgrag = config_dict['USE_CGRAG']
     print_cgrag = config_dict['PRINT_CGRAG']
 
-    if embed_model_file == '':
-        print("You must specify an embedding model in config.json. See readme for more information. Exiting...")
+    if config_dict["EMBED_MODEL"] == "":
+        print("""You must specify EMBED_MODEL. Use 'dir-assistant config open' and \
+see readme for more information. Exiting...""")
         exit(1)
-
-    if active_model_is_local and llm_model_file == '':
-        print("You must specify an local LLM model in config.json. See readme for more information. Exiting...")
+    if active_model_is_local:
+        if config_dict["LLM_MODEL"] == "":
+            print("""You must specify LLM_MODEL.  Use 'dir-assistant config open' and \
+    see readme for more information. Exiting...""")
+            exit(1)
+    elif lite_llm_model == "":
+        print("""You must specify LITELLM_MODEL. Use 'dir-assistant config open' and see readme \
+for more information. Exiting...""")
         exit(1)
 
     ignore_paths = args.i__ignore if args.i__ignore else []
@@ -84,9 +90,6 @@ def start(args, config_dict):
     # Initialize the LLM model
     if active_model_is_local:
         print(f"{Fore.LIGHTBLACK_EX}Loading local LLM model...{Style.RESET_ALL}")
-        if config_dict['LLM_MODEL'] == "":
-            print("You must specify an LLM model in config.json. See readme for more information. Exiting...")
-            exit(1)
         llm = LlamaCppRunner(
             model_path=llm_model_file,
             llama_cpp_options=llama_cpp_options,
@@ -101,9 +104,6 @@ def start(args, config_dict):
         )
     else:
         print(f"{Fore.LIGHTBLACK_EX}Loading remote LLM model...{Style.RESET_ALL}")
-        if lite_llm_model == "":
-            print("You must specify a LiteLLM model in config.json. See readme for more information. Exiting...")
-            exit(1)
         llm = LiteLLMRunner(
             lite_llm_model=lite_llm_model,
             lite_llm_model_uses_system_message=lite_llm_model_uses_system_message,
