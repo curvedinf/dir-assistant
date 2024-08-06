@@ -26,7 +26,7 @@ CONFIG_DEFAULTS = {
     'EMBED_MODEL': '',
     'LLM_MODEL': '',
     'LLAMA_CPP_OPTIONS': {
-        'n_ctx': 12000,
+        'n_ctx': 9200,
         'verbose': False,
     },
     'LLAMA_CPP_EMBED_OPTIONS': {

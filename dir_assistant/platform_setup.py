@@ -5,11 +5,13 @@ from dir_assistant.config import save_config
 
 def platform(args, config_dict):
     is_cpu = False
+    is_cuda = False
     cmake_args = ''
     if args.selection.lower() == 'cpu':
         is_cpu = True
     elif args.selection.lower() == 'cuda':
         cmake_args = '-DGGML_CUDA=on'
+        is_cuda = True
     elif args.selection.lower() == 'rocm':
         cmake_args = '-DGGML_HIPBLAS=ON'
     elif args.selection.lower() == 'metal':
@@ -32,6 +34,9 @@ def platform(args, config_dict):
     else:
         config_dict['LLAMA_CPP_OPTIONS']['n_gpu_layers'] = -1
         config_dict['LLAMA_CPP_EMBED_OPTIONS']['n_gpu_layers'] = -1
+        if is_cuda:
+            config_dict['LLAMA_CPP_OPTIONS']['flash_attn'] = True
+            config_dict['LLAMA_CPP_EMBED_OPTIONS']['flash_attn'] = True
 
     save_config({'DIR_ASSISTANT': config_dict})
 

@@ -153,7 +153,7 @@ def find_split_point(embed, line_content, max_size, header):
 
 def search_index(embed, index, query, all_chunks):
     query_embedding = embed.create_embedding([query])['data'][0]['embedding']
-    distances, indices = index.search(np.array([query_embedding]), 100)
+    distances, indices = index.search(np.array([query_embedding]), 100) # 819,200 tokens max with default embedding
     relevant_chunks = [all_chunks[i] for i in indices[0] if i != -1]
     return relevant_chunks
 

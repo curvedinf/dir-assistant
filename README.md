@@ -30,7 +30,8 @@ In this section are recipes to run `dir-assistant` in basic capacity to get you 
 ### Quickstart with Local Default Model (Phi 3 128k)
 
 To get started locally, you can download a default llm model. Default configuration with this model requires 
-14GB of memory, but you will be able to adjust the configuration to fit lower memory requirements. To run via CPU:
+11GB of memory on most hardware or 8GB on nvidia GPUs due to flash attention availability (enabled by default). 
+You will be able to adjust the configuration to fit higher or lower memory requirements. To run via CPU:
 
 ```shell
 pip install dir-assistant
@@ -221,7 +222,7 @@ The most important `llama-cpp-python` options are related to tuning the LLM to y
 file text that can be included when running a prompt.
 * `CONTEXT_FILE_RATIO` sets the proportion of prompt history to file text to be included when sent to the LLM. 
 Higher ratios mean more file text and less prompt history. More file text generally improves comprehension.
-* If your llm `n_ctx` is smaller than your embed `n_ctx` times `CONTEXT_FILE_RATIO`, your file text chunks 
+* If your llm `n_ctx` times `CONTEXT_FILE_RATIO` is smaller than your embed `n_ctx`, your file text chunks 
 have the potential to be larger than your llm context, and thus will not be included. To ensure all files 
 can be included, make sure your embed context is smaller than `n_ctx` times `CONTEXT_FILE_RATIO`.
 * Larger embed `n_ctx` will chunk your files into larger sizes, which allows LLMs to understand them more
