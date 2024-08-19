@@ -86,8 +86,6 @@ information to work with. If the prompt is referencing code, list specific class
 
     def run_stream_processes(self, user_input, write_to_stdout):
         prompt = self.create_prompt(user_input)
-        sys.stdout.write(prompt)
-        sys.stdout.flush()
         relevant_full_text = self.build_relevant_full_text(prompt)
         if self.use_cgrag and self.fileset_larger_than_4x_context:
             cgrag_prompt = self.create_cgrag_prompt(prompt)

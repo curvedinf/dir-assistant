@@ -1,6 +1,8 @@
 import os
+import sys
 import tempfile
 
+from colorama import Style, Fore
 from prompt_toolkit import prompt
 
 from dir_assistant.assistant.cgrag_assistant import CGRAGAssistant
@@ -53,24 +55,42 @@ User prompt:
                 return f"""User Prompt:
 {user_input}
 ----------------------------------
-Create a .diff file with changes that could be applied to the attached files that address the user's prompt.
-Do not provide an introduction, summary, or conclusion. Only respond with the .diff file's contents.
+Given the user prompt above and included file snippets, respond with the contents of a single file that has
+the changes the user prompt requested. Do not provide an introduction, summary, or conclusion. Only respond 
+with the file's contents. Do not respond with surrounding markdown. Add the filename of the file as the
+first line of the response.
+
+Example response:
+/home/user/hello_project/hello_world.py
+if __name__ == "__main__":
+    print("Hello, World!")
+
+Real response:
 """
             else:
                 return user_input
 
     def run_post_stream_processes(self, user_input, stream_output, write_to_stdout):
-        if not self.commit_to_git or not self.should_diff:
+        if (not self.commit_to_git or not self.should_diff) and not self.git_apply_error:
             return super().run_post_stream_processes(user_input, stream_output, write_to_stdout)
         else:
-            apply_changes = prompt("Apply these changes? (Y/N): ", multiline=False).strip().lower()
+            sys.stdout.write(f'{Style.BRIGHT}{Fore.BLUE}Apply these changes? (Y/N): {Style.RESET_ALL}')
+            apply_changes = prompt('', multiline=False).strip().lower()
+            if write_to_stdout:
+                sys.stdout.write('\n')
             if apply_changes == 'y':
-                with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-                    temp_file.write(stream_output)
-                exit_code = os.system(f"git apply {temp_file.name}")
-                if exit_code != 0:
-                    return False
-                commit_message = user_input.strip()
+                output_lines = stream_output.split('\n')
+                changed_filepath = output_lines[0].strip()
+                cleaned_output = '\n'.join(output_lines[1:])
+                with open(changed_filepath, 'w') as changed_file:
+                    changed_file.write(cleaned_output)
                 os.system('git add .')
-                os.system(f'git commit -m "{commit_message}"')
+                os.system(f'git commit -m "{user_input.strip()}"')
+                if write_to_stdout:
+                    sys.stdout.write(f'\n{Style.BRIGHT}Changes committed.{Style.RESET_ALL}\n\n')
+                    sys.stdout.flush()
             return True
+
+    def stream_chat(self, user_input):
+        self.git_apply_error = None
+        super().stream_chat(user_input)

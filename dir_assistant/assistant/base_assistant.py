@@ -115,10 +115,12 @@ class BaseAssistant:
 
     def run_accepted_output_processes(self, user_input, stream_output, write_to_stdout):
         # Run processes that should be run if the output is accepted
+        #sys.stdout.write(f'Response accepted, continuing...\n\n')
         return
 
     def run_bad_output_processes(self, user_input, stream_output, write_to_stdout):
         # Run processes that should be run if the output is bad
+        sys.stdout.write(f'Response rejected, ignoring...\n\n')
         return
 
     def stream_chat(self, user_input):
@@ -189,4 +191,7 @@ class BaseAssistant:
     def run_one_off_completion(self, prompt):
         one_off_history = self.create_one_off_prompt_history(prompt)
         completion_generator = self.call_completion(one_off_history)
-        return self.run_completion_generator(completion_generator, self.create_empty_history(), False)
+        return self.run_completion_generator(
+            completion_generator,
+            self.create_empty_history(),
+            False)['content']

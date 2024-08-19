@@ -113,10 +113,10 @@ for more information. Exiting..."""
             index,
             chunks,
             context_file_ratio,
+            output_acceptance_retries,
             use_cgrag,
             print_cgrag,
             commit_to_git,
-            output_acceptance_retries,
             llama_cpp_completion_options,
         )
     else:
@@ -131,10 +131,10 @@ for more information. Exiting..."""
             index,
             chunks,
             context_file_ratio,
+            output_acceptance_retries,
             use_cgrag,
             print_cgrag,
             commit_to_git,
-            output_acceptance_retries,
         )
 
     # Start file watcher
