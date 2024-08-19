@@ -5,9 +5,12 @@ warnings.filterwarnings("ignore", category=SyntaxWarning)
 
 from dir_assistant.assistant.index import clear
 from dir_assistant.cli.config import config, config_open, load_config
-from dir_assistant.cli.models import (models_download_embed,
-                                      models_download_llm, models_open,
-                                      models_print)
+from dir_assistant.cli.models import (
+    models_download_embed,
+    models_download_llm,
+    models_open,
+    models_print,
+)
 from dir_assistant.cli.platform_setup import platform
 from dir_assistant.cli.setkey import setkey
 from dir_assistant.cli.start import start
