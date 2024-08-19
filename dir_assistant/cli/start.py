@@ -6,8 +6,10 @@ from colorama import Fore, Style
 from prompt_toolkit import prompt
 
 from dir_assistant.assistant.index import create_file_index
-from dir_assistant.assistant.model_runners import LlamaCppRunner, LiteLLMRunner
+from dir_assistant.assistant.lite_llm_assistant import LiteLLMAssistant
+from dir_assistant.assistant.llama_cpp_assistant import LlamaCppAssistant
 from dir_assistant.assistant.file_watcher import start_file_watcher
+from dir_assistant.assistant.llama_cpp_embed import LlamaCppEmbed
 from dir_assistant.cli.config import get_file_path
 
 
@@ -69,17 +71,15 @@ for more information. Exiting...""")
 
     # Initialize the embedding model
     print(f"{Fore.LIGHTBLACK_EX}Loading embedding model...{Style.RESET_ALL}")
-    embed = Llama(
+    embed = LlamaCppEmbed(
         model_path=embed_model_file,
-        embedding=True,
-        # pooling_type=2,  # CLS
-        **llama_cpp_embed_options
+        embed_options=llama_cpp_embed_options
     )
-    llama_cpp_embed_chunk_size = embed.context_params.n_ctx
+    embed_chunk_size = embed.get_chunk_size()
 
     # Create the file index
     print(f"{Fore.LIGHTBLACK_EX}Creating file embeddings and index...{Style.RESET_ALL}")
-    index, chunks = create_file_index(embed, ignore_paths, llama_cpp_embed_chunk_size)
+    index, chunks = create_file_index(embed, ignore_paths, embed_chunk_size)
 
     # Set up the system instructions
     system_instructions_full = f"{system_instructions}\n\nThe user will ask questions relating \
@@ -89,7 +89,7 @@ for more information. Exiting...""")
     # Initialize the LLM model
     if active_model_is_local:
         print(f"{Fore.LIGHTBLACK_EX}Loading local LLM model...{Style.RESET_ALL}")
-        llm = LlamaCppRunner(
+        llm = LlamaCppAssistant(
             model_path=llm_model_file,
             llama_cpp_options=llama_cpp_options,
             system_instructions=system_instructions_full,
@@ -103,7 +103,7 @@ for more information. Exiting...""")
         )
     else:
         print(f"{Fore.LIGHTBLACK_EX}Loading remote LLM model...{Style.RESET_ALL}")
-        llm = LiteLLMRunner(
+        llm = LiteLLMAssistant(
             lite_llm_model=lite_llm_model,
             lite_llm_model_uses_system_message=lite_llm_model_uses_system_message,
             lite_llm_context_size=lite_llm_context_size,
@@ -122,7 +122,7 @@ for more information. Exiting...""")
         '.',
         embed,
         ignore_paths,
-        llama_cpp_embed_chunk_size,
+        embed_chunk_size,
         llm.update_index_and_chunks
     )
 

@@ -3,12 +3,14 @@ import sys
 
 import numpy as np
 from colorama import Style, Fore
-from llama_cpp import Llama
-from litellm import completion
 
-from dir_assistant.assistant.index import search_index, count_tokens
+from dir_assistant.assistant.index import search_index
 
-class BaseRunner:
+class BaseAssistant:
+    """
+    A base class for LLM assistants that enables inclusion of local files in the LLM context. Files
+    are collected recursively from the current directory.
+    """
     def __init__(
             self,
             system_instructions,
@@ -25,7 +27,7 @@ class BaseRunner:
         self.context_file_ratio = context_file_ratio
         self.use_cgrag = use_cgrag
         self.print_cgrag = print_cgrag
-        system_instructions_tokens = count_tokens(embed, system_instructions)
+        system_instructions_tokens = self.embed.count_tokens(system_instructions)
         self.chat_history = [{
             "role": "system",
             "content": system_instructions,
@@ -84,7 +86,7 @@ information to work with. If the prompt is referencing code, list specific class
             cgrag_history.append({
                 "role": "user",
                 "content": cgrag_content,
-                "tokens": count_tokens(self.embed, cgrag_content)
+                "tokens": self.embed.count_tokens(cgrag_content)
             })
             sum_of_tokens = sum([message["tokens"] for message in cgrag_history])
             while sum_of_tokens > self.context_size:
@@ -109,7 +111,7 @@ information to work with. If the prompt is referencing code, list specific class
         self.chat_history.append({
             "role": "user",
             "content": user_content, # content will be replaced with user_input a few lines below
-            "tokens": count_tokens(self.embed, user_input) # we will be using user_input in the final history object
+            "tokens": self.embed.count_tokens(user_input) # we will be using user_input in the final history object
         })
 
         # Remove old messages from the chat history if too large for context
@@ -131,7 +133,7 @@ information to work with. If the prompt is referencing code, list specific class
         sys.stdout.flush()
 
         # Add the completion to the chat history
-        output_message["tokens"] = count_tokens(self.embed, output_message["content"])
+        output_message["tokens"] = self.embed.count_tokens(output_message["content"])
         self.chat_history.append(output_message)
 
     def update_index_and_chunks(self, file_path, new_chunks, new_embeddings):
@@ -154,108 +156,3 @@ information to work with. If the prompt is referencing code, list specific class
             self.index.add(np.array(new_embeddings))
 
 
-class LlamaCppRunner(BaseRunner):
-    def __init__(
-            self,
-            model_path,
-            llama_cpp_options,
-            system_instructions,
-            embed,
-            index,
-            chunks,
-            context_file_ratio,
-            use_cgrag,
-            print_cgrag,
-            completion_options,
-    ):
-        super().__init__(
-            system_instructions,
-            embed,
-            index,
-            chunks,
-            context_file_ratio,
-            use_cgrag,
-            print_cgrag
-        )
-        self.llm = Llama(
-            model_path=model_path,
-            **llama_cpp_options
-        )
-        self.context_size = self.llm.context_params.n_ctx
-        self.completion_options = completion_options
-        print(f"{Fore.LIGHTBLACK_EX}LLM context size: {self.context_size}{Style.RESET_ALL}")
-
-    def call_completion(self, chat_history):
-        return self.llm.create_chat_completion(
-            messages=chat_history,
-            stream=True,
-            **self.completion_options
-        )
-
-    def write_chunks(self, completion_output, output_message, write_to_stdout=True):
-        for chunk in completion_output:
-            delta = chunk['choices'][0]['delta']
-            if "content" in delta:
-                output_message["content"] += delta["content"]
-                if write_to_stdout:
-                    sys.stdout.write(delta["content"])
-                    sys.stdout.flush()
-        return output_message
-
-class LiteLLMRunner(BaseRunner):
-    def __init__(
-            self,
-            lite_llm_model,
-            lite_llm_model_uses_system_message,
-            lite_llm_context_size,
-            lite_llm_pass_through_context_size,
-            system_instructions,
-            embed,
-            index,
-            chunks,
-            context_file_ratio,
-            use_cgrag,
-            print_cgrag
-    ):
-        super().__init__(
-            system_instructions,
-            embed,
-            index,
-            chunks,
-            context_file_ratio,
-            use_cgrag,
-            print_cgrag
-        )
-        self.lite_llm_model = lite_llm_model
-        self.context_size = lite_llm_context_size
-        self.pass_through_context_size = lite_llm_pass_through_context_size
-        print(f"{Fore.LIGHTBLACK_EX}LiteLLM context size: {self.context_size}{Style.RESET_ALL}")
-        if not lite_llm_model_uses_system_message:
-            self.chat_history[0]['role'] = 'user'
-
-    def call_completion(self, chat_history):
-        if self.pass_through_context_size:
-            return completion(
-                model=self.lite_llm_model,
-                messages=chat_history,
-                stream=True,
-                timeout=600,
-                num_ctx=self.context_size
-            )
-        else:
-            return completion(
-                model=self.lite_llm_model,
-                messages=chat_history,
-                stream=True,
-                timeout=600
-            )
-
-    def write_chunks(self, completion_output, output_message, write_to_stdout=True):
-        for chunk in completion_output:
-            delta = chunk['choices'][0]['delta']
-            if "content" in delta and delta["content"] != None:
-                output_message["content"] += delta["content"]
-                if write_to_stdout:
-                    sys.stdout.write(delta["content"])
-                    sys.stdout.flush()
-        return output_message

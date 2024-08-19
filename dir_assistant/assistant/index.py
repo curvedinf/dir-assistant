@@ -11,10 +11,6 @@ INDEX_CACHE_FILENAME = 'index_cache.sqlite'
 INDEX_CACHE_PATH = '~/.cache/dir-assistant'
 
 
-def count_tokens(embed, text):
-    return len(embed.tokenize(bytes(text, 'utf-8')))
-
-
 TEXT_CHARS = bytearray({7, 8, 9, 10, 12, 13, 27} | set(range(0x20, 0x100)) - {0x7f})
 def is_text_file(filepath):
     return not bool(open(filepath, 'rb').read(1024).translate(None, TEXT_CHARS))
@@ -106,7 +102,7 @@ def process_file(embed, filepath, contents, embed_chunk_size):
             proposed_chunk = current_chunk + line_content + '\n'
             chunk_header = f"---------------\n\nUser file '{filepath}' lines {start_line_number}-{line_number}:\n\n"
             proposed_text = chunk_header + proposed_chunk
-            chunk_tokens = count_tokens(embed, proposed_text)
+            chunk_tokens = embed.count_tokens(proposed_text)
 
             if chunk_tokens <= embed_chunk_size:
                 current_chunk = proposed_chunk
@@ -120,11 +116,11 @@ def process_file(embed, filepath, contents, embed_chunk_size):
                 else:
                     # Save the current chunk as it is, and start a new one
                     chunks.append({
-                        "tokens": count_tokens(embed, chunk_header + current_chunk),
+                        "tokens": embed.count_tokens(chunk_header + current_chunk),
                         "text": chunk_header + current_chunk,
                         "filepath": filepath,
                     })
-                    embedding = embed.create_embedding(chunk_header + current_chunk)['data'][0]['embedding']
+                    embedding = embed.create_embedding(chunk_header + current_chunk)
                     embeddings_list.append(embedding)
                     current_chunk = ''
                     start_line_number = line_number  # Next chunk starts from this line
@@ -134,11 +130,11 @@ def process_file(embed, filepath, contents, embed_chunk_size):
     if current_chunk:
         chunk_header = f"---------------\n\nUser file '{filepath}' lines {start_line_number}-{len(lines)}:\n\n"
         chunks.append({
-            "tokens": count_tokens(embed, chunk_header + current_chunk),
+            "tokens": embed.count_tokens(chunk_header + current_chunk),
             "text": chunk_header + current_chunk,
             "filepath": filepath,
         })
-        embedding = embed.create_embedding(chunk_header + current_chunk)['data'][0]['embedding']
+        embedding = embed.create_embedding(chunk_header + current_chunk)
         embeddings_list.append(embedding)
 
     return chunks, embeddings_list
@@ -146,13 +142,13 @@ def process_file(embed, filepath, contents, embed_chunk_size):
 
 def find_split_point(embed, line_content, max_size, header):
     for split_point in range(1, len(line_content)):
-        if count_tokens(embed, header + line_content[:split_point] + '\n') >= max_size:
+        if embed.count_tokens(header + line_content[:split_point] + '\n') >= max_size:
             return split_point - 1
     return len(line_content)
 
 
 def search_index(embed, index, query, all_chunks):
-    query_embedding = embed.create_embedding([query])['data'][0]['embedding']
+    query_embedding = embed.create_embedding(query)
     distances, indices = index.search(np.array([query_embedding]), 100) # 819,200 tokens max with default embedding
     relevant_chunks = [all_chunks[i] for i in indices[0] if i != -1]
     return relevant_chunks
