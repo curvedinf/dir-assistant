@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 # The directory containing this file
 HERE = Path(__file__).parent
@@ -13,11 +13,11 @@ setup(
     version="1.0.3",
     description="Chat with your current directory's files using a local or API LLM.",
     long_description=README,
-    long_description_content_type='text/markdown',
-    url='https://github.com/curvedinf/dir-assistant',
-    author='Chase Adams',
-    author_email='chase.adams@gmail.com',
-    license='MIT',
+    long_description_content_type="text/markdown",
+    url="https://github.com/curvedinf/dir-assistant",
+    author="Chase Adams",
+    author_email="chase.adams@gmail.com",
+    license="MIT",
     packages=find_packages(),
     install_requires=[
         "llama-cpp-python",
