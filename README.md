@@ -18,10 +18,7 @@ and runs API LLMS using the also fantastic [LiteLLM](https://github.com/BerriAI/
 
 ## New Features
 
-* Now installable via pip
-* Thorough CLI functionality including platform installation, model downloading, and config editing.
-* User files have been moved to appropriate home hidden directories.
-* Config now has llama.cpp completion options exposed (top_k, frequency_penalty, etc.)
+* pipx support for Ubuntu 24.04
 
 ## Quickstart
 
@@ -56,6 +53,16 @@ See which platforms are supported using `-h`:
 dir-assistant platform -h
 ```
 
+#### For Ubuntu 24.04 system python
+
+`pip3` has been replaced with `pipx` starting in Ubuntu 24.04, so you will need to modify your install process.
+
+```
+pipx install dir-assistant
+...
+dir-assistant platform cuda --pipx
+```
+
 ### Quickstart with API Model
 
 To get started using an API model, you can use Google Gemini 1.5 Flash, which is currently free.
@@ -86,6 +93,16 @@ See which platforms are supported using `-h`:
 dir-assistant platform -h
 ```
 
+#### For Ubuntu 24.04 system python
+
+`pip3` has been replaced with `pipx` starting in Ubuntu 24.04, so you will need to modify your install process.
+
+```
+pipx install dir-assistant
+...
+dir-assistant platform cuda --pipx
+```
+
 ## Install
 
 Install with pip:
@@ -96,6 +113,14 @@ pip install dir-assistant
 
 The default configuration for `dir-assistant` is API-mode. If you download an LLM model with `download-llm`, 
 local-mode will automatically be set. To change from API-mode to local-mode, set the `ACTIVE_MODEL_IS_LOCAL` setting.
+
+## For Ubuntu 24.04 system python
+
+`pip3` has been replaced with `pipx` starting in Ubuntu 24.04, so you will need to modify your install process.
+
+```
+pipx install dir-assistant
+```
 
 ## Embedding Model Download
 
@@ -129,6 +154,14 @@ Available options: `cpu`, `cuda`, `rocm`, `metal`, `vulkan`, `sycl`
 
 Note: The embedding model and the local llm model will be run with acceleration after selecting a platform. To disable 
 hardware acceleration change `n_gpu_layers = -1` to `n_gpu_layers = 0` in the config.
+
+### For Ubuntu 24.04 system python
+
+`pip3` has been replaced with `pipx` starting in Ubuntu 24.04, so you will need to modify your platform setup process.
+
+```
+dir-assistant platform cuda --pipx
+```
 
 ### For Platform Install Issues
 

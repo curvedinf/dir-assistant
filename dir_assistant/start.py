@@ -13,7 +13,6 @@ from dir_assistant.config import get_file_path
 
 MODELS_PATH = os.path.expanduser('~/.local/share/dir-assistant/models')
 
-
 def display_startup_art():
     print(f"""{Style.BRIGHT}{Fore.GREEN}
 

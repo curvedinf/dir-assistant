@@ -1,3 +1,3 @@
 #!/bin/bash
 
-cp -r dir_assistant/* ~/.local/lib/python3.10/site-packages/dir_assistant/
+cp -r dir_assistant/* ~/.local/share/pipx/venvs/dir-assistant/lib/python3.12/site-packages/dir_assistant

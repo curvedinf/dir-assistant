@@ -24,7 +24,11 @@ def platform(args, config_dict):
         raise ValueError("Invalid platform selection.")
 
     # Install llama-cpp-python with the selected platform cmake_args
-    os.system(f"CMAKE_ARGS='{cmake_args}' pip install --upgrade --force-reinstall --no-cache-dir llama-cpp-python faiss-cpu")
+    if args.pipx:
+        # pip3 has been replaced with pipx on Ubuntu 24.04
+        os.system(f"CMAKE_ARGS='{cmake_args}' pipx runpip dir-assistant install --upgrade --force-reinstall --no-cache-dir llama-cpp-python faiss-cpu")
+    else:
+        os.system(f"CMAKE_ARGS='{cmake_args}' pip install --upgrade --force-reinstall --no-cache-dir llama-cpp-python faiss-cpu")
 
     if is_cpu:
         if 'n_gpu_layers' in config_dict['LLAMA_CPP_OPTIONS']:

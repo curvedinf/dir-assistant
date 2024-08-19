@@ -1,4 +1,5 @@
 import argparse
+import warnings
 
 from dir_assistant.index import clear
 from dir_assistant.models import models_open, models_download_embed, models_download_llm, models_print
@@ -8,6 +9,8 @@ from dir_assistant.setkey import setkey
 from dir_assistant.start import start
 
 def main():
+    warnings.filterwarnings('ignore', category=SyntaxWarning)
+
 	# Setup argument parsing
     parser = argparse.ArgumentParser(description="Chat with your current directory's files using a local or API LLM.")
 
@@ -58,6 +61,11 @@ rocm      - AMD
 metal     - Apple
 sycl      - Intel
 vulkan    - Vulkan'''
+    )
+    setup_parser.add_argument(
+        '--pipx',
+        action='store_true',
+        help='Compatibility option for Ubuntu 24.04. Install using pipx instead of pip.'
     )
 
     # Config
