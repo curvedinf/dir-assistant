@@ -1,9 +1,9 @@
-from dir_assistant.assistant.base_assistant import BaseAssistant
-from colorama import Fore, Style
 import copy
 import sys
 
-from dir_assistant.assistant.index import search_index
+from colorama import Fore, Style
+
+from dir_assistant.assistant.base_assistant import BaseAssistant
 
 
 class CGRAGAssistant(BaseAssistant):
@@ -14,6 +14,7 @@ class CGRAGAssistant(BaseAssistant):
         index,
         chunks,
         context_file_ratio,
+        output_acceptance_retries,
         use_cgrag,
         print_cgrag,
     ):
@@ -23,6 +24,7 @@ class CGRAGAssistant(BaseAssistant):
             index,
             chunks,
             context_file_ratio,
+            output_acceptance_retries,
         )
         self.use_cgrag = use_cgrag
         self.print_cgrag = print_cgrag
@@ -67,15 +69,11 @@ class CGRAGAssistant(BaseAssistant):
             sys.stdout.write(Style.BRIGHT + Fore.WHITE + "\r" + (" " * 36))
         sys.stdout.write("\r(thinking...)" + Style.RESET_ALL)
 
-    def stream_chat(self, user_input):
-        self.write_assistant_thinking_message()
-
-        relevant_full_text = self.build_relevant_full_text(user_input)
-        if self.use_cgrag and self.fileset_larger_than_4x_context:
-            cgrag_prompt = f"""What information related to the included files is important to answering the following 
+    def create_cgrag_prompt(self, base_prompt):
+        return f"""What information related to the included files is important to answering the following 
 user prompt?
 
-User prompt: '{user_input}'
+User prompt: '{base_prompt}'
 
 Respond with only a list of information and concepts. Include in the list all information and concepts necessary to
 answer the prompt, including those in the included files and those which the included files do not contain. Your
@@ -85,15 +83,22 @@ so your response must include the most important concepts and information requir
 prompt. It is okay if the list is very long or short, but err on the side of a longer list so the RAG has more 
 information to work with. If the prompt is referencing code, list specific class, function, and variable names.
 """
+
+    def run_stream_processes(self, user_input, write_to_stdout):
+        prompt = self.create_prompt(user_input)
+        sys.stdout.write(prompt)
+        sys.stdout.flush()
+        relevant_full_text = self.build_relevant_full_text(prompt)
+        if self.use_cgrag and self.fileset_larger_than_4x_context:
+            cgrag_prompt = self.create_cgrag_prompt(prompt)
             cgrag_content = relevant_full_text + cgrag_prompt
             cgrag_history = copy.deepcopy(self.chat_history)
             cgrag_history.append(self.create_user_history(cgrag_content, cgrag_content))
-            self.cull_any_history(cgrag_history)
+            self.cull_history_list(cgrag_history)
             cgrag_generator = self.call_completion(cgrag_history)
             output_history = self.create_empty_history()
             output_history = self.run_completion_generator(cgrag_generator, output_history, False)
             relevant_full_text = self.build_relevant_full_text(output_history["content"])
             self.print_cgrag_output(output_history["content"])
             sys.stdout.flush()
-
-        self.run_basic_chat_stream(user_input, relevant_full_text)
+        return self.run_basic_chat_stream(prompt, relevant_full_text, write_to_stdout)

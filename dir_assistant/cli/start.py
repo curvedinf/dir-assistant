@@ -60,6 +60,8 @@ def start(args, config_dict):
     ]
     use_cgrag = config_dict["USE_CGRAG"]
     print_cgrag = config_dict["PRINT_CGRAG"]
+    output_acceptance_retries = config_dict["OUTPUT_ACCEPTANCE_RETRIES"]
+    commit_to_git = config_dict["COMMIT_TO_GIT"]
 
     if config_dict["EMBED_MODEL"] == "":
         print(
@@ -104,31 +106,35 @@ for more information. Exiting..."""
     if active_model_is_local:
         print(f"{Fore.LIGHTBLACK_EX}Loading local LLM model...{Style.RESET_ALL}")
         llm = LlamaCppAssistant(
-            model_path=llm_model_file,
-            llama_cpp_options=llama_cpp_options,
-            system_instructions=system_instructions_full,
-            embed=embed,
-            index=index,
-            chunks=chunks,
-            context_file_ratio=context_file_ratio,
-            use_cgrag=use_cgrag,
-            print_cgrag=print_cgrag,
-            completion_options=llama_cpp_completion_options,
+            llm_model_file,
+            llama_cpp_options,
+            system_instructions_full,
+            embed,
+            index,
+            chunks,
+            context_file_ratio,
+            use_cgrag,
+            print_cgrag,
+            commit_to_git,
+            output_acceptance_retries,
+            llama_cpp_completion_options,
         )
     else:
         print(f"{Fore.LIGHTBLACK_EX}Loading remote LLM model...{Style.RESET_ALL}")
         llm = LiteLLMAssistant(
-            lite_llm_model=lite_llm_model,
-            lite_llm_model_uses_system_message=lite_llm_model_uses_system_message,
-            lite_llm_context_size=lite_llm_context_size,
-            lite_llm_pass_through_context_size=lite_llm_pass_through_context_size,
-            system_instructions=system_instructions_full,
-            embed=embed,
-            index=index,
-            chunks=chunks,
-            context_file_ratio=context_file_ratio,
-            use_cgrag=use_cgrag,
-            print_cgrag=print_cgrag,
+            lite_llm_model,
+            lite_llm_model_uses_system_message,
+            lite_llm_context_size,
+            lite_llm_pass_through_context_size,
+            system_instructions,
+            embed,
+            index,
+            chunks,
+            context_file_ratio,
+            use_cgrag,
+            print_cgrag,
+            commit_to_git,
+            output_acceptance_retries,
         )
 
     # Start file watcher

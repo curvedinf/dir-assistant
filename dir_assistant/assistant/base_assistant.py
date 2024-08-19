@@ -1,5 +1,6 @@
 import copy
 import sys
+from os import write
 
 import numpy as np
 from colorama import Fore, Style
@@ -20,6 +21,7 @@ class BaseAssistant:
         index,
         chunks,
         context_file_ratio,
+        output_acceptance_retries
     ):
         self.embed = embed
         self.index = index
@@ -34,12 +36,13 @@ class BaseAssistant:
             }
         ]
         self.context_size = 8192
+        self.output_acceptance_retries = output_acceptance_retries
 
     def call_completion(self, chat_history):
         # unimplemented on base class
         raise NotImplementedError
 
-    def run_completion_generator(self, completion_output, output_message, write_to_stdout=True):
+    def run_completion_generator(self, completion_output, output_message, write_to_stdout):
         # unimplemented on base class
         raise NotImplementedError
 
@@ -76,9 +79,9 @@ class BaseAssistant:
         )
 
     def cull_history(self):
-        self.cull_any_history(self.chat_history)
+        self.cull_history_list(self.chat_history)
 
-    def cull_any_history(self, history_list):
+    def cull_history_list(self, history_list):
         sum_of_tokens = sum([message["tokens"] for message in history_list])
         while sum_of_tokens > self.context_size:
             history_list.pop(0)
@@ -87,12 +90,54 @@ class BaseAssistant:
     def create_empty_history(self, role="assistant"):
         return {"role": role, "content": "", "tokens": 0}
 
-    def stream_chat(self, user_input):
-        self.write_assistant_thinking_message()
-        relevant_full_text = self.build_relevant_full_text(user_input)
-        self.run_basic_chat_stream(user_input, relevant_full_text)
+    def create_one_off_prompt_history(self, prompt):
+        return [{
+            "role": "user",
+            "content": prompt,
+            "tokens": self.embed.count_tokens(prompt),
+        }]
 
-    def run_basic_chat_stream(self, user_input, relevant_full_text):
+    def create_prompt(self, user_input):
+        return user_input
+
+    def run_pre_stream_processes(self, user_input, write_to_stdout):
+        self.write_assistant_thinking_message()
+
+    def run_stream_processes(self, user_input, write_to_stdout):
+        # Returns a string of the assistant's response
+        prompt = self.create_prompt(user_input)
+        relevant_full_text = self.build_relevant_full_text(prompt)
+        return self.run_basic_chat_stream(prompt, relevant_full_text, write_to_stdout)
+
+    def run_post_stream_processes(self, user_input, stream_output, write_to_stdout):
+        # Returns whether the output should be accepted
+        return True
+
+    def run_accepted_output_processes(self, user_input, stream_output, write_to_stdout):
+        # Run processes that should be run if the output is accepted
+        return
+
+    def run_bad_output_processes(self, user_input, stream_output, write_to_stdout):
+        # Run processes that should be run if the output is bad
+        return
+
+    def stream_chat(self, user_input):
+        # Main function for streaming assistant chat to the user.
+        retries = 0
+        accepted = False
+        while retries < self.output_acceptance_retries:
+            self.run_pre_stream_processes(user_input, True)
+            stream_output = self.run_stream_processes(user_input, True)
+            accepted = self.run_post_stream_processes(user_input, stream_output, True)
+            if accepted:
+                break
+            retries += 1
+        if accepted:
+            self.run_accepted_output_processes(user_input, stream_output, True)
+        else:
+            self.run_bad_output_processes(user_input, stream_output, True)
+
+    def run_basic_chat_stream(self, user_input, relevant_full_text, write_to_stdout):
         # Add the user input to the chat history
         user_content = relevant_full_text + user_input
         self.add_user_history(user_content, user_input)
@@ -108,14 +153,17 @@ class BaseAssistant:
 
         # Display chat history
         output_history = self.create_empty_history()
-        sys.stdout.write(Style.BRIGHT + Fore.WHITE + "\r" + (" " * 36) + "\r")
-        output_history = self.run_completion_generator(completion_generator, output_history)
-        sys.stdout.write(Style.RESET_ALL + "\n\n")
-        sys.stdout.flush()
+        if write_to_stdout:
+            sys.stdout.write(Style.BRIGHT + Fore.WHITE + "\r" + (" " * 36) + "\r")
+        output_history = self.run_completion_generator(completion_generator, output_history, write_to_stdout)
+        if write_to_stdout:
+            sys.stdout.write(Style.RESET_ALL + "\n\n")
+            sys.stdout.flush()
 
         # Add the completion to the chat history
         output_history["tokens"] = self.embed.count_tokens(output_history["content"])
         self.chat_history.append(output_history)
+        return output_history["content"]
 
     def update_index_and_chunks(self, file_path, new_chunks, new_embeddings):
         # Remove old chunks and embeddings for this file
@@ -137,3 +185,8 @@ class BaseAssistant:
         # Add new embeddings to the index
         if new_embeddings:
             self.index.add(np.array(new_embeddings))
+
+    def run_one_off_completion(self, prompt):
+        one_off_history = self.create_one_off_prompt_history(prompt)
+        completion_generator = self.call_completion(one_off_history)
+        return self.run_completion_generator(completion_generator, self.create_empty_history(), False)

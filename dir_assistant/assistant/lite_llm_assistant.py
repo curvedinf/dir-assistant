@@ -3,10 +3,10 @@ import sys
 from colorama import Fore, Style
 from litellm import completion
 
-from dir_assistant.assistant.cgrag_assistant import CGRAGAssistant
+from dir_assistant.assistant.git_assistant import GitAssistant
 
 
-class LiteLLMAssistant(CGRAGAssistant):
+class LiteLLMAssistant(GitAssistant):
     def __init__(
         self,
         lite_llm_model,
@@ -18,8 +18,10 @@ class LiteLLMAssistant(CGRAGAssistant):
         index,
         chunks,
         context_file_ratio,
+        output_acceptance_retries,
         use_cgrag,
         print_cgrag,
+        commit_to_git,
     ):
         super().__init__(
             system_instructions,
@@ -27,8 +29,10 @@ class LiteLLMAssistant(CGRAGAssistant):
             index,
             chunks,
             context_file_ratio,
+            output_acceptance_retries,
             use_cgrag,
             print_cgrag,
+            commit_to_git,
         )
         self.lite_llm_model = lite_llm_model
         self.context_size = lite_llm_context_size
@@ -56,7 +60,7 @@ class LiteLLMAssistant(CGRAGAssistant):
                 timeout=600,
             )
 
-    def run_completion_generator(self, completion_output, output_message, write_to_stdout=True):
+    def run_completion_generator(self, completion_output, output_message, write_to_stdout):
         for chunk in completion_output:
             delta = chunk["choices"][0]["delta"]
             if "content" in delta and delta["content"] != None:

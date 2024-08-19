@@ -3,10 +3,10 @@ import sys
 from colorama import Fore, Style
 from llama_cpp import Llama
 
-from dir_assistant.assistant.cgrag_assistant import CGRAGAssistant
+from dir_assistant.assistant.git_assistant import GitAssistant
 
 
-class LlamaCppAssistant(CGRAGAssistant):
+class LlamaCppAssistant(GitAssistant):
     def __init__(
         self,
         model_path,
@@ -16,8 +16,10 @@ class LlamaCppAssistant(CGRAGAssistant):
         index,
         chunks,
         context_file_ratio,
+        output_acceptance_retries,
         use_cgrag,
         print_cgrag,
+        commit_to_git,
         completion_options,
     ):
         super().__init__(
@@ -26,8 +28,10 @@ class LlamaCppAssistant(CGRAGAssistant):
             index,
             chunks,
             context_file_ratio,
+            output_acceptance_retries,
             use_cgrag,
             print_cgrag,
+            commit_to_git,
         )
         self.llm = Llama(model_path=model_path, **llama_cpp_options)
         self.context_size = self.llm.context_params.n_ctx
@@ -41,7 +45,7 @@ class LlamaCppAssistant(CGRAGAssistant):
             messages=chat_history, stream=True, **self.completion_options
         )
 
-    def run_completion_generator(self, completion_output, output_message, write_to_stdout=True):
+    def run_completion_generator(self, completion_output, output_message, write_to_stdout):
         for chunk in completion_output:
             delta = chunk["choices"][0]["delta"]
             if "content" in delta:
