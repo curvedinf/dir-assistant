@@ -19,6 +19,7 @@ and runs API LLMS using the also fantastic [LiteLLM](https://github.com/BerriAI/
 ## New Features
 
 * pipx support for Ubuntu 24.04
+* Automatically disable CGRAG for filesets smaller than 4x the LLM context
 
 ## Quickstart
 

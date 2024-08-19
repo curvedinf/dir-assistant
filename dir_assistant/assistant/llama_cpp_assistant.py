@@ -3,10 +3,10 @@ import sys
 from colorama import Fore, Style
 from llama_cpp import Llama
 
-from dir_assistant.assistant.base_assistant import BaseAssistant
+from dir_assistant.assistant.cgrag_assistant import CGRAGAssistant
 
 
-class LlamaCppAssistant(BaseAssistant):
+class LlamaCppAssistant(CGRAGAssistant):
     def __init__(
         self,
         model_path,
@@ -41,7 +41,7 @@ class LlamaCppAssistant(BaseAssistant):
             messages=chat_history, stream=True, **self.completion_options
         )
 
-    def write_chunks(self, completion_output, output_message, write_to_stdout=True):
+    def run_completion_generator(self, completion_output, output_message, write_to_stdout=True):
         for chunk in completion_output:
             delta = chunk["choices"][0]["delta"]
             if "content" in delta:

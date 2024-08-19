@@ -3,10 +3,10 @@ import sys
 from colorama import Fore, Style
 from litellm import completion
 
-from dir_assistant.assistant.base_assistant import BaseAssistant
+from dir_assistant.assistant.cgrag_assistant import CGRAGAssistant
 
 
-class LiteLLMAssistant(BaseAssistant):
+class LiteLLMAssistant(CGRAGAssistant):
     def __init__(
         self,
         lite_llm_model,
@@ -56,7 +56,7 @@ class LiteLLMAssistant(BaseAssistant):
                 timeout=600,
             )
 
-    def write_chunks(self, completion_output, output_message, write_to_stdout=True):
+    def run_completion_generator(self, completion_output, output_message, write_to_stdout=True):
         for chunk in completion_output:
             delta = chunk["choices"][0]["delta"]
             if "content" in delta and delta["content"] != None:
