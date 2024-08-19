@@ -2,7 +2,7 @@ import os
 from platform import system
 from subprocess import run
 
-from dir_assistant.config import get_file_path, save_config
+from dir_assistant.cli.config import get_file_path, save_config
 
 MODELS_DEFAULT_EMBED = 'nomic-embed-text-v1.5.Q5_K_M.gguf'
 MODELS_DEFAULT_LLM = 'Phi-3.1-mini-128k-instruct-Q5_K_L.gguf'

@@ -1,15 +1,17 @@
 import argparse
 import warnings
 
-from dir_assistant.index import clear
-from dir_assistant.models import models_open, models_download_embed, models_download_llm, models_print
-from dir_assistant.platform_setup import platform
-from dir_assistant.config import config, load_config, config_open
-from dir_assistant.setkey import setkey
-from dir_assistant.start import start
+warnings.filterwarnings('ignore', category=SyntaxWarning)
+
+from dir_assistant.assistant.index import clear
+from dir_assistant.cli.models import models_open, models_download_embed, models_download_llm, models_print
+from dir_assistant.cli.platform_setup import platform
+from dir_assistant.cli.config import config, load_config, config_open
+from dir_assistant.cli.setkey import setkey
+from dir_assistant.cli.start import start
+
 
 def main():
-    warnings.filterwarnings('ignore', category=SyntaxWarning)
 
 	# Setup argument parsing
     parser = argparse.ArgumentParser(description="Chat with your current directory's files using a local or API LLM.")

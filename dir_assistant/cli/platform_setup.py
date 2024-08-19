@@ -1,6 +1,6 @@
 import os
 
-from dir_assistant.config import save_config
+from dir_assistant.cli.config import save_config
 
 
 def platform(args, config_dict):

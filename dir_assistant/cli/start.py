@@ -5,10 +5,10 @@ from llama_cpp import Llama
 from colorama import Fore, Style
 from prompt_toolkit import prompt
 
-from dir_assistant.index import create_file_index
-from dir_assistant.model_runners import LlamaCppRunner, LiteLLMRunner
-from dir_assistant.file_watcher import start_file_watcher
-from dir_assistant.config import get_file_path
+from dir_assistant.assistant.index import create_file_index
+from dir_assistant.assistant.model_runners import LlamaCppRunner, LiteLLMRunner
+from dir_assistant.assistant.file_watcher import start_file_watcher
+from dir_assistant.cli.config import get_file_path
 
 
 MODELS_PATH = os.path.expanduser('~/.local/share/dir-assistant/models')

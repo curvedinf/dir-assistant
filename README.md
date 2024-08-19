@@ -53,11 +53,11 @@ See which platforms are supported using `-h`:
 dir-assistant platform -h
 ```
 
-#### For Ubuntu 24.04 system python
+#### For Ubuntu 24.04
 
-`pip3` has been replaced with `pipx` starting in Ubuntu 24.04, so you will need to modify your install process.
+`pip3` has been replaced with `pipx` starting in Ubuntu 24.04.
 
-```
+```shell
 pipx install dir-assistant
 ...
 dir-assistant platform cuda --pipx
@@ -93,11 +93,11 @@ See which platforms are supported using `-h`:
 dir-assistant platform -h
 ```
 
-#### For Ubuntu 24.04 system python
+#### For Ubuntu 24.04
 
-`pip3` has been replaced with `pipx` starting in Ubuntu 24.04, so you will need to modify your install process.
+`pip3` has been replaced with `pipx` starting in Ubuntu 24.04.
 
-```
+```shell
 pipx install dir-assistant
 ...
 dir-assistant platform cuda --pipx
@@ -114,11 +114,11 @@ pip install dir-assistant
 The default configuration for `dir-assistant` is API-mode. If you download an LLM model with `download-llm`, 
 local-mode will automatically be set. To change from API-mode to local-mode, set the `ACTIVE_MODEL_IS_LOCAL` setting.
 
-## For Ubuntu 24.04 system python
+#### For Ubuntu 24.04
 
-`pip3` has been replaced with `pipx` starting in Ubuntu 24.04, so you will need to modify your install process.
+`pip3` has been replaced with `pipx` starting in Ubuntu 24.04.
 
-```
+```shell
 pipx install dir-assistant
 ```
 
@@ -155,11 +155,11 @@ Available options: `cpu`, `cuda`, `rocm`, `metal`, `vulkan`, `sycl`
 Note: The embedding model and the local llm model will be run with acceleration after selecting a platform. To disable 
 hardware acceleration change `n_gpu_layers = -1` to `n_gpu_layers = 0` in the config.
 
-### For Ubuntu 24.04 system python
+#### For Ubuntu 24.04
 
-`pip3` has been replaced with `pipx` starting in Ubuntu 24.04, so you will need to modify your platform setup process.
+`pip3` has been replaced with `pipx` starting in Ubuntu 24.04.
 
-```
+```shell
 dir-assistant platform cuda --pipx
 ```
 

@@ -6,7 +6,7 @@ from colorama import Style, Fore
 from llama_cpp import Llama
 from litellm import completion
 
-from dir_assistant.index import search_index, count_tokens
+from dir_assistant.assistant.index import search_index, count_tokens
 
 class BaseRunner:
     def __init__(
