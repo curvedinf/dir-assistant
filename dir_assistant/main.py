@@ -113,7 +113,11 @@ vulkan    - Vulkan'''
 
     # Parse the arguments
     args = parser.parse_args()
-    config_dict = load_config()
+
+    if args.mode != 'config' or args.config_mode != 'open':
+        # Do not load the config file if the user is opening the config file.
+        # The toml may be malformed, so we don't want to crash before it is opened.
+        config_dict = load_config()
 
     # Run the user's selected mode
     if args.mode == 'start' or args.mode is None:
@@ -124,7 +128,7 @@ vulkan    - Vulkan'''
         if args.config_mode == 'print' or args.config_mode is None:
             config(args, config_dict)
         elif args.config_mode == 'open':
-            config_open(args, config_dict)
+            config_open(args)
         else:
             config_parser.print_help()
     elif args.mode == 'models':

@@ -94,7 +94,7 @@ def config(args, config_dict):
     print(toml.dumps(config_dict))
 
 
-def config_open(args, config_dict):
+def config_open(args):
     config_file_path = get_file_path(CONFIG_PATH, CONFIG_FILENAME)
     editor = getenv("VISUAL") or getenv("EDITOR")  or "nano" # Default to nano if EDITOR not set
     run([editor, config_file_path])
