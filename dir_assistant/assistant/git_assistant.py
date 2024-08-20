@@ -1,12 +1,10 @@
+```python
 import os
 import sys
 import tempfile
-
 from colorama import Style, Fore
 from prompt_toolkit import prompt
-
 from dir_assistant.assistant.cgrag_assistant import CGRAGAssistant
-
 
 class GitAssistant(CGRAGAssistant):
     def __init__(
@@ -40,7 +38,6 @@ class GitAssistant(CGRAGAssistant):
             # Ask the LLM if a diff commit is appropriate
             should_diff_output = self.run_one_off_completion(f"""Does the prompt below request changes to files? 
 Respond only with "YES" or "NO". Do not respond with additional characters.
-
 User prompt:
 {user_input}
 """)
@@ -59,12 +56,10 @@ Given the user prompt above and included file snippets, respond with the content
 the changes the user prompt requested. Do not provide an introduction, summary, or conclusion. Only respond 
 with the file's contents. Do not respond with surrounding markdown. Add the filename of the file as the
 first line of the response.
-
 Example response:
 /home/user/hello_project/hello_world.py
 if __name__ == "__main__":
     print("Hello, World!")
-
 Real response:
 """
             else:
@@ -81,7 +76,7 @@ Real response:
             if apply_changes == 'y':
                 output_lines = stream_output.split('\n')
                 changed_filepath = output_lines[0].strip()
-                cleaned_output = '\n'.join(output_lines[1:])
+                cleaned_output = '\n'.join(line for line in output_lines[1:] if not (line.startswith('```') or line.endswith('```')))
                 with open(changed_filepath, 'w') as changed_file:
                     changed_file.write(cleaned_output)
                 os.system('git add .')
@@ -94,3 +89,4 @@ Real response:
     def stream_chat(self, user_input):
         self.git_apply_error = None
         super().stream_chat(user_input)
+```

@@ -1,4 +1,3 @@
-```python
 import os
 from colorama import Fore, Style
 from llama_cpp import Llama
@@ -144,4 +143,3 @@ for more information. Exiting..."""
             print(f"{Style.BRIGHT}{Fore.GREEN}Reverted to the previous commit.{Style.RESET_ALL}\n")
         else:
             llm.stream_chat(user_input)
-```
