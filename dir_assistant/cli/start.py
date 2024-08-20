@@ -1,9 +1,9 @@
 import os
 import sys
-
 from colorama import Fore, Style
 from llama_cpp import Llama
 from prompt_toolkit import prompt
+from prompt_toolkit.history import InMemoryHistory
 from dir_assistant.assistant.file_watcher import start_file_watcher
 from dir_assistant.assistant.index import create_file_index
 from dir_assistant.assistant.lite_llm_assistant import LiteLLMAssistant
@@ -62,6 +62,7 @@ def start(args, config_dict):
     print_cgrag = config_dict["PRINT_CGRAG"]
     output_acceptance_retries = config_dict["OUTPUT_ACCEPTANCE_RETRIES"]
     commit_to_git = config_dict["COMMIT_TO_GIT"]
+
     if config_dict["EMBED_MODEL"] == "":
         print(
             """You must specify EMBED_MODEL. Use 'dir-assistant config open' and \
@@ -81,21 +82,26 @@ see readme for more information. Exiting..."""
 for more information. Exiting..."""
         )
         exit(1)
+
     ignore_paths = args.i__ignore if args.i__ignore else []
     ignore_paths.extend(config_dict["GLOBAL_IGNORES"])
+
     # Initialize the embedding model
     print(f"{Fore.LIGHTBLACK_EX}Loading embedding model...{Style.RESET_ALL}")
     embed = LlamaCppEmbed(
         model_path=embed_model_file, embed_options=llama_cpp_embed_options
     )
     embed_chunk_size = embed.get_chunk_size()
+
     # Create the file index
     print(f"{Fore.LIGHTBLACK_EX}Creating file embeddings and index...{Style.RESET_ALL}")
     index, chunks = create_file_index(embed, ignore_paths, embed_chunk_size)
+
     # Set up the system instructions
     system_instructions_full = f"{system_instructions}\n\nThe user will ask questions relating \
     to files they will provide. Do your best to answer questions related to the these files. When \
     the user refers to files, always assume they want to know about the files they provided."
+
     # Initialize the LLM model
     if active_model_is_local:
         print(f"{Fore.LIGHTBLACK_EX}Loading local LLM model...{Style.RESET_ALL}")
@@ -130,19 +136,26 @@ for more information. Exiting..."""
             print_cgrag,
             commit_to_git,
         )
+
     # Start file watcher
     watcher = start_file_watcher(
         ".", embed, ignore_paths, embed_chunk_size, llm.update_index_and_chunks
     )
+
     # Display the startup art
     display_startup_art(commit_to_git)
+
+    # Initialize history for prompt input
+    history = InMemoryHistory()
+
     # Begin the conversation
     while True:
         # Get user input
         sys.stdout.write(
             f"{Style.BRIGHT}{Fore.RED}You (Press ALT-Enter to submit): \n\n{Style.RESET_ALL}"
         )
-        user_input = prompt("", multiline=True)
+        user_input = prompt("", multiline=True, history=history)
+
         if user_input.strip().lower() == "exit":
             break
         elif user_input.strip().lower() == "undo":
