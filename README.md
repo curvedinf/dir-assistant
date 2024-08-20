@@ -298,7 +298,7 @@ COMMIT_TO_GIT = true
 
 Once enabled, the assistant will ask for confirmation on any change you request to modify files. The assistant will
 only change one file at a time, so for multi-file changes, you must make multiple prompts. If your prompt does not 
-involve a file modification, the assistant will not make any updates and it will work as though `COMMIT_TO_GIT` is off. 
+involve a file modification, the assistant will not make any updates, and it will work as though `COMMIT_TO_GIT` is off. 
 To undo a commit, type `undo` in the prompt.
 
 ## Running
@@ -332,13 +332,6 @@ GLOBAL_IGNORES = [
     ...
     "file.txt"
 ]
-```
-
-## Upgrading
-Some version upgrades may have incompatibility issues in the embedding index cache. Use this command to delete the
-index cache so it may be regenerated:
-```shell
-dir-assistant clear
 ```
 
 ## Upgrading
