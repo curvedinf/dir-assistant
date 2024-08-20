@@ -275,6 +275,69 @@ dir-assistant
 Running `dir-assistant` will scan all files recursively in your current directory. The most relevant files will 
 automatically be sent to the LLM when you enter a prompt.
 
+## Automated File Updates withGIT Commits
+The `COMMIT_TO_GIT` feature allows dir-assistant to make changes directly to your files and commit the changes to git
+during the chat. By default, this feature is disabled, but after enabling it, the assistant will suggest file changes 
+and ask whether to apply the changes. If confirmed, it stages the changes and creates a git commit with the prompt 
+message as the commit message.
+
+To enable the `COMMIT_TO_GIT` feature, update the configuration:
+
+```shell
+dir-assistant config open
+```
+
+Change or add the following setting:
+
+```toml
+[DIR_ASSISTANT]
+...
+COMMIT_TO_GIT = true
+```
+
+Once enabled, the assistant will handle the Git commit process as part of its workflow. To undo a commit,
+type `undo` in the prompt.
+
+## Running
+
+```shell
+dir-assistant
+```
+Running `dir-assistant` will scan all files recursively in your current directory. The most relevant files will 
+automatically be sent to the LLM when you enter a prompt.
+
+### Ignoring files
+
+You can ignore files when starting up so they will not be included in the assistant's context:
+
+```shell
+dir-assistant -i file.txt
+```
+
+There is also a global ignore list in the config file. To configure it first open the config file:
+
+```shell
+dir-assistant config open
+```
+
+Then edit the setting:
+
+```toml
+[DIR_ASSISTANT]
+...
+GLOBAL_IGNORES = [
+    ...
+    "file.txt"
+]
+```
+
+## Upgrading
+Some version upgrades may have incompatibility issues in the embedding index cache. Use this command to delete the
+index cache so it may be regenerated:
+```shell
+dir-assistant clear
+```
+
 ## Upgrading
 
 Some version upgrades may have incompatibility issues in the embedding index cache. Use this command to delete the

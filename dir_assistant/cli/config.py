@@ -23,7 +23,7 @@ CONFIG_DEFAULTS = {
     "OUTPUT_ACCEPTANCE_RETRIES": 1,
     "USE_CGRAG": True,
     "PRINT_CGRAG": False,
-    "COMMIT_TO_GIT": True,
+    "COMMIT_TO_GIT": False,
     "MODELS_PATH": "~/.local/share/dir-assistant/models/",
     "EMBED_MODEL": "",
     "LLM_MODEL": "",
