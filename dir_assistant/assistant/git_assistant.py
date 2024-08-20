@@ -1,4 +1,3 @@
-```python
 import os
 import sys
 import tempfile
@@ -76,9 +75,18 @@ Real response:
             if apply_changes == 'y':
                 output_lines = stream_output.split('\n')
                 changed_filepath = output_lines[0].strip()
-                cleaned_output = '\n'.join(line for line in output_lines[1:] if not (line.startswith('```') or line.endswith('```')))
-                with open(changed_filepath, 'w') as changed_file:
-                    changed_file.write(cleaned_output)
+                file_slice = output_lines[1:]
+                if file_slice[0].startswith('```'):
+                    file_slice = file_slice[1:]
+                if file_slice[-1].endswith('```'):
+                    file_slice = file_slice[:-1]
+                cleaned_output = '\n'.join(file_slice)
+                try:
+                    os.makedirs(os.path.dirname(changed_filepath), exist_ok=True)
+                    with open(changed_filepath, 'w') as changed_file:
+                        changed_file.write(cleaned_output)
+                except Exception as e:
+                    return False
                 os.system('git add .')
                 os.system(f'git commit -m "{user_input.strip()}"')
                 if write_to_stdout:
@@ -89,4 +97,3 @@ Real response:
     def stream_chat(self, user_input):
         self.git_apply_error = None
         super().stream_chat(user_input)
-```

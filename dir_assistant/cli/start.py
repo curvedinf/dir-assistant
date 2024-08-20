@@ -1,4 +1,6 @@
 import os
+import sys
+
 from colorama import Fore, Style
 from llama_cpp import Llama
 from prompt_toolkit import prompt
@@ -11,8 +13,8 @@ from dir_assistant.cli.config import get_file_path
 
 MODELS_PATH = os.path.expanduser("~/.local/share/dir-assistant/models")
 
-def display_startup_art():
-    print(
+def display_startup_art(commit_to_git):
+    sys.stdout.write(
         f"""{Style.BRIGHT}{Fore.GREEN}
   _____ _____ _____                                              
  |  __ \_   _|  __ \                                             
@@ -25,11 +27,16 @@ def display_startup_art():
    / /\ \  \___ \\\___ \  | |  \___ \   | | / /\ \ | . ` |  | |   
   / ____ \ ____) |___) |_| |_ ____) |  | |/ ____ \| |\  |  | |   
  /_/    \_\_____/_____/|_____|_____/   |_/_/    \_\_| \_|  |_|   
-{Style.RESET_ALL}"""
+{Style.RESET_ALL}\n\n"""
     )
-    print(
-        f"{Style.BRIGHT}{Fore.BLUE}Type 'exit' to quit the conversation.\n{Style.BLUE}Type 'undo' to revert to the previous commit.\n\n{Style.RESET_ALL}"
+    sys.stdout.write(
+        f"{Style.BRIGHT}{Fore.BLUE}Type 'exit' to quit the conversation.\n"
     )
+    if commit_to_git:
+        sys.stdout.write(
+            f"{Style.BRIGHT}{Fore.BLUE}Type 'undo' to roll back the last commit.\n"
+        )
+    sys.stdout.write("\n")
 
 def start(args, config_dict):
     # Load settings
@@ -107,7 +114,7 @@ for more information. Exiting..."""
             llama_cpp_completion_options,
         )
     else:
-        print(f"{Fore.LIGHTBLACK_EX}Loading remote LLM model...{Style.RESET_ALL}")
+        sys.stdout.write(f"{Fore.LIGHTBLACK_EX}Loading remote LLM model...{Style.RESET_ALL}")
         llm = LiteLLMAssistant(
             lite_llm_model,
             lite_llm_model_uses_system_message,
@@ -128,18 +135,19 @@ for more information. Exiting..."""
         ".", embed, ignore_paths, embed_chunk_size, llm.update_index_and_chunks
     )
     # Display the startup art
-    display_startup_art()
+    display_startup_art(commit_to_git)
     # Begin the conversation
     while True:
         # Get user input
-        print(
-            f"{Style.BRIGHT}{Fore.RED}You (Press ALT-Enter to submit): \n{Style.RESET_ALL}"
+        sys.stdout.write(
+            f"{Style.BRIGHT}{Fore.RED}You (Press ALT-Enter to submit): \n\n{Style.RESET_ALL}"
         )
         user_input = prompt("", multiline=True)
         if user_input.strip().lower() == "exit":
             break
         elif user_input.strip().lower() == "undo":
             os.system('git reset --hard HEAD~1')
-            print(f"{Style.BRIGHT}{Fore.GREEN}Reverted to the previous commit.{Style.RESET_ALL}\n")
+            print(f"\n{Style.BRIGHT}Rolled back to the previous commit.{Style.RESET_ALL}\n\n")
+            continue
         else:
             llm.stream_chat(user_input)
