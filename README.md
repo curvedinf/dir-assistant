@@ -275,8 +275,8 @@ dir-assistant
 Running `dir-assistant` will scan all files recursively in your current directory. The most relevant files will 
 automatically be sent to the LLM when you enter a prompt.
 
-## Automated File Updates withGIT Commits
-The `COMMIT_TO_GIT` feature allows dir-assistant to make changes directly to your files and commit the changes to git
+## Automated file update and git commit
+The `COMMIT_TO_GIT` feature allows `dir-assistant` to make changes directly to your files and commit the changes to git
 during the chat. By default, this feature is disabled, but after enabling it, the assistant will suggest file changes 
 and ask whether to apply the changes. If confirmed, it stages the changes and creates a git commit with the prompt 
 message as the commit message.
@@ -372,6 +372,7 @@ please see [CONTRIBUTORS.md](CONTRIBUTORS.md).
 - ~~File watching (automatically reindex changed files)~~
 - ~~Single-step pip install~~
 - ~~Model download~~
+- ~~Commit to git~~
 - Web search
 - API Embedding models
 - Simple mode for better compatibility with external script automations
