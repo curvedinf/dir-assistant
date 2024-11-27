@@ -41,6 +41,7 @@ class FileChangeHandler(FileSystemEventHandler):
             event.is_directory
             or event.event_type == "opened"
             or event.event_type == "closed"
+            or event.event_type == "closed_no_write"
         ):
             return
         self.reindex_file(event.src_path)
