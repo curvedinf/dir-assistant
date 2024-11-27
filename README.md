@@ -376,3 +376,7 @@ please see [CONTRIBUTORS.md](CONTRIBUTORS.md).
 - Web search
 - API Embedding models
 - Simple mode for better compatibility with external script automations
+
+## Additional Credits
+
+Special thanks to [Blazed.deals](https://blazed.deals) for sponsoring this project.
