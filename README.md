@@ -124,10 +124,12 @@ local-mode will automatically be set. To change from API-mode to local-mode, set
 pipx install dir-assistant
 ```
 
-## Embedding Model Download
+## Embedding Model Download (Optional)
 
-You must download an embedding model regardless of whether you are running in local or API mode. You can
-download a good default embedding model with:
+You must use an embedding model regardless of whether you are running in local or API mode, but you can
+choose whether you want it to be local or API using the `ACTIVE_EMBED_IS_LOCAL` setting. Generally local will be
+faster, but API will be higher quality. To start, it is recommended to use a local model. You can download a 
+good default embedding model with:
 
 ```shell
 dir-assistant models download-embed
