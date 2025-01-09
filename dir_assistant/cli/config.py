@@ -20,6 +20,7 @@ CONFIG_DEFAULTS = {
     ],
     "CONTEXT_FILE_RATIO": 0.9,
     "ACTIVE_MODEL_IS_LOCAL": False,
+    "ACTIVE_EMBED_IS_LOCAL": False,
     "OUTPUT_ACCEPTANCE_RETRIES": 1,
     "USE_CGRAG": True,
     "PRINT_CGRAG": False,
@@ -28,7 +29,7 @@ CONFIG_DEFAULTS = {
     "EMBED_MODEL": "",
     "LLM_MODEL": "",
     "LLAMA_CPP_OPTIONS": {
-        "n_ctx": 9200,
+        "n_ctx": 10000,
         "verbose": False,
     },
     "LLAMA_CPP_EMBED_OPTIONS": {
@@ -45,6 +46,9 @@ CONFIG_DEFAULTS = {
     "LITELLM_CONTEXT_SIZE": 500000,
     "LITELLM_MODEL_USES_SYSTEM_MESSAGE": False,
     "LITELLM_PASS_THROUGH_CONTEXT_SIZE": False,
+    "LITELLM_EMBED_MODEL": "gemini/text-embedding-004",
+    "LITELLM_EMBED_CHUNK_SIZE": 2048,
+    "LITELLM_EMBED_REQUEST_DELAY": 0,
     "LITELLM_API_KEYS": {
         "GEMINI_API_KEY": "",
         "OPENAI_API_KEY": "",

@@ -54,3 +54,6 @@ class LlamaCppAssistant(GitAssistant):
                     sys.stdout.write(delta["content"])
                     sys.stdout.flush()
         return output_message
+
+    def count_tokens(self, text):
+        return len(self.llm.tokenize(bytes(text, "utf-8")))

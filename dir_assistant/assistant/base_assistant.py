@@ -1,6 +1,4 @@
-import copy
 import sys
-from os import write
 
 import numpy as np
 from colorama import Fore, Style
@@ -23,20 +21,25 @@ class BaseAssistant:
         context_file_ratio,
         output_acceptance_retries
     ):
+        self.system_instructions = system_instructions
         self.embed = embed
         self.index = index
         self.chunks = chunks
         self.context_file_ratio = context_file_ratio
-        system_instructions_tokens = self.embed.count_tokens(system_instructions)
+        self.context_size = 8192
+        self.output_acceptance_retries = output_acceptance_retries
+
+    def initialize_history(self):
+        # This inititialization occurs separately from the constructor because child classes need to initialize
+        # before count_tokens can be called.
+        system_instructions_tokens = self.count_tokens(self.system_instructions)
         self.chat_history = [
             {
                 "role": "system",
-                "content": system_instructions,
+                "content": self.system_instructions,
                 "tokens": system_instructions_tokens,
             }
         ]
-        self.context_size = 8192
-        self.output_acceptance_retries = output_acceptance_retries
 
     def call_completion(self, chat_history):
         # unimplemented on base class
@@ -46,12 +49,18 @@ class BaseAssistant:
         # unimplemented on base class
         raise NotImplementedError
 
+    def count_tokens(self, text):
+        # unimplemented on base class
+        raise NotImplementedError
+
     def build_relevant_full_text(self, user_input):
         relevant_chunks = search_index(self.embed, self.index, user_input, self.chunks)
         relevant_full_text = ""
         chunk_total_tokens = 0
         for i, relevant_chunk in enumerate(relevant_chunks, start=1):
-            chunk_total_tokens += relevant_chunk["tokens"]
+            # Note: relevant_chunk["tokens"] is created with the embedding model, not the LLM, so it will
+            # not be accurate for the purposes of maximizing the context of the LLM.
+            chunk_total_tokens += self.count_tokens(relevant_chunk["text"] + "\n\n")
             if chunk_total_tokens >= self.context_size * self.context_file_ratio:
                 break
             relevant_full_text += relevant_chunk["text"] + "\n\n"
@@ -82,10 +91,10 @@ class BaseAssistant:
         self.cull_history_list(self.chat_history)
 
     def cull_history_list(self, history_list):
-        sum_of_tokens = sum([message["tokens"] for message in history_list])
+        sum_of_tokens = sum([self.count_tokens(message["content"]) for message in history_list])
         while sum_of_tokens > self.context_size:
             history_list.pop(0)
-            sum_of_tokens = sum([message["tokens"] for message in history_list])
+            sum_of_tokens = sum([self.count_tokens(message["content"]) for message in history_list])
 
     def create_empty_history(self, role="assistant"):
         return {"role": role, "content": "", "tokens": 0}
@@ -94,7 +103,7 @@ class BaseAssistant:
         return [{
             "role": "user",
             "content": prompt,
-            "tokens": self.embed.count_tokens(prompt),
+            "tokens": self.count_tokens(prompt),
         }]
 
     def create_prompt(self, user_input):
@@ -163,7 +172,7 @@ class BaseAssistant:
             sys.stdout.flush()
 
         # Add the completion to the chat history
-        output_history["tokens"] = self.embed.count_tokens(output_history["content"])
+        output_history["tokens"] = self.count_tokens(output_history["content"])
         self.chat_history.append(output_history)
         return output_history["content"]
 
