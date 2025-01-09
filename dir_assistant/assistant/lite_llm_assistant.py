@@ -1,7 +1,7 @@
 import sys
 
 from colorama import Fore, Style
-from litellm import completion
+from litellm import completion, token_counter
 
 from dir_assistant.assistant.git_assistant import GitAssistant
 
@@ -69,3 +69,6 @@ class LiteLLMAssistant(GitAssistant):
                     sys.stdout.write(delta["content"])
                     sys.stdout.flush()
         return output_message
+
+    def count_tokens(self, text):
+        return token_counter(model=self.lite_llm_model, messages=[text])

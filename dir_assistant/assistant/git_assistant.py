@@ -1,6 +1,5 @@
 import os
 import sys
-import tempfile
 from colorama import Style, Fore
 from prompt_toolkit import prompt
 from dir_assistant.assistant.cgrag_assistant import CGRAGAssistant

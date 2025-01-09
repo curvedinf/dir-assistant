@@ -1,7 +1,6 @@
 import os
 import sys
 from colorama import Fore, Style
-from llama_cpp import Llama
 from prompt_toolkit import prompt
 from prompt_toolkit.history import InMemoryHistory
 from dir_assistant.assistant.file_watcher import start_file_watcher

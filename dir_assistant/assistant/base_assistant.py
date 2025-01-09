@@ -1,6 +1,4 @@
-import copy
 import sys
-from os import write
 
 import numpy as np
 from colorama import Fore, Style
