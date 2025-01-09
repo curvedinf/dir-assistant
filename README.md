@@ -126,9 +126,9 @@ pipx install dir-assistant
 
 ## Embedding Model Configuration
 
-You must use an embedding model regardless of whether you are running in local or API mode, but you can
-choose whether you want it to be local or API using the `ACTIVE_EMBED_IS_LOCAL` setting. Generally local will be
-faster, but API will be higher quality. To start, it is recommended to use a local model. You can download a 
+You must use an embedding model regardless of whether you are running an LLM via local or API mode, but you can also
+choose whether the embedding model is local or API using the `ACTIVE_EMBED_IS_LOCAL` setting. Generally local embedding 
+will be faster, but API will be higher quality. To start, it is recommended to use a local model. You can download a 
 good default embedding model with:
 
 ```shell
