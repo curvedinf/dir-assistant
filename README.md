@@ -20,6 +20,7 @@ and runs API LLMS using the also fantastic [LiteLLM](https://github.com/BerriAI/
 
 * API embedding support with the new `ACTIVE_EMBED_IS_LOCAL = false` setting
 * Updated default local model to `QWQ-LCoT-7B-Instruct`
+* Improved prompt robustness and efficiency
 
 ## Quickstart
 
@@ -359,7 +360,7 @@ please see [CONTRIBUTORS.md](CONTRIBUTORS.md).
 
 ## Limitations
 
-- Only tested on Ubuntu 22.04. Please let us know if you run it successfully on other platforms by submitting an issue.
+- Only tested on Ubuntu 22.04 and 24.04. Please let us know if you run it successfully on other platforms by submitting an issue.
 - Dir-assistant only detects and reads text files at this time.
 
 ## Todos
@@ -373,8 +374,8 @@ please see [CONTRIBUTORS.md](CONTRIBUTORS.md).
 - ~~Single-step pip install~~
 - ~~Model download~~
 - ~~Commit to git~~
+- ~~API Embedding models~~
 - Web search
-- API Embedding models
 - Simple mode for better compatibility with external script automations
 
 ## Additional Credits
