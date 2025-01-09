@@ -35,7 +35,7 @@ class GitAssistant(CGRAGAssistant):
         else:
             # Ask the LLM if a diff commit is appropriate
             should_diff_output = self.run_one_off_completion(f"""Does the prompt below request changes to files? 
-Respond only with "YES" or "NO". Do not respond with additional characters.
+Respond only with one word: "YES" or "NO". Do not respond with additional words or characters, only "YES" or "NO".
 User prompt:
 {user_input}
 """)
@@ -60,6 +60,7 @@ Example response:
 /home/user/hello_project/hello_world.py
 if __name__ == "__main__":
     print("Hello, World!")
+
 Real response:
 """
             else:

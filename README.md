@@ -18,18 +18,18 @@ and runs API LLMS using the also fantastic [LiteLLM](https://github.com/BerriAI/
 
 ## New Features
 
-* pipx support for Ubuntu 24.04
-* Automatically disable CGRAG for filesets smaller than 4x the LLM context
+* API embedding support with the new `ACTIVE_EMBED_IS_LOCAL = false` setting
+* Updated default local model to `QWQ-LCoT-7B-Instruct`
 
 ## Quickstart
 
 In this section are recipes to run `dir-assistant` in basic capacity to get you started quickly.
 
-### Quickstart with Local Default Model (Phi 3 128k)
+### Quickstart with Local Default Model
 
 To get started locally, you can download a default llm model. Default configuration with this model requires 
-11GB of memory on most hardware or 8GB on nvidia GPUs due to flash attention availability (enabled by default). 
-You will be able to adjust the configuration to fit higher or lower memory requirements. To run via CPU:
+8GB of memory on most hardware. You will be able to adjust the configuration to fit higher or lower memory 
+requirements. To run via CPU:
 
 ```shell
 pip install dir-assistant
@@ -205,7 +205,7 @@ However, in most cases you will need to modify other options when changing APIs.
 
 ## Local LLM Model Download
 
-If you want to use a local LLM, you can download a low requirements default model (Phi 3 128k) with:
+If you want to use a local LLM, you can download a low requirements default model with:
 
 ```shell
 dir-assistant models download-llm

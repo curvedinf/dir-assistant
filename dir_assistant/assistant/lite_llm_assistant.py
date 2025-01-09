@@ -71,4 +71,4 @@ class LiteLLMAssistant(GitAssistant):
         return output_message
 
     def count_tokens(self, text):
-        return token_counter(model=self.lite_llm_model, messages=[text])
+        return token_counter(model=self.lite_llm_model, messages=[{"user": "role", "content": text}])

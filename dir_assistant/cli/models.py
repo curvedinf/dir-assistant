@@ -5,9 +5,9 @@ from subprocess import run
 from dir_assistant.cli.config import get_file_path, save_config
 
 MODELS_DEFAULT_EMBED = "nomic-embed-text-v1.5.Q5_K_M.gguf"
-MODELS_DEFAULT_LLM = "Phi-3.1-mini-128k-instruct-Q5_K_L.gguf"
+MODELS_DEFAULT_LLM = "QwQ-LCoT-7B-Instruct-Q4_0.gguf"
 MODELS_DEFAULT_EMBED_URL = f"https://huggingface.co/nomic-ai/nomic-embed-text-v1.5-GGUF/resolve/main/{MODELS_DEFAULT_EMBED}?download=true"
-MODELS_DEFAULT_LLM_URL = f"https://huggingface.co/bartowski/Phi-3.1-mini-128k-instruct-GGUF/resolve/main/{MODELS_DEFAULT_LLM}?download=true"
+MODELS_DEFAULT_LLM_URL = f"https://huggingface.co/bartowski/QwQ-LCoT-7B-Instruct-GGUF/resolve/main/{MODELS_DEFAULT_LLM}?download=true"
 
 
 def open_directory(path):
@@ -37,6 +37,7 @@ def models_download_embed(args, config_dict):
         config_dict["DIR_ASSISTANT"]["MODELS_PATH"], MODELS_DEFAULT_EMBED
     )
     run(["wget", "-O", model_path, MODELS_DEFAULT_EMBED_URL])
+    config_dict["DIR_ASSISTANT"]["ACTIVE_EMBED_IS_LOCAL"] = True
     config_dict["DIR_ASSISTANT"]["EMBED_MODEL"] = MODELS_DEFAULT_EMBED
     save_config(config_dict)
 
