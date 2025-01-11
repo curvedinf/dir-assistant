@@ -37,10 +37,14 @@ class LiteLLMAssistant(GitAssistant):
         self.lite_llm_model = lite_llm_model
         self.context_size = lite_llm_context_size
         self.pass_through_context_size = lite_llm_pass_through_context_size
+        self.lite_llm_model_uses_system_message = lite_llm_model_uses_system_message
         print(
             f"{Fore.LIGHTBLACK_EX}LiteLLM context size: {self.context_size}{Style.RESET_ALL}"
         )
-        if not lite_llm_model_uses_system_message:
+
+    def initialize_history(self):
+        super().initialize_history()
+        if not self.lite_llm_model_uses_system_message:
             self.chat_history[0]["role"] = "user"
 
     def call_completion(self, chat_history):
