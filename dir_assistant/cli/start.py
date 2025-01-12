@@ -104,6 +104,9 @@ see readme for more information. Exiting..."""
         exit(1)
 
     ignore_paths = args.i__ignore if args.i__ignore else []
+    additional_folders = []
+    if args.additional_scan_folders:
+        additional_folders = [f.strip() for f in args.additional_scan_folders.split(",")]
     ignore_paths.extend(config_dict["GLOBAL_IGNORES"])
 
     # Initialize the embedding model
@@ -123,7 +126,7 @@ see readme for more information. Exiting..."""
 
     # Create the file index
     print(f"{Fore.LIGHTBLACK_EX}Creating file embeddings and index...{Style.RESET_ALL}")
-    index, chunks = create_file_index(embed, ignore_paths, embed_chunk_size)
+    index, chunks = create_file_index(embed, ignore_paths, embed_chunk_size, additional_folders)
 
     # Set up the system instructions
     system_instructions_full = f"{system_instructions}\n\nThe user will ask questions relating \
