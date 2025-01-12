@@ -189,7 +189,7 @@ see readme for more information. Exiting..."""
         bindings = KeyBindings()
 
         @bindings.add(Keys.Escape, Keys.Enter)
-        @bindings.add(Keys.AltEnter)  # For Option-Enter on macOS
+        @bindings.add('escape', 'enter')  # For Option-Enter on macOS
         def _(event):
             event.current_buffer.validate_and_handle()
 
