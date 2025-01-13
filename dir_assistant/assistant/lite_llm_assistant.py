@@ -64,7 +64,9 @@ class LiteLLMAssistant(GitAssistant):
                 timeout=600,
             )
 
-    def run_completion_generator(self, completion_output, output_message, write_to_stdout):
+    def run_completion_generator(
+        self, completion_output, output_message, write_to_stdout
+    ):
         for chunk in completion_output:
             delta = chunk["choices"][0]["delta"]
             if "content" in delta and delta["content"] != None:
@@ -75,4 +77,6 @@ class LiteLLMAssistant(GitAssistant):
         return output_message
 
     def count_tokens(self, text):
-        return token_counter(model=self.lite_llm_model, messages=[{"user": "role", "content": text}])
+        return token_counter(
+            model=self.lite_llm_model, messages=[{"user": "role", "content": text}]
+        )

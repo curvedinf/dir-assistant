@@ -19,7 +19,7 @@ class BaseAssistant:
         index,
         chunks,
         context_file_ratio,
-        output_acceptance_retries
+        output_acceptance_retries,
     ):
         self.system_instructions = system_instructions
         self.embed = embed
@@ -45,7 +45,9 @@ class BaseAssistant:
         # unimplemented on base class
         raise NotImplementedError
 
-    def run_completion_generator(self, completion_output, output_message, write_to_stdout):
+    def run_completion_generator(
+        self, completion_output, output_message, write_to_stdout
+    ):
         # unimplemented on base class
         raise NotImplementedError
 
@@ -70,9 +72,7 @@ class BaseAssistant:
         sys.stdout.write(
             f"{Style.BRIGHT}{Fore.GREEN}\nAssistant: \n\n{Style.RESET_ALL}"
         )
-        sys.stdout.write(
-            f"{Style.BRIGHT}{Fore.WHITE}\r(thinking...){Style.RESET_ALL}"
-        )
+        sys.stdout.write(f"{Style.BRIGHT}{Fore.WHITE}\r(thinking...){Style.RESET_ALL}")
         sys.stdout.flush()
 
     def create_user_history(self, temp_content, final_content):
@@ -83,28 +83,32 @@ class BaseAssistant:
         }
 
     def add_user_history(self, temp_content, final_content):
-        self.chat_history.append(
-            self.create_user_history(temp_content, final_content)
-        )
+        self.chat_history.append(self.create_user_history(temp_content, final_content))
 
     def cull_history(self):
         self.cull_history_list(self.chat_history)
 
     def cull_history_list(self, history_list):
-        sum_of_tokens = sum([self.count_tokens(message["content"]) for message in history_list])
+        sum_of_tokens = sum(
+            [self.count_tokens(message["content"]) for message in history_list]
+        )
         while sum_of_tokens > self.context_size:
             history_list.pop(0)
-            sum_of_tokens = sum([self.count_tokens(message["content"]) for message in history_list])
+            sum_of_tokens = sum(
+                [self.count_tokens(message["content"]) for message in history_list]
+            )
 
     def create_empty_history(self, role="assistant"):
         return {"role": role, "content": "", "tokens": 0}
 
     def create_one_off_prompt_history(self, prompt):
-        return [{
-            "role": "user",
-            "content": prompt,
-            "tokens": self.count_tokens(prompt),
-        }]
+        return [
+            {
+                "role": "user",
+                "content": prompt,
+                "tokens": self.count_tokens(prompt),
+            }
+        ]
 
     def create_prompt(self, user_input):
         return user_input
@@ -124,12 +128,12 @@ class BaseAssistant:
 
     def run_accepted_output_processes(self, user_input, stream_output, write_to_stdout):
         # Run processes that should be run if the output is accepted
-        #sys.stdout.write(f'Response accepted, continuing...\n\n')
+        # sys.stdout.write(f'Response accepted, continuing...\n\n')
         return
 
     def run_bad_output_processes(self, user_input, stream_output, write_to_stdout):
         # Run processes that should be run if the output is bad
-        sys.stdout.write(f'Response rejected, ignoring...\n\n')
+        sys.stdout.write(f"Response rejected, ignoring...\n\n")
         return
 
     def stream_chat(self, user_input):
@@ -166,7 +170,9 @@ class BaseAssistant:
         output_history = self.create_empty_history()
         if write_to_stdout:
             sys.stdout.write(Style.BRIGHT + Fore.WHITE + "\r" + (" " * 36) + "\r")
-        output_history = self.run_completion_generator(completion_generator, output_history, write_to_stdout)
+        output_history = self.run_completion_generator(
+            completion_generator, output_history, write_to_stdout
+        )
         if write_to_stdout:
             sys.stdout.write(Style.RESET_ALL + "\n\n")
             sys.stdout.flush()
@@ -201,6 +207,5 @@ class BaseAssistant:
         one_off_history = self.create_one_off_prompt_history(prompt)
         completion_generator = self.call_completion(one_off_history)
         return self.run_completion_generator(
-            completion_generator,
-            self.create_empty_history(),
-            False)['content']
+            completion_generator, self.create_empty_history(), False
+        )["content"]
