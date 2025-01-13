@@ -4,8 +4,8 @@ import sys
 from colorama import Fore, Style
 from prompt_toolkit import prompt
 from prompt_toolkit.history import InMemoryHistory
-from prompt_toolkit.keys import Keys
 from prompt_toolkit.key_binding import KeyBindings
+from prompt_toolkit.keys import Keys
 
 from dir_assistant.assistant.file_watcher import start_file_watcher
 from dir_assistant.assistant.index import create_file_index
@@ -197,7 +197,7 @@ see readme for more information. Exiting..."""
         bindings = KeyBindings()
 
         @bindings.add(Keys.Escape, Keys.Enter)
-        @bindings.add('escape', 'enter')  # For Option-Enter on macOS
+        @bindings.add("escape", "enter")  # For Option-Enter on macOS
         def _(event):
             event.current_buffer.validate_and_handle()
 
