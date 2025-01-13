@@ -77,6 +77,15 @@ def create_file_index(embed, ignore_paths, embed_chunk_size, extra_dirs=[]):
                 f"{Fore.YELLOW}Warning: Additional folder {folder} does not exist{Style.RESET_ALL}"
             )
 
+    if not files_with_contents:
+        print(
+            f"{Fore.YELLOW}Warning: No text files found, creating first-file.txt...{Style.RESET_ALL}"
+        )
+        with open("first-file.txt", "w") as file:
+            file.write("Dir-assistant requires a file to be initialized, so this one was created because "
+                       "the directory was empty.")
+        files_with_contents = get_files_with_contents(".", ignore_paths, cache_db)
+
     chunks = []
     embeddings_list = []
     with SqliteDict(cache_db, autocommit=True) as cache:
