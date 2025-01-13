@@ -191,7 +191,7 @@ see readme for more information. Exiting..."""
     while True:
         # Get user input
         sys.stdout.write(
-            f"{Style.BRIGHT}{Fore.RED}You (Press ALT-Enter, OPTION-Enter, or Ctrl-O to submit): \n\n{Style.RESET_ALL}"
+            f"{Style.BRIGHT}{Fore.RED}You (Press ALT-Enter, OPT-Enter, or CTRL-O to submit): \n\n{Style.RESET_ALL}"
         )
         # Configure key bindings for Option-Enter on macOS
         bindings = KeyBindings()
