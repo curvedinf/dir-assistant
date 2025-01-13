@@ -314,7 +314,7 @@ automatically be sent to the LLM when you enter a prompt.
 You can include files from outside your current directory to include in your `dir-assistant` session:
 
 ```shell
-dir-assistant -d /path/to/dir1 /path/to/dir2
+dir-assistant -d /path/to/dir1 ../dir2
 ```
 
 ### Ignoring files
