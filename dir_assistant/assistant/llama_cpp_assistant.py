@@ -45,7 +45,9 @@ class LlamaCppAssistant(GitAssistant):
             messages=chat_history, stream=True, **self.completion_options
         )
 
-    def run_completion_generator(self, completion_output, output_message, write_to_stdout):
+    def run_completion_generator(
+        self, completion_output, output_message, write_to_stdout
+    ):
         for chunk in completion_output:
             delta = chunk["choices"][0]["delta"]
             if "content" in delta:

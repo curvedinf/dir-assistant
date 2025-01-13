@@ -1,4 +1,4 @@
 #!/bin/sh
 
-black
+black .
 isort . --profile black

@@ -56,10 +56,7 @@ class CGRAGAssistant(BaseAssistant):
         if self.print_cgrag:
             sys.stdout.write(Style.BRIGHT + Fore.WHITE + "\r" + (" " * 36))
             sys.stdout.write(
-                Style.BRIGHT
-                + Fore.WHITE
-                + f'\r{cgrag_output}\n\n'
-                + Style.RESET_ALL
+                Style.BRIGHT + Fore.WHITE + f"\r{cgrag_output}\n\n" + Style.RESET_ALL
             )
             sys.stdout.write(
                 Style.BRIGHT + Fore.GREEN + "Assistant: \n\n" + Style.RESET_ALL
@@ -89,13 +86,19 @@ function, and variable names as applicable to answering the user prompt.
             cgrag_prompt = self.create_cgrag_prompt(user_input)
             cgrag_content = relevant_full_text + cgrag_prompt
             cgrag_history = copy.deepcopy(self.chat_history)
-            cgrag_prompt_history = self.create_user_history(cgrag_content, cgrag_content)
+            cgrag_prompt_history = self.create_user_history(
+                cgrag_content, cgrag_content
+            )
             cgrag_history.append(cgrag_prompt_history)
             self.cull_history_list(cgrag_history)
             cgrag_generator = self.call_completion(cgrag_history)
             output_history = self.create_empty_history()
-            output_history = self.run_completion_generator(cgrag_generator, output_history, False)
-            relevant_full_text = self.build_relevant_full_text(output_history["content"])
+            output_history = self.run_completion_generator(
+                cgrag_generator, output_history, False
+            )
+            relevant_full_text = self.build_relevant_full_text(
+                output_history["content"]
+            )
             self.print_cgrag_output(output_history["content"])
             sys.stdout.flush()
         else:

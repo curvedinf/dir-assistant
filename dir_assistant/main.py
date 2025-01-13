@@ -29,9 +29,10 @@ def main():
         help="A list of space-separated filepaths to ignore.",
     )
     parser.add_argument(
-        "--additional-scan-folders",
+        "-d" "--dirs",
         type=str,
-        help="Comma-separated list of additional folders to scan",
+        nargs="+",
+        help="A list of space-separated directories to work on. Your current directory will always be used.",
     )
 
     mode_subparsers = parser.add_subparsers(
@@ -48,6 +49,12 @@ def main():
         type=str,
         nargs="+",
         help="A list of space-separated filepaths to ignore.",
+    )
+    start_parser.add_argument(
+        "-d" "--dirs",
+        type=str,
+        nargs="+",
+        help="A list of space-separated directories to work on. Your current directory will always be used.",
     )
     start_subparsers = start_parser.add_subparsers(
         dest="start_mode", help="Operation mode for the config subcommand."

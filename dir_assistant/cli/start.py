@@ -1,8 +1,10 @@
 import os
 import sys
+
 from colorama import Fore, Style
 from prompt_toolkit import prompt
 from prompt_toolkit.history import InMemoryHistory
+
 from dir_assistant.assistant.file_watcher import start_file_watcher
 from dir_assistant.assistant.index import create_file_index
 from dir_assistant.assistant.lite_llm_assistant import LiteLLMAssistant
@@ -12,6 +14,7 @@ from dir_assistant.assistant.llama_cpp_embed import LlamaCppEmbed
 from dir_assistant.cli.config import get_file_path
 
 MODELS_PATH = os.path.expanduser("~/.local/share/dir-assistant/models")
+
 
 def display_startup_art(commit_to_git):
     sys.stdout.write(
@@ -37,6 +40,7 @@ def display_startup_art(commit_to_git):
             f"{Style.BRIGHT}{Fore.BLUE}Type 'undo' to roll back the last commit.\n"
         )
     sys.stdout.write("\n")
+
 
 def start(args, config_dict):
     # Main settings
@@ -104,10 +108,9 @@ see readme for more information. Exiting..."""
         exit(1)
 
     ignore_paths = args.i__ignore if args.i__ignore else []
-    additional_folders = []
-    if args.additional_scan_folders:
-        additional_folders = [f.strip() for f in args.additional_scan_folders.split(",")]
     ignore_paths.extend(config_dict["GLOBAL_IGNORES"])
+
+    extra_dirs = args.d__dirs if args.d__dirs else []
 
     # Initialize the embedding model
     print(f"{Fore.LIGHTBLACK_EX}Loading embedding model...{Style.RESET_ALL}")
@@ -126,7 +129,7 @@ see readme for more information. Exiting..."""
 
     # Create the file index
     print(f"{Fore.LIGHTBLACK_EX}Creating file embeddings and index...{Style.RESET_ALL}")
-    index, chunks = create_file_index(embed, ignore_paths, embed_chunk_size, additional_folders)
+    index, chunks = create_file_index(embed, ignore_paths, embed_chunk_size, extra_dirs)
 
     # Set up the system instructions
     system_instructions_full = f"{system_instructions}\n\nThe user will ask questions relating \
@@ -151,7 +154,9 @@ see readme for more information. Exiting..."""
             llama_cpp_completion_options,
         )
     else:
-        sys.stdout.write(f"{Fore.LIGHTBLACK_EX}Loading remote LLM model...{Style.RESET_ALL}")
+        sys.stdout.write(
+            f"{Fore.LIGHTBLACK_EX}Loading remote LLM model...{Style.RESET_ALL}"
+        )
         llm = LiteLLMAssistant(
             lite_llm_model,
             lite_llm_model_uses_system_message,
@@ -191,8 +196,10 @@ see readme for more information. Exiting..."""
         if user_input.strip().lower() == "exit":
             break
         elif user_input.strip().lower() == "undo":
-            os.system('git reset --hard HEAD~1')
-            print(f"\n{Style.BRIGHT}Rolled back to the previous commit.{Style.RESET_ALL}\n\n")
+            os.system("git reset --hard HEAD~1")
+            print(
+                f"\n{Style.BRIGHT}Rolled back to the previous commit.{Style.RESET_ALL}\n\n"
+            )
             continue
         else:
             llm.stream_chat(user_input)
