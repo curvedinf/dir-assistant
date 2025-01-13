@@ -4,17 +4,13 @@ Chat with your current directory's files using a local or API LLM.
 
 ![(Demo GIF of dir-assistant being run)](demo.gif)
 
-Dir-assistant has local platform support for CPU (OpenBLAS), Cuda, ROCm, Metal, Vulkan, and SYCL.
-
-Dir-assistant has API support for all major LLM APIs. More info in the 
+- Local platform support for CPU (OpenBLAS), Cuda, ROCm, Metal, Vulkan, and SYCL. 
+- API support for all major LLM APIs. More info in the 
 [LiteLLM Docs](https://docs.litellm.ai/docs/providers).
-
-Dir-assistant uses a unique method for finding the most important files to include when submitting your
+- Runs on Linux and macOS. Windows may work but we are still looking for testing feedback.
+- Uses a unique method for finding the most important files to include when submitting your
 prompt to an LLM called CGRAG (Contextually Guided Retrieval-Augmented Generation). You can read 
 [this blog post](https://medium.com/@djangoist/how-to-create-accurate-llm-responses-on-large-code-repositories-presenting-cgrag-a-new-feature-of-e77c0ffe432d) for more information about how it works.
-
-This project runs local LLMs via the fantastic [llama-cpp-python](https://github.com/abetlen/llama-cpp-python) package
-and runs API LLMS using the also fantastic [LiteLLM](https://github.com/BerriAI/litellm) package.
 
 ## New Features
 
@@ -361,9 +357,14 @@ the helptext, please report a github issue.
 We appreciate contributions from the community! For a list of contributors and how you can contribute,
 please see [CONTRIBUTORS.md](CONTRIBUTORS.md).
 
+## Acknowledgements
+
+- Local LLMs are run via the fantastic [llama-cpp-python](https://github.com/abetlen/llama-cpp-python) package
+- API LLMS are run using the also fantastic [LiteLLM](https://github.com/BerriAI/litellm) package
+
 ## Limitations
 
-- Only tested on Ubuntu 22.04 and 24.04. Please let us know if you run it successfully on other platforms by submitting an issue.
+- Only tested on Ubuntu 22.04, Ubuntu 24.04, and MacOS. Please let us know if you run it successfully on other platforms by submitting an issue.
 - Dir-assistant only detects and reads text files at this time.
 
 ## Todos
