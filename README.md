@@ -386,7 +386,8 @@ please see [CONTRIBUTORS.md](CONTRIBUTORS.md).
 - ~~Commit to git~~
 - ~~API Embedding models~~
 - Web search
-- Simple mode for better compatibility with external script automations
+- Daemon mode for API-based use
+- Immediate mode for better compatibility with external script automations
 
 ## Additional Credits
 
