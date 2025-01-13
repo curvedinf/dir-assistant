@@ -343,13 +343,6 @@ GLOBAL_IGNORES = [
 ```
 
 ## Upgrading
-Some version upgrades may have incompatibility issues in the embedding index cache. Use this command to delete the
-index cache so it may be regenerated:
-```shell
-dir-assistant clear
-```
-
-## Upgrading
 
 Some version upgrades may have incompatibility issues in the embedding index cache. Use this command to delete the
 index cache so it may be regenerated:
