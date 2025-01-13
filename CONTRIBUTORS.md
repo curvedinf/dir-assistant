@@ -13,6 +13,9 @@ We would like to extend our gratitude to the following contributors for their ef
 - **retteghy**
   - GitHub: [retteghy](https://github.com/retteghy)
 
+- **iSevenDays**
+  - GitHub: [iSevenDays](https://github.com/iSevenDays)
+
 ## How to Contribute
 
 We welcome contributions from the community! Here are a few ways you can help:
