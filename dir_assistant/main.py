@@ -28,6 +28,11 @@ def main():
         nargs="+",
         help="A list of space-separated filepaths to ignore.",
     )
+    parser.add_argument(
+        "--additional-scan-folders",
+        type=str,
+        help="Comma-separated list of additional folders to scan",
+    )
 
     mode_subparsers = parser.add_subparsers(
         dest="mode", help="Run dir-assistant in regular mode"

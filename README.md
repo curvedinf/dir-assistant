@@ -309,6 +309,14 @@ dir-assistant
 Running `dir-assistant` will scan all files recursively in your current directory. The most relevant files will 
 automatically be sent to the LLM when you enter a prompt.
 
+### Additional scan folders
+
+You can include files from folders outside your current directory:
+
+```shell
+dir-assistant start --additional-scan-folders "/path/to/folder1,/path/to/folder2"
+```
+
 ### Ignoring files
 
 You can ignore files when starting up so they will not be included in the assistant's context:
