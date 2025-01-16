@@ -13,7 +13,12 @@ from dir_assistant.cli.models import (
 )
 from dir_assistant.cli.platform_setup import platform
 from dir_assistant.cli.setkey import setkey
-from dir_assistant.cli.start import start, run_single_prompt
+from dir_assistant.cli.start import (
+    start, 
+    run_single_prompt, 
+    get_config_overrides, 
+    parse_config_override
+)
 
 def main():
     # Setup argument parsing
@@ -32,11 +37,6 @@ def main():
         type=str,
         nargs="+",
         help="A list of space-separated directories to work on. Your current directory will always be used.",
-    )
-    parser.add_argument(
-        "--single-prompt",
-        type=str,
-        help="Run a single prompt and output the final answer.",
     )
 
     mode_subparsers = parser.add_subparsers(
@@ -59,6 +59,16 @@ def main():
         type=str,
         nargs="+",
         help="A list of space-separated directories to work on. Your current directory will always be used.",
+    )
+    start_parser.add_argument(
+        "--single-prompt",
+        type=str,
+        help="Run a single prompt and output the final answer.",
+    )
+    start_parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Show debug information during execution.",
     )
     start_subparsers = start_parser.add_subparsers(
         dest="start_mode", help="Operation mode for the config subcommand."
@@ -156,13 +166,37 @@ vulkan    - Vulkan""",
     )
     setkey_parser.add_argument("api_key", type=str, help="The API key to set.")
 
+    # Add config override argument
+    parser.add_argument(
+        '--config',
+        action='append',
+        help='Override config values in KEY=VALUE format. Can be used multiple times.',
+        dest='config_overrides',
+        default=[]
+    )
+
     # Parse the arguments
     args = parser.parse_args()
 
-    if args.mode != "config" or args.config_mode != "open":
+    if not (args.mode == "config" and args.config_mode == "open"):
         # Do not load the config file if the user is opening the config file.
         # The toml may be malformed, so we don't want to crash before it is opened.
         config_dict = load_config()
+
+    # Process config overrides
+    if args.config_overrides:
+        for override in args.config_overrides:
+            try:
+                key, value = parse_config_override(override)
+                if key in config_dict:
+                    config_dict[key] = value
+                else:
+                    print(f"Warning: Unknown config key '{key}' ignored")
+            except ValueError as e:
+                print(f"Warning: {str(e)}")
+    
+    # Update config with environment variable overrides
+    config_dict.update(get_config_overrides(config_dict))
 
     # Run the user's selected mode
     if args.mode == "start" or args.mode is None:

@@ -202,6 +202,70 @@ dir-assistant setkey GEMINI_API_KEY xxxxxYOURAPIKEYHERExxxxx
 
 However, in most cases you will need to modify other options when changing APIs.
 
+## Configuration Overrides
+
+You can override configuration settings using environment variables. This is useful for temporary changes or when running dir-assistant in different environments.
+
+## Command Line Arguments
+
+### Start Mode Arguments
+
+When using the `start` mode (default mode), the following arguments are available:
+
+- `-i --ignore`: A list of space-separated filepaths to ignore
+- `-d --dirs`: A list of space-separated directories to work on (your current directory will always be used)
+- `--single-prompt`: Run a single prompt and output the final answer
+- `--verbose`: Show debug information during execution
+
+Example usage:
+
+```shell
+# Run a single prompt and exit
+dir-assistant start --single-prompt "What does this codebase do?"
+
+# Show debug information
+dir-assistant start --verbose
+
+# Ignore specific files and add additional directories
+dir-assistant start -i "*.log" "*.tmp" -d "../other-project"
+```
+
+### Environment Variable Overrides
+
+Any configuration setting can be overridden using environment variables. The environment variable name should match the configuration key name:
+
+```shell
+# Override the model path
+export LLM_MODEL="mistral-7b-instruct.Q4_K_M.gguf"
+
+# Enable git commits
+export COMMIT_TO_GIT=true
+
+# Change context ratio
+export CONTEXT_FILE_RATIO=0.7
+
+# Example running with overrides
+COMMIT_TO_GIT=true CONTEXT_FILE_RATIO=0.7 dir-assistant
+```
+
+The following value types are automatically converted:
+
+- Booleans: 'true' or 'false' (case insensitive)
+- Integers: '42'
+- Floats: '0.5'
+- Strings: Any other value will be treated as a string
+
+This allows you to quickly test different configurations without modifying your config file:
+
+```shell
+# Run with different models
+LLM_MODEL="model1.gguf" dir-assistant
+LLM_MODEL="model2.gguf" dir-assistant
+
+# Test with different context ratios
+CONTEXT_FILE_RATIO=0.8 dir-assistant
+```
+
 ## Local LLM Model Download
 
 If you want to use a local LLM, you can download a low requirements default model with:

@@ -60,10 +60,11 @@ def get_files_with_contents(directory, ignore_paths, cache_db):
     return files_with_contents
 
 
-def create_file_index(embed, ignore_paths, embed_chunk_size, extra_dirs=[]):
+def create_file_index(embed, ignore_paths, embed_chunk_size, extra_dirs=[], verbose=False):
     cache_db = get_file_path(INDEX_CACHE_PATH, INDEX_CACHE_FILENAME)
 
-    print(f"{Fore.LIGHTBLACK_EX}Finding files to index...{Style.RESET_ALL}")
+    if verbose:
+        print(f"{Fore.LIGHTBLACK_EX}Finding files to index...{Style.RESET_ALL}")
     # Start with current directory
     files_with_contents = get_files_with_contents(".", ignore_paths, cache_db)
 
@@ -73,14 +74,16 @@ def create_file_index(embed, ignore_paths, embed_chunk_size, extra_dirs=[]):
             folder_files = get_files_with_contents(folder, ignore_paths, cache_db)
             files_with_contents.extend(folder_files)
         else:
-            print(
-                f"{Fore.YELLOW}Warning: Additional folder {folder} does not exist{Style.RESET_ALL}"
-            )
+            if verbose:
+                print(
+                    f"{Fore.YELLOW}Warning: Additional folder {folder} does not exist{Style.RESET_ALL}"
+                )
 
     if not files_with_contents:
-        print(
-            f"{Fore.YELLOW}Warning: No text files found, creating first-file.txt...{Style.RESET_ALL}"
-        )
+        if verbose:
+            print(
+                f"{Fore.YELLOW}Warning: No text files found, creating first-file.txt...{Style.RESET_ALL}"
+            )
         with open("first-file.txt", "w") as file:
             file.write("Dir-assistant requires a file to be initialized, so this one was created because "
                        "the directory was empty.")
@@ -93,16 +96,17 @@ def create_file_index(embed, ignore_paths, embed_chunk_size, extra_dirs=[]):
             filepath = file_info["filepath"]
             cached_chunks = cache.get(f"{filepath}_chunks")
             if cached_chunks and cached_chunks["mtime"] == file_info["mtime"]:
-                print(
-                    f"{Fore.LIGHTBLACK_EX}Using cached embeddings for {filepath}{Style.RESET_ALL}"
-                )
+                if verbose:
+                    print(
+                        f"{Fore.LIGHTBLACK_EX}Using cached embeddings for {filepath}{Style.RESET_ALL}"
+                    )
                 chunks.extend(cached_chunks["chunks"])
                 embeddings_list.extend(cached_chunks["embeddings"])
                 continue
 
             contents = file_info["contents"]
             file_chunks, file_embeddings = process_file(
-                embed, filepath, contents, embed_chunk_size
+                embed, filepath, contents, embed_chunk_size, verbose
             )
             chunks.extend(file_chunks)
             embeddings_list.extend(file_embeddings)
@@ -112,21 +116,23 @@ def create_file_index(embed, ignore_paths, embed_chunk_size, extra_dirs=[]):
                 "mtime": file_info["mtime"],
             }
 
-    print(f"{Fore.LIGHTBLACK_EX}Creating index from embeddings...{Style.RESET_ALL}")
+    if verbose:
+        print(f"{Fore.LIGHTBLACK_EX}Creating index from embeddings...{Style.RESET_ALL}")
     embeddings = np.array(embeddings_list)
     index = IndexFlatL2(embeddings.shape[1])
     index.add(embeddings)
     return index, chunks
 
 
-def process_file(embed, filepath, contents, embed_chunk_size):
+def process_file(embed, filepath, contents, embed_chunk_size, verbose=False):
     lines = contents.split("\n")
     current_chunk = ""
     start_line_number = 1
     chunks = []
     embeddings_list = []
 
-    print(f"{Fore.LIGHTBLACK_EX}Creating embeddings for {filepath}{Style.RESET_ALL}")
+    if verbose:
+        print(f"{Fore.LIGHTBLACK_EX}Creating embeddings for {filepath}{Style.RESET_ALL}")
     for line_number, line in enumerate(lines, start=1):
         # Process each line individually if needed
         line_content = line

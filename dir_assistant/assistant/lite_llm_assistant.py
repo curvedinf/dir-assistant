@@ -22,6 +22,7 @@ class LiteLLMAssistant(GitAssistant):
         use_cgrag,
         print_cgrag,
         commit_to_git,
+        verbose=False,
     ):
         super().__init__(
             system_instructions,
@@ -38,9 +39,10 @@ class LiteLLMAssistant(GitAssistant):
         self.context_size = lite_llm_context_size
         self.pass_through_context_size = lite_llm_pass_through_context_size
         self.lite_llm_model_uses_system_message = lite_llm_model_uses_system_message
-        print(
-            f"{Fore.LIGHTBLACK_EX}LiteLLM context size: {self.context_size}{Style.RESET_ALL}"
-        )
+        if verbose:
+            print(
+                f"{Fore.LIGHTBLACK_EX}LiteLLM context size: {self.context_size}{Style.RESET_ALL}"
+            )
 
     def initialize_history(self):
         super().initialize_history()

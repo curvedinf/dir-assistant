@@ -99,8 +99,9 @@ function, and variable names as applicable to answering the user prompt.
             relevant_full_text = self.build_relevant_full_text(
                 output_history["content"]
             )
-            self.print_cgrag_output(output_history["content"])
-            sys.stdout.flush()
+            if write_to_stdout:
+                self.print_cgrag_output(output_history["content"])
+                sys.stdout.flush()
         else:
             relevant_full_text = self.build_relevant_full_text(user_input)
         prompt = self.create_prompt(user_input)

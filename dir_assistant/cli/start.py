@@ -13,7 +13,7 @@ from dir_assistant.assistant.lite_llm_assistant import LiteLLMAssistant
 from dir_assistant.assistant.lite_llm_embed import LiteLlmEmbed
 from dir_assistant.assistant.llama_cpp_assistant import LlamaCppAssistant
 from dir_assistant.assistant.llama_cpp_embed import LlamaCppEmbed
-from dir_assistant.cli.config import get_file_path
+from dir_assistant.cli.config import get_file_path, load_config
 
 MODELS_PATH = os.path.expanduser("~/.local/share/dir-assistant/models")
 
@@ -46,11 +46,49 @@ def run_single_prompt(args, config_dict):
     llm = initialize_llm(args, config_dict)
     llm.initialize_history()
     response = llm.run_stream_processes(args.single_prompt, False)
-    print(f"\n{Style.BRIGHT}{Fore.GREEN}Assistant:{Style.RESET_ALL}\n")
+    
+    # Only print the final response
     print(response)
-    print("\n")
+
+def get_config_overrides(config_dict):
+    """Get configuration overrides from both environment variables and command line arguments"""
+    overrides = {}
+    
+    # Process all environment variables that match config keys
+    for key in os.environ:
+        if key in config_dict:  # Only process if it's a valid config key
+            env_value = os.environ[key]
+            overrides[key] = convert_value(env_value)
+    
+    return overrides
+
+def convert_value(value_str):
+    """Convert string values to appropriate Python types"""
+    # Handle boolean values
+    if value_str.lower() in ('true', 'false'):
+        return value_str.lower() == 'true'
+    # Handle integer values
+    elif value_str.isdigit():
+        return int(value_str)
+    # Handle float values
+    elif value_str.replace('.', '').isdigit():
+        return float(value_str)
+    # Keep as string if no other type matches
+    return value_str
+
+def parse_config_override(override_str):
+    """Parse a key=value config override string"""
+    try:
+        key, value = override_str.split('=', 1)
+        return key.strip(), convert_value(value.strip())
+    except ValueError:
+        raise ValueError(f"Invalid config override format: {override_str}. Use KEY=VALUE format.")
 
 def initialize_llm(args, config_dict):
+    # Apply any environment variable overrides to config
+    overrides = get_config_overrides(config_dict)
+    config_dict.update(overrides)
+    
     # Main settings
     active_model_is_local = config_dict["ACTIVE_MODEL_IS_LOCAL"]
     active_embed_is_local = config_dict["ACTIVE_EMBED_IS_LOCAL"]
@@ -121,7 +159,8 @@ see readme for more information. Exiting..."""
     extra_dirs = args.d__dirs if args.d__dirs else []
 
     # Initialize the embedding model
-    print(f"{Fore.LIGHTBLACK_EX}Loading embedding model...{Style.RESET_ALL}")
+    if args.verbose:
+        print(f"{Fore.LIGHTBLACK_EX}Loading embedding model...{Style.RESET_ALL}")
     if active_embed_is_local:
         embed = LlamaCppEmbed(
             model_path=embed_model_file, embed_options=llama_cpp_embed_options
@@ -136,8 +175,9 @@ see readme for more information. Exiting..."""
         embed_chunk_size = lite_llm_embed_chunk_size
 
     # Create the file index
-    print(f"{Fore.LIGHTBLACK_EX}Creating file embeddings and index...{Style.RESET_ALL}")
-    index, chunks = create_file_index(embed, ignore_paths, embed_chunk_size, extra_dirs)
+    if args.verbose:
+        print(f"{Fore.LIGHTBLACK_EX}Creating file embeddings and index...{Style.RESET_ALL}")
+    index, chunks = create_file_index(embed, ignore_paths, embed_chunk_size, extra_dirs, args.verbose)
 
     # Set up the system instructions
     system_instructions_full = f"{system_instructions}\n\nThe user will ask questions relating \
@@ -146,7 +186,8 @@ see readme for more information. Exiting..."""
 
     # Initialize the LLM model
     if active_model_is_local:
-        print(f"{Fore.LIGHTBLACK_EX}Loading local LLM model...{Style.RESET_ALL}")
+        if args.verbose:
+            print(f"{Fore.LIGHTBLACK_EX}Loading local LLM model...{Style.RESET_ALL}")
         llm = LlamaCppAssistant(
             llm_model_file,
             llama_cpp_options,
@@ -162,9 +203,10 @@ see readme for more information. Exiting..."""
             llama_cpp_completion_options,
         )
     else:
-        sys.stdout.write(
-            f"{Fore.LIGHTBLACK_EX}Loading remote LLM model...{Style.RESET_ALL}"
-        )
+        if args.verbose:
+            sys.stdout.write(
+                f"{Fore.LIGHTBLACK_EX}Loading remote LLM model...{Style.RESET_ALL}"
+            )
         llm = LiteLLMAssistant(
             lite_llm_model,
             lite_llm_model_uses_system_message,
@@ -179,6 +221,7 @@ see readme for more information. Exiting..."""
             use_cgrag,
             print_cgrag,
             commit_to_git,
+            verbose=args.verbose,
         )
 
     return llm
@@ -190,9 +233,9 @@ def start(args, config_dict):
     # Get variables needed for file watcher and startup art
     ignore_paths = args.i__ignore if args.i__ignore else []
     ignore_paths.extend(config_dict["GLOBAL_IGNORES"])
-    commit_to_git = config_dict["COMMIT_TO_GIT"]
+    commit_to_git = config_dict["DIR_ASSISTANT"]["COMMIT_TO_GIT"]
     embed = llm.embed
-    embed_chunk_size = llm.embed.get_chunk_size()
+    embed_chunk_size = lite_llm_embed_chunk_size if not active_embed_is_local else embed.get_chunk_size()
 
     # Start file watcher
     watcher = start_file_watcher(
