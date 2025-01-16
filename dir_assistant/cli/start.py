@@ -185,6 +185,13 @@ def start(args, config_dict):
     llm = initialize_llm(args, config_dict)
     llm.initialize_history()
 
+    # Get variables needed for file watcher and startup art
+    ignore_paths = args.i__ignore if args.i__ignore else []
+    ignore_paths.extend(config_dict["GLOBAL_IGNORES"])
+    commit_to_git = config_dict["COMMIT_TO_GIT"]
+    embed = llm.embed
+    embed_chunk_size = llm.embed.get_chunk_size()
+
     # Start file watcher
     watcher = start_file_watcher(
         ".", embed, ignore_paths, embed_chunk_size, llm.update_index_and_chunks
