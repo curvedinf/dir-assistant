@@ -17,7 +17,6 @@ from dir_assistant.cli.config import get_file_path
 
 MODELS_PATH = os.path.expanduser("~/.local/share/dir-assistant/models")
 
-
 def display_startup_art(commit_to_git):
     sys.stdout.write(
         f"""{Style.BRIGHT}{Fore.GREEN}
@@ -43,8 +42,13 @@ def display_startup_art(commit_to_git):
         )
     sys.stdout.write("\n")
 
+def run_single_prompt(args, config_dict):
+    llm = initialize_llm(args, config_dict)
+    llm.initialize_history()
+    response = llm.run_stream_processes(args.single_prompt, False)
+    print(response)
 
-def start(args, config_dict):
+def initialize_llm(args, config_dict):
     # Main settings
     active_model_is_local = config_dict["ACTIVE_MODEL_IS_LOCAL"]
     active_embed_is_local = config_dict["ACTIVE_EMBED_IS_LOCAL"]
@@ -83,7 +87,7 @@ def start(args, config_dict):
     if active_model_is_local:
         if config_dict["LLM_MODEL"] == "":
             print(
-                """You must specify LLM_MODEL.  Use 'dir-assistant config open' and \
+                """You must specify LLM_MODEL. Use 'dir-assistant config open' and \
     see readme for more information. Exiting..."""
             )
             exit(1)
@@ -174,6 +178,11 @@ see readme for more information. Exiting..."""
             print_cgrag,
             commit_to_git,
         )
+
+    return llm
+
+def start(args, config_dict):
+    llm = initialize_llm(args, config_dict)
     llm.initialize_history()
 
     # Start file watcher

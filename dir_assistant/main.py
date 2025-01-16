@@ -13,8 +13,7 @@ from dir_assistant.cli.models import (
 )
 from dir_assistant.cli.platform_setup import platform
 from dir_assistant.cli.setkey import setkey
-from dir_assistant.cli.start import start
-
+from dir_assistant.cli.start import start, run_single_prompt
 
 def main():
     # Setup argument parsing
@@ -33,6 +32,11 @@ def main():
         type=str,
         nargs="+",
         help="A list of space-separated directories to work on. Your current directory will always be used.",
+    )
+    parser.add_argument(
+        "--single-prompt",
+        type=str,
+        help="Run a single prompt and output the final answer.",
     )
 
     mode_subparsers = parser.add_subparsers(
@@ -162,7 +166,10 @@ vulkan    - Vulkan""",
 
     # Run the user's selected mode
     if args.mode == "start" or args.mode is None:
-        start(args, config_dict["DIR_ASSISTANT"])
+        if args.single_prompt:
+            run_single_prompt(args, config_dict["DIR_ASSISTANT"])
+        else:
+            start(args, config_dict["DIR_ASSISTANT"])
     elif args.mode == "platform":
         platform(args, config_dict["DIR_ASSISTANT"])
     elif args.mode == "config":
@@ -189,7 +196,6 @@ vulkan    - Vulkan""",
         setkey(args, config_dict)
     else:
         parser.print_help()
-
 
 if __name__ == "__main__":
     main()
