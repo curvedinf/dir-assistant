@@ -1,6 +1,7 @@
 import os
 import sys
 
+import litellm
 from colorama import Fore, Style
 from prompt_toolkit import prompt
 from prompt_toolkit.history import InMemoryHistory
@@ -14,6 +15,8 @@ from dir_assistant.assistant.lite_llm_embed import LiteLlmEmbed
 from dir_assistant.assistant.llama_cpp_assistant import LlamaCppAssistant
 from dir_assistant.assistant.llama_cpp_embed import LlamaCppEmbed
 from dir_assistant.cli.config import get_file_path
+
+litellm.suppress_debug_info = True
 
 MODELS_PATH = os.path.expanduser("~/.local/share/dir-assistant/models")
 
