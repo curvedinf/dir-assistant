@@ -38,6 +38,16 @@ def main():
         nargs="+",
         help="A list of space-separated directories to work on. Your current directory will always be used.",
     )
+    parser.add_argument(
+        "--single-prompt",
+        type=str,
+        help="Run a single prompt and output the final answer.",
+    )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Show debug information during execution.",
+    )
 
     mode_subparsers = parser.add_subparsers(
         dest="mode", help="Run dir-assistant in regular mode"
@@ -200,7 +210,7 @@ vulkan    - Vulkan""",
 
     # Run the user's selected mode
     if args.mode == "start" or args.mode is None:
-        if args.single_prompt:
+        if getattr(args, 'single_prompt', None):
             run_single_prompt(args, config_dict["DIR_ASSISTANT"])
         else:
             start(args, config_dict["DIR_ASSISTANT"])
