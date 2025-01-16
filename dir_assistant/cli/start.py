@@ -46,7 +46,9 @@ def run_single_prompt(args, config_dict):
     llm = initialize_llm(args, config_dict)
     llm.initialize_history()
     response = llm.run_stream_processes(args.single_prompt, False)
+    print(f"\n{Style.BRIGHT}{Fore.GREEN}Assistant:{Style.RESET_ALL}\n")
     print(response)
+    print("\n")
 
 def initialize_llm(args, config_dict):
     # Main settings
