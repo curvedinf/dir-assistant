@@ -558,4 +558,3 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 /.pypirc
-.aider*
