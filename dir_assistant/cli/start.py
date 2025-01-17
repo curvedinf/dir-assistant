@@ -54,13 +54,13 @@ def get_config_overrides(config_dict):
     """Get configuration overrides from both environment variables and command line arguments"""
     overrides = {}
     
+    # Check if we're working with the full config dict or just DIR_ASSISTANT section
+    is_full_config = "DIR_ASSISTANT" in config_dict
+    config = config_dict["DIR_ASSISTANT"] if is_full_config else config_dict
+    
     # Process all environment variables that match config keys
     for key in os.environ:
-        if key in config_dict:  # Only process if it's a valid config key
-            env_value = os.environ[key]
-            overrides[key] = convert_value(env_value)
-        # Check if the key exists in DIR_ASSISTANT section
-        elif key in config_dict["DIR_ASSISTANT"]:
+        if key in config:  # Only process if it's a valid config key
             env_value = os.environ[key]
             overrides[key] = convert_value(env_value)
     
@@ -89,16 +89,15 @@ def parse_config_override(override_str):
         raise ValueError(f"Invalid config override format: {override_str}. Use KEY=VALUE format.")
 
 def initialize_llm(args, config_dict):
+    # Check if we're working with the full config dict or just DIR_ASSISTANT section
+    is_full_config = "DIR_ASSISTANT" in config_dict
+    config = config_dict["DIR_ASSISTANT"] if is_full_config else config_dict
+    
     # Apply any environment variable overrides to config
     overrides = get_config_overrides(config_dict)
-    # Update both top-level and DIR_ASSISTANT section
+    # Update config with overrides
     for key, value in overrides.items():
-        if key in config_dict:
-            config_dict[key] = value
-        elif key in config_dict["DIR_ASSISTANT"]:
-            config_dict["DIR_ASSISTANT"][key] = value
-    
-    config = config_dict["DIR_ASSISTANT"]
+        config[key] = value
     
     # Main settings
     active_model_is_local = config["ACTIVE_MODEL_IS_LOCAL"]
@@ -238,7 +237,9 @@ def start(args, config_dict):
     llm.initialize_history()
 
     # Get variables needed for file watcher and startup art
-    config = config_dict["DIR_ASSISTANT"]
+    is_full_config = "DIR_ASSISTANT" in config_dict
+    config = config_dict["DIR_ASSISTANT"] if is_full_config else config_dict
+    
     ignore_paths = args.ignore if args.ignore else []
     ignore_paths.extend(config["GLOBAL_IGNORES"])
     commit_to_git = config["COMMIT_TO_GIT"]
