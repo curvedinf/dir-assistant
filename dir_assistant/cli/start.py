@@ -59,6 +59,10 @@ def get_config_overrides(config_dict):
         if key in config_dict:  # Only process if it's a valid config key
             env_value = os.environ[key]
             overrides[key] = convert_value(env_value)
+        # Check if the key exists in DIR_ASSISTANT section
+        elif key in config_dict["DIR_ASSISTANT"]:
+            env_value = os.environ[key]
+            overrides[key] = convert_value(env_value)
     
     return overrides
 
@@ -87,45 +91,48 @@ def parse_config_override(override_str):
 def initialize_llm(args, config_dict):
     # Apply any environment variable overrides to config
     overrides = get_config_overrides(config_dict)
-    config_dict.update(overrides)
+    # Update both top-level and DIR_ASSISTANT section
+    for key, value in overrides.items():
+        if key in config_dict:
+            config_dict[key] = value
+        elif key in config_dict["DIR_ASSISTANT"]:
+            config_dict["DIR_ASSISTANT"][key] = value
+    
+    config = config_dict["DIR_ASSISTANT"]
     
     # Main settings
-    active_model_is_local = config_dict["ACTIVE_MODEL_IS_LOCAL"]
-    active_embed_is_local = config_dict["ACTIVE_EMBED_IS_LOCAL"]
-    context_file_ratio = config_dict["CONTEXT_FILE_RATIO"]
-    system_instructions = config_dict["SYSTEM_INSTRUCTIONS"]
+    active_model_is_local = config["ACTIVE_MODEL_IS_LOCAL"]
+    active_embed_is_local = config["ACTIVE_EMBED_IS_LOCAL"]
+    context_file_ratio = config["CONTEXT_FILE_RATIO"]
+    system_instructions = config["SYSTEM_INSTRUCTIONS"]
 
     # Llama.cpp settings
-    llm_model_file = get_file_path(config_dict["MODELS_PATH"], config_dict["LLM_MODEL"])
+    llm_model_file = get_file_path(config["MODELS_PATH"], config["LLM_MODEL"])
     embed_model_file = get_file_path(
-        config_dict["MODELS_PATH"], config_dict["EMBED_MODEL"]
+        config["MODELS_PATH"], config["EMBED_MODEL"]
     )
-    llama_cpp_options = config_dict["LLAMA_CPP_OPTIONS"]
-    llama_cpp_embed_options = config_dict["LLAMA_CPP_EMBED_OPTIONS"]
-    llama_cpp_completion_options = config_dict["LLAMA_CPP_COMPLETION_OPTIONS"]
+    llama_cpp_options = config["LLAMA_CPP_OPTIONS"]
+    llama_cpp_embed_options = config["LLAMA_CPP_EMBED_OPTIONS"]
+    llama_cpp_completion_options = config["LLAMA_CPP_COMPLETION_OPTIONS"]
 
     # LiteLLM settings
-    lite_llm_model = config_dict["LITELLM_MODEL"]
-    lite_llm_context_size = config_dict["LITELLM_CONTEXT_SIZE"]
-    lite_llm_model_uses_system_message = config_dict[
-        "LITELLM_MODEL_USES_SYSTEM_MESSAGE"
-    ]
-    lite_llm_pass_through_context_size = config_dict[
-        "LITELLM_PASS_THROUGH_CONTEXT_SIZE"
-    ]
-    lite_llm_embed_model = config_dict["LITELLM_EMBED_MODEL"]
-    lite_llm_embed_chunk_size = config_dict["LITELLM_EMBED_CHUNK_SIZE"]
-    lite_llm_embed_request_delay = float(config_dict["LITELLM_EMBED_REQUEST_DELAY"])
+    lite_llm_model = config["LITELLM_MODEL"]
+    lite_llm_context_size = config["LITELLM_CONTEXT_SIZE"]
+    lite_llm_model_uses_system_message = config["LITELLM_MODEL_USES_SYSTEM_MESSAGE"]
+    lite_llm_pass_through_context_size = config["LITELLM_PASS_THROUGH_CONTEXT_SIZE"]
+    lite_llm_embed_model = config["LITELLM_EMBED_MODEL"]
+    lite_llm_embed_chunk_size = config["LITELLM_EMBED_CHUNK_SIZE"]
+    lite_llm_embed_request_delay = float(config["LITELLM_EMBED_REQUEST_DELAY"])
 
     # Assistant settings
-    use_cgrag = config_dict["USE_CGRAG"]
-    print_cgrag = config_dict["PRINT_CGRAG"]
-    output_acceptance_retries = config_dict["OUTPUT_ACCEPTANCE_RETRIES"]
-    commit_to_git = config_dict["COMMIT_TO_GIT"]
+    use_cgrag = config["USE_CGRAG"]
+    print_cgrag = config["PRINT_CGRAG"]
+    output_acceptance_retries = config["OUTPUT_ACCEPTANCE_RETRIES"]
+    commit_to_git = config["COMMIT_TO_GIT"]
 
     # Check for basic missing model configs
     if active_model_is_local:
-        if config_dict["LLM_MODEL"] == "":
+        if config["LLM_MODEL"] == "":
             print(
                 """You must specify LLM_MODEL. Use 'dir-assistant config open' and \
     see readme for more information. Exiting..."""
@@ -140,7 +147,7 @@ for more information. Exiting..."""
 
     # Check for basic missing embedding model configs
     if active_embed_is_local:
-        if config_dict["EMBED_MODEL"] == "":
+        if config["EMBED_MODEL"] == "":
             print(
                 """You must specify EMBED_MODEL. Use 'dir-assistant config open' and \
 see readme for more information. Exiting..."""
@@ -153,10 +160,10 @@ see readme for more information. Exiting..."""
         )
         exit(1)
 
-    ignore_paths = args.i__ignore if args.i__ignore else []
-    ignore_paths.extend(config_dict["GLOBAL_IGNORES"])
+    ignore_paths = args.ignore if args.ignore else []
+    ignore_paths.extend(config["GLOBAL_IGNORES"])
 
-    extra_dirs = args.d__dirs if args.d__dirs else []
+    extra_dirs = args.dirs if args.dirs else []
 
     # Initialize the embedding model
     if args.verbose:
@@ -231,11 +238,13 @@ def start(args, config_dict):
     llm.initialize_history()
 
     # Get variables needed for file watcher and startup art
-    ignore_paths = args.i__ignore if args.i__ignore else []
-    ignore_paths.extend(config_dict["GLOBAL_IGNORES"])
-    commit_to_git = config_dict["DIR_ASSISTANT"]["COMMIT_TO_GIT"]
+    config = config_dict["DIR_ASSISTANT"]
+    ignore_paths = args.ignore if args.ignore else []
+    ignore_paths.extend(config["GLOBAL_IGNORES"])
+    commit_to_git = config["COMMIT_TO_GIT"]
     embed = llm.embed
-    embed_chunk_size = lite_llm_embed_chunk_size if not active_embed_is_local else embed.get_chunk_size()
+    active_embed_is_local = config["ACTIVE_EMBED_IS_LOCAL"]
+    embed_chunk_size = config["LITELLM_EMBED_CHUNK_SIZE"] if not active_embed_is_local else embed.get_chunk_size()
 
     # Start file watcher
     watcher = start_file_watcher(

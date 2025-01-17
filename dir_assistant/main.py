@@ -27,13 +27,13 @@ def main():
     )
 
     parser.add_argument(
-        "-i" "--ignore",
+        "-i", "--ignore",
         type=str,
         nargs="+",
         help="A list of space-separated filepaths to ignore.",
     )
     parser.add_argument(
-        "-d" "--dirs",
+        "-d", "--dirs",
         type=str,
         nargs="+",
         help="A list of space-separated directories to work on. Your current directory will always be used.",
@@ -59,13 +59,13 @@ def main():
         help="Run dir-assistant in regular mode.",
     )
     start_parser.add_argument(
-        "-i" "--ignore",
+        "-i", "--ignore",
         type=str,
         nargs="+",
         help="A list of space-separated filepaths to ignore.",
     )
     start_parser.add_argument(
-        "-d" "--dirs",
+        "-d", "--dirs",
         type=str,
         nargs="+",
         help="A list of space-separated directories to work on. Your current directory will always be used.",
