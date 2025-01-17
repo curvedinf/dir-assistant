@@ -94,12 +94,12 @@ function, and variable names as applicable to answering the user prompt.
             cgrag_generator = self.call_completion(cgrag_history)
             output_history = self.create_empty_history()
             output_history = self.run_completion_generator(
-                cgrag_generator, output_history, False
+                cgrag_generator, output_history, write_to_stdout and self.print_cgrag
             )
             relevant_full_text = self.build_relevant_full_text(
                 output_history["content"]
             )
-            if write_to_stdout:
+            if write_to_stdout and self.print_cgrag:
                 self.print_cgrag_output(output_history["content"])
                 sys.stdout.flush()
         else:

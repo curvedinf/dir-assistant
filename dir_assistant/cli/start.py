@@ -45,7 +45,7 @@ def display_startup_art(commit_to_git):
 def run_single_prompt(args, config_dict):
     llm = initialize_llm(args, config_dict)
     llm.initialize_history()
-    response = llm.run_stream_processes(args.single_prompt, False)
+    response = llm.run_stream_processes(args.single_prompt, True)
     
     # Only print the final response
     print(response)
@@ -95,8 +95,11 @@ def initialize_llm(args, config_dict):
     
     # Apply any environment variable overrides to config
     overrides = get_config_overrides(config_dict)
+    
     # Update config with overrides
     for key, value in overrides.items():
+        if args.verbose:
+            print(f"Debug: Applying config override {key}={value}")
         config[key] = value
     
     # Main settings
