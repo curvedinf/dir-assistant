@@ -45,6 +45,8 @@ def display_startup_art(commit_to_git):
 def run_single_prompt(args, config_dict):
     llm = initialize_llm(args, config_dict)
     llm.initialize_history()
+    llm.no_color = args.no_color
+    llm.verbose = args.verbose
     response = llm.run_stream_processes(args.single_prompt, True)
     
     # Only print the final response

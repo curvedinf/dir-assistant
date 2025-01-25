@@ -48,6 +48,11 @@ def main():
         action="store_true",
         help="Show debug information during execution.",
     )
+    parser.add_argument(
+        "--no-color",
+        action="store_true",
+        help="Disable colored output.",
+    )
 
     mode_subparsers = parser.add_subparsers(
         dest="mode", help="Run dir-assistant in regular mode"

@@ -28,6 +28,8 @@ class BaseAssistant:
         self.context_file_ratio = context_file_ratio
         self.context_size = 8192
         self.output_acceptance_retries = output_acceptance_retries
+        self.no_color = False
+        self.verbose = False
 
     def initialize_history(self):
         # This inititialization occurs separately from the constructor because child classes need to initialize
@@ -114,7 +116,8 @@ class BaseAssistant:
         return user_input
 
     def run_pre_stream_processes(self, user_input, write_to_stdout):
-        self.write_assistant_thinking_message()
+        if not self.no_color and not self.verbose: # TODO: add an option to disable thinking message
+            self.write_assistant_thinking_message()
 
     def run_stream_processes(self, user_input, write_to_stdout):
         # Returns a string of the assistant's response
