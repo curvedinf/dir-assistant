@@ -85,6 +85,11 @@ def main():
         action="store_true",
         help="Show debug information during execution.",
     )
+    start_parser.add_argument(
+        "--no-color",
+        action="store_true",
+        help="Disable colored output.",
+    )
     start_subparsers = start_parser.add_subparsers(
         dest="start_mode", help="Operation mode for the config subcommand."
     )
