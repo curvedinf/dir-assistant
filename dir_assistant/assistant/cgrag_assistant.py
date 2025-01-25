@@ -63,7 +63,9 @@ class CGRAGAssistant(BaseAssistant):
             )
         else:
             sys.stdout.write(self.get_color_prefix(Style.BRIGHT, Fore.WHITE) + "\r" + (" " * 36))
-        sys.stdout.write("\r(thinking...)" + self.get_color_suffix())
+        sys.stdout.write(
+            f"{self.get_color_prefix(Style.BRIGHT, Fore.WHITE)}\r(thinking...){self.get_color_suffix()}"
+        )
 
     def create_cgrag_prompt(self, base_prompt):
         return f"""What information related to the included files is important to answering the following 

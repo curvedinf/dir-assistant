@@ -202,12 +202,12 @@ class BaseAssistant:
         # Display chat history
         output_history = self.create_empty_history()
         if write_to_stdout:
-            sys.stdout.write(Style.BRIGHT + Fore.WHITE + "\r" + (" " * 36) + "\r")
+            sys.stdout.write(f"{self.get_color_prefix(Style.BRIGHT, Fore.WHITE)}\r{' ' * 36}\r{self.get_color_suffix()}")
         output_history = self.run_completion_generator(
             completion_generator, output_history, write_to_stdout
         )
         if write_to_stdout:
-            sys.stdout.write(Style.RESET_ALL + "\n\n")
+            sys.stdout.write(f"{self.get_color_suffix()}\n\n")
             sys.stdout.flush()
 
         # Add the completion to the chat history
