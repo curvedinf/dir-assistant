@@ -63,6 +63,12 @@ def get_config_overrides(config_dict):
         if key in config:  # Only process if it's a valid config key
             env_value = os.environ[key]
             overrides[key] = convert_value(env_value)
+        # Check for API keys
+        elif key.endswith('_API_KEY') and 'LITELLM_API_KEYS' in config:
+            env_value = os.environ[key]
+            if 'LITELLM_API_KEYS' not in overrides:
+                overrides['LITELLM_API_KEYS'] = {}
+            overrides['LITELLM_API_KEYS'][key] = env_value
     
     return overrides
 
@@ -100,7 +106,11 @@ def initialize_llm(args, config_dict):
     for key, value in overrides.items():
         if args.verbose:
             print(f"Debug: Applying config override {key}={value}")
-        config[key] = value
+        if key == 'LITELLM_API_KEYS':
+            # Update API keys while preserving existing ones
+            config[key].update(value)
+        else:
+            config[key] = value
     
     # Main settings
     active_model_is_local = config["ACTIVE_MODEL_IS_LOCAL"]
