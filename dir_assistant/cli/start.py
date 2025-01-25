@@ -17,9 +17,9 @@ from dir_assistant.cli.config import get_file_path, load_config
 
 MODELS_PATH = os.path.expanduser("~/.local/share/dir-assistant/models")
 
-def display_startup_art(commit_to_git):
+def display_startup_art(commit_to_git, no_color=False):
     sys.stdout.write(
-        f"""{Style.BRIGHT}{Fore.GREEN}
+        f"""{Style.RESET_ALL if no_color else Style.BRIGHT}{Style.RESET_ALL if no_color else Fore.GREEN}
   _____ _____ _____                                              
  |  __ \_   _|  __ \                                             
  | |  | || | | |__) |                                            
@@ -33,12 +33,13 @@ def display_startup_art(commit_to_git):
  /_/    \_\_____/_____/|_____|_____/   |_/_/    \_\_| \_|  |_|   
 {Style.RESET_ALL}\n\n"""
     )
+    color_prefix = Style.RESET_ALL if no_color else f"{Style.BRIGHT}{Fore.BLUE}"
     sys.stdout.write(
-        f"{Style.BRIGHT}{Fore.BLUE}Type 'exit' to quit the conversation.\n"
+        f"{color_prefix}Type 'exit' to quit the conversation.\n"
     )
     if commit_to_git:
         sys.stdout.write(
-            f"{Style.BRIGHT}{Fore.BLUE}Type 'undo' to roll back the last commit.\n"
+            f"{color_prefix}Type 'undo' to roll back the last commit.\n"
         )
     sys.stdout.write("\n")
 
@@ -250,6 +251,7 @@ see readme for more information. Exiting..."""
 def start(args, config_dict):
     llm = initialize_llm(args, config_dict)
     llm.initialize_history()
+    llm.no_color = args.no_color  # Set no_color on the LLM instance
 
     # Get variables needed for file watcher and startup art
     is_full_config = "DIR_ASSISTANT" in config_dict
@@ -268,7 +270,7 @@ def start(args, config_dict):
     )
 
     # Display the startup art
-    display_startup_art(commit_to_git)
+    display_startup_art(commit_to_git, no_color=args.no_color)
 
     # Initialize history for prompt input
     history = InMemoryHistory()
@@ -276,8 +278,10 @@ def start(args, config_dict):
     # Begin the conversation
     while True:
         # Get user input
+        color_prefix = "" if args.no_color else f"{Style.BRIGHT}{Fore.RED}"
+        color_suffix = "" if args.no_color else Style.RESET_ALL
         sys.stdout.write(
-            f"{Style.BRIGHT}{Fore.RED}You (Press ALT-Enter, OPT-Enter, or CTRL-O to submit): \n\n{Style.RESET_ALL}"
+            f"{color_prefix}You (Press ALT-Enter, OPT-Enter, or CTRL-O to submit): \n\n{color_suffix}"
         )
         # Configure key bindings for Option-Enter on macOS
         bindings = KeyBindings()
@@ -293,8 +297,9 @@ def start(args, config_dict):
             break
         elif user_input.strip().lower() == "undo":
             os.system("git reset --hard HEAD~1")
+            color_prefix = "" if args.no_color else Style.BRIGHT
             print(
-                f"\n{Style.BRIGHT}Rolled back to the previous commit.{Style.RESET_ALL}\n\n"
+                f"\n{color_prefix}Rolled back to the previous commit.{color_suffix}\n\n"
             )
             continue
         else:

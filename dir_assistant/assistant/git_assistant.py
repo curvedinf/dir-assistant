@@ -80,7 +80,7 @@ Real response:
             )
         else:
             sys.stdout.write(
-                f"{Style.BRIGHT}{Fore.BLUE}Apply these changes? (Y/N): {Style.RESET_ALL}"
+                f"{self.get_color_prefix(Style.BRIGHT, Fore.BLUE)}Apply these changes? (Y/N): {self.get_color_suffix()}"
             )
             apply_changes = prompt("", multiline=False).strip().lower()
             if write_to_stdout:
@@ -104,7 +104,7 @@ Real response:
                 os.system(f'git commit -m "{user_input.strip()}"')
                 if write_to_stdout:
                     sys.stdout.write(
-                        f"\n{Style.BRIGHT}Changes committed.{Style.RESET_ALL}\n\n"
+                        f"\n{self.get_color_prefix(Style.BRIGHT)}Changes committed.{self.get_color_suffix()}\n\n"
                     )
                     sys.stdout.flush()
             return True
