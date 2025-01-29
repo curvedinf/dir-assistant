@@ -202,70 +202,6 @@ dir-assistant setkey GEMINI_API_KEY xxxxxYOURAPIKEYHERExxxxx
 
 However, in most cases you will need to modify other options when changing APIs.
 
-## Configuration Overrides
-
-You can override configuration settings using environment variables. This is useful for temporary changes or when running dir-assistant in different environments.
-
-## Command Line Arguments
-
-### Start Mode Arguments
-
-When using the `start` mode (default mode), the following arguments are available:
-
-- `-i --ignore`: A list of space-separated filepaths to ignore
-- `-d --dirs`: A list of space-separated directories to work on (your current directory will always be used)
-- `--single-prompt`: Run a single prompt and output the final answer
-- `--verbose`: Show debug information during execution
-
-Example usage:
-
-```shell
-# Run a single prompt and exit
-dir-assistant start --single-prompt "What does this codebase do?"
-
-# Show debug information
-dir-assistant start --verbose
-
-# Ignore specific files and add additional directories
-dir-assistant start -i "*.log" "*.tmp" -d "../other-project"
-```
-
-### Environment Variable Overrides
-
-Any configuration setting can be overridden using environment variables. The environment variable name should match the configuration key name:
-
-```shell
-# Override the model path
-export LLM_MODEL="mistral-7b-instruct.Q4_K_M.gguf"
-
-# Enable git commits
-export COMMIT_TO_GIT=true
-
-# Change context ratio
-export CONTEXT_FILE_RATIO=0.7
-
-# Example running with overrides
-COMMIT_TO_GIT=true CONTEXT_FILE_RATIO=0.7 dir-assistant
-```
-
-The following value types are automatically converted:
-
-- Booleans: 'true' or 'false' (case insensitive)
-- Integers: '42'
-- Floats: '0.5'
-- Strings: Any other value will be treated as a string
-
-This allows you to quickly test different configurations without modifying your config file:
-
-```shell
-# Run with different models
-LLM_MODEL="model1.gguf" dir-assistant
-LLM_MODEL="model2.gguf" dir-assistant
-
-# Test with different context ratios
-CONTEXT_FILE_RATIO=0.8 dir-assistant
-```
-
 ## Local LLM Model Download
 
 If you want to use a local LLM, you can download a low requirements default model with:
@@ -338,7 +274,31 @@ dir-assistant
 Running `dir-assistant` will scan all files recursively in your current directory. The most relevant files will 
 automatically be sent to the LLM when you enter a prompt.
 
-## Automated file update and git commit
+`dir-assistant` is shorthand for `dir-assistant start`. All arguments below are applicable for both.
+
+#### Options for Running
+
+The following arguments are available while running `dir-assistant`:
+
+- `-i --ignore`: A list of space-separated filepaths to ignore
+- `-d --dirs`: A list of space-separated directories to work on (your current directory will always be used)
+- `-s --single-prompt`: Run a single prompt and output the final answer
+- `-v --verbose`: Show debug information during execution
+
+Example usage:
+
+```shell
+# Run a single prompt and exit
+dir-assistant -s "What does this codebase do?"
+
+# Show debug information
+dir-assistant -v
+
+# Ignore specific files and add additional directories
+dir-assistant -i "*.log" "*.tmp" -d "../other-project"
+```
+
+### Automated file update and git commit
 The `COMMIT_TO_GIT` feature allows `dir-assistant` to make changes directly to your files and commit the changes to git
 during the chat. By default, this feature is disabled, but after enabling it, the assistant will suggest file changes 
 and ask whether to apply the changes. If confirmed, it stages the changes and creates a git commit with the prompt 
@@ -360,14 +320,6 @@ COMMIT_TO_GIT = true
 
 Once enabled, the assistant will handle the Git commit process as part of its workflow. To undo a commit,
 type `undo` in the prompt.
-
-## Running
-
-```shell
-dir-assistant
-```
-Running `dir-assistant` will scan all files recursively in your current directory. The most relevant files will 
-automatically be sent to the LLM when you enter a prompt.
 
 ### Additional directories
 
@@ -402,6 +354,34 @@ GLOBAL_IGNORES = [
 ]
 ```
 
+### Overriding Configurations with Environment Variables
+
+Any configuration setting can be overridden using environment variables. The environment variable name should match the configuration key name:
+
+```shell
+# Override the model path
+export DIR_ASSISTANT__LLM_MODEL="mistral-7b-instruct.Q4_K_M.gguf"
+
+# Enable git commits
+export DIR_ASSISTANT__COMMIT_TO_GIT=true
+
+# Change context ratio
+export DIR_ASSISTANT__CONTEXT_FILE_RATIO=0.7
+
+# Example running with overrides
+DIR_ASSISTANT__COMMIT_TO_GIT=true DIR_ASSISTANT__CONTEXT_FILE_RATIO=0.7 dir-assistant
+```
+
+This allows multiple config profiles for your custom use cases.
+
+```shell
+# Run with different models
+DIR_ASSISTANT__LLM_MODEL="model1.gguf" dir-assistant -s "What does this codebase do?"
+DIR_ASSISTANT__LLM_MODEL="model2.gguf" dir-assistant -s "What does this codebase do?"
+
+# Test with different context ratios
+DIR_ASSISTANT__CONTEXT_FILE_RATIO=0.8 dir-assistant
+```
 ## Upgrading
 
 Some version upgrades may have incompatibility issues in the embedding index cache. Use this command to delete the
@@ -443,9 +423,9 @@ please see [CONTRIBUTORS.md](CONTRIBUTORS.md).
 - ~~Model download~~
 - ~~Commit to git~~
 - ~~API Embedding models~~
+- ~~Immediate mode for better compatibility with custom script automations~~
 - Web search
 - Daemon mode for API-based use
-- Immediate mode for better compatibility with external script automations
 
 ## Additional Credits
 
