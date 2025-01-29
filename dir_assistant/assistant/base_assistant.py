@@ -86,9 +86,7 @@ class BaseAssistant:
     def write_assistant_thinking_message(self):
         color_prefix = self.get_color_prefix(Style.BRIGHT, Fore.GREEN)
         color_suffix = self.get_color_suffix()
-        sys.stdout.write(
-            f"{color_prefix}\nAssistant: \n\n{color_suffix}"
-        )
+        sys.stdout.write(f"{color_prefix}\nAssistant: \n\n{color_suffix}")
         sys.stdout.write(
             f"{self.get_color_prefix(Style.BRIGHT, Fore.WHITE)}\r(thinking...){color_suffix}"
         )
@@ -146,7 +144,7 @@ class BaseAssistant:
         return user_input
 
     def run_pre_stream_processes(self, user_input, write_to_stdout):
-        if not self.no_color and not self.verbose: # TODO: add an option to disable thinking message
+        if self.verbose:
             self.write_assistant_thinking_message()
 
     def run_stream_processes(self, user_input, write_to_stdout):
@@ -202,7 +200,9 @@ class BaseAssistant:
         # Display chat history
         output_history = self.create_empty_history()
         if write_to_stdout:
-            sys.stdout.write(f"{self.get_color_prefix(Style.BRIGHT, Fore.WHITE)}\r{' ' * 36}\r{self.get_color_suffix()}")
+            sys.stdout.write(
+                f"{self.get_color_prefix(Style.BRIGHT, Fore.WHITE)}\r{' ' * 36}\r{self.get_color_suffix()}"
+            )
         output_history = self.run_completion_generator(
             completion_generator, output_history, write_to_stdout
         )

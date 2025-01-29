@@ -54,15 +54,23 @@ class CGRAGAssistant(BaseAssistant):
 
     def print_cgrag_output(self, cgrag_output):
         if self.print_cgrag:
-            sys.stdout.write(self.get_color_prefix(Style.BRIGHT, Fore.WHITE) + "\r" + (" " * 36))
             sys.stdout.write(
-                self.get_color_prefix(Style.BRIGHT, Fore.WHITE) + f"\r{cgrag_output}\n\n" + self.get_color_suffix()
+                self.get_color_prefix(Style.BRIGHT, Fore.WHITE) + "\r" + (" " * 36)
             )
             sys.stdout.write(
-                self.get_color_prefix(Style.BRIGHT, Fore.GREEN) + "Assistant: \n\n" + self.get_color_suffix()
+                self.get_color_prefix(Style.BRIGHT, Fore.WHITE)
+                + f"\r{cgrag_output}\n\n"
+                + self.get_color_suffix()
+            )
+            sys.stdout.write(
+                self.get_color_prefix(Style.BRIGHT, Fore.GREEN)
+                + "Assistant: \n\n"
+                + self.get_color_suffix()
             )
         else:
-            sys.stdout.write(self.get_color_prefix(Style.BRIGHT, Fore.WHITE) + "\r" + (" " * 36))
+            sys.stdout.write(
+                self.get_color_prefix(Style.BRIGHT, Fore.WHITE) + "\r" + (" " * 36)
+            )
         sys.stdout.write(
             f"{self.get_color_prefix(Style.BRIGHT, Fore.WHITE)}\r(thinking...){self.get_color_suffix()}"
         )

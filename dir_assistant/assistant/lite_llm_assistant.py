@@ -78,10 +78,12 @@ class LiteLLMAssistant(GitAssistant):
             delta = chunk["choices"][0]["delta"]
             if "content" in delta and delta["content"] != None:
                 output_message["content"] += delta["content"]
-                
+
                 if write_to_stdout:
                     if not self.no_color:
-                        sys.stdout.write(self.get_color_prefix(Style.BRIGHT, Fore.WHITE))
+                        sys.stdout.write(
+                            self.get_color_prefix(Style.BRIGHT, Fore.WHITE)
+                        )
                     sys.stdout.write(delta["content"])
                     if not self.no_color:
                         sys.stdout.write(self.get_color_suffix())

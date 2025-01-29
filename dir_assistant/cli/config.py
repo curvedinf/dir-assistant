@@ -81,6 +81,7 @@ def check_defaults(config_dict, defaults_dict):
 
 def set_environment_overrides(config_dict):
     """Replace config values with environment variable overrides"""
+
     def _override_config(config_branch, prefix=""):
         for key, value in config_branch.items():
             env_key = f"{prefix}__{key}" if prefix else key
@@ -96,13 +97,13 @@ def set_environment_overrides(config_dict):
 def coerce_setting_string_value(value_str):
     """Convert string values to appropriate Python types"""
     # Handle boolean values
-    if value_str.lower() in ('true', 'false'):
-        return value_str.lower() == 'true'
+    if value_str.lower() in ("true", "false"):
+        return value_str.lower() == "true"
     # Handle integer values
     elif value_str.isdigit():
         return int(value_str)
     # Handle float values
-    elif value_str.replace('.', '').isdigit():
+    elif value_str.replace(".", "").isdigit():
         return float(value_str)
     # Keep as string if no other type matches
     return value_str
@@ -111,10 +112,12 @@ def coerce_setting_string_value(value_str):
 def parse_config_override(override_str):
     """Parse a key=value config override string"""
     try:
-        key, value = override_str.split('=', 1)
+        key, value = override_str.split("=", 1)
         return key.strip(), coerce_setting_string_value(value.strip())
     except ValueError:
-        raise ValueError(f"Invalid config override format: {override_str}. Use KEY=VALUE format.")
+        raise ValueError(
+            f"Invalid config override format: {override_str}. Use KEY=VALUE format."
+        )
 
 
 def load_config(skip_environment_vars=False):

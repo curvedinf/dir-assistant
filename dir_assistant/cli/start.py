@@ -14,11 +14,12 @@ from dir_assistant.assistant.lite_llm_assistant import LiteLLMAssistant
 from dir_assistant.assistant.lite_llm_embed import LiteLlmEmbed
 from dir_assistant.assistant.llama_cpp_assistant import LlamaCppAssistant
 from dir_assistant.assistant.llama_cpp_embed import LlamaCppEmbed
-from dir_assistant.cli.config import get_file_path, STORAGE_PATH, HISTORY_FILENAME
+from dir_assistant.cli.config import HISTORY_FILENAME, STORAGE_PATH, get_file_path
 
 litellm.suppress_debug_info = True
 
 MODELS_PATH = os.path.expanduser("~/.local/share/dir-assistant/models")
+
 
 def display_startup_art(commit_to_git, no_color=False):
     sys.stdout.write(
@@ -42,6 +43,7 @@ def display_startup_art(commit_to_git, no_color=False):
         print(f"{color_prefix}Type 'undo' to roll back the last commit.")
     print("")
 
+
 def run_single_prompt(args, config_dict):
     llm = initialize_llm(args, config_dict, chat_mode=False)
     llm.initialize_history()
@@ -50,9 +52,12 @@ def run_single_prompt(args, config_dict):
     # Only print the final response
     sys.stdout.write(response)
 
+
 def initialize_llm(args, config_dict, chat_mode=True):
     # Check if we're working with the full config dict or just DIR_ASSISTANT section
-    config = config_dict["DIR_ASSISTANT"] if "DIR_ASSISTANT" in config_dict else config_dict
+    config = (
+        config_dict["DIR_ASSISTANT"] if "DIR_ASSISTANT" in config_dict else config_dict
+    )
 
     # Main settings
     active_model_is_local = config["ACTIVE_MODEL_IS_LOCAL"]
@@ -62,9 +67,7 @@ def initialize_llm(args, config_dict, chat_mode=True):
 
     # Llama.cpp settings
     llm_model_file = get_file_path(config["MODELS_PATH"], config["LLM_MODEL"])
-    embed_model_file = get_file_path(
-        config["MODELS_PATH"], config["EMBED_MODEL"]
-    )
+    embed_model_file = get_file_path(config["MODELS_PATH"], config["EMBED_MODEL"])
     llama_cpp_options = config["LLAMA_CPP_OPTIONS"]
     llama_cpp_embed_options = config["LLAMA_CPP_EMBED_OPTIONS"]
     llama_cpp_completion_options = config["LLAMA_CPP_COMPLETION_OPTIONS"]
@@ -139,8 +142,12 @@ see readme for more information. Exiting..."""
 
     # Create the file index
     if verbose or chat_mode:
-        print(f"{Fore.LIGHTBLACK_EX}Creating file embeddings and index...{Style.RESET_ALL}")
-    index, chunks = create_file_index(embed, ignore_paths, embed_chunk_size, extra_dirs, verbose)
+        print(
+            f"{Fore.LIGHTBLACK_EX}Creating file embeddings and index...{Style.RESET_ALL}"
+        )
+    index, chunks = create_file_index(
+        embed, ignore_paths, embed_chunk_size, extra_dirs, verbose
+    )
 
     # Set up the system instructions
     system_instructions_full = f"{system_instructions}\n\nThe user will ask questions relating \
@@ -169,9 +176,7 @@ see readme for more information. Exiting..."""
         )
     else:
         if verbose:
-            print(
-                f"{Fore.LIGHTBLACK_EX}Loading remote LLM model...{Style.RESET_ALL}"
-            )
+            print(f"{Fore.LIGHTBLACK_EX}Loading remote LLM model...{Style.RESET_ALL}")
         llm = LiteLLMAssistant(
             lite_llm_model,
             lite_llm_model_uses_system_message,
@@ -191,6 +196,7 @@ see readme for more information. Exiting..."""
         )
 
     return llm
+
 
 def start(args, config_dict):
     single_prompt = args.single_prompt
@@ -213,13 +219,17 @@ def start(args, config_dict):
     # Get variables needed for file watcher and startup art
     is_full_config = "DIR_ASSISTANT" in config_dict
     config = config_dict["DIR_ASSISTANT"] if is_full_config else config_dict
-    
+
     ignore_paths = args.ignore if args.ignore else []
     ignore_paths.extend(config["GLOBAL_IGNORES"])
     commit_to_git = config["COMMIT_TO_GIT"]
     embed = llm.embed
     active_embed_is_local = config["ACTIVE_EMBED_IS_LOCAL"]
-    embed_chunk_size = config["LITELLM_EMBED_CHUNK_SIZE"] if not active_embed_is_local else embed.get_chunk_size()
+    embed_chunk_size = (
+        config["LITELLM_EMBED_CHUNK_SIZE"]
+        if not active_embed_is_local
+        else embed.get_chunk_size()
+    )
 
     # Start file watcher. It is running in another thread after this.
     watcher = start_file_watcher(

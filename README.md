@@ -1,9 +1,25 @@
 # dir-assistant
 
+[![PyPI](https://img.shields.io/pypi/v/dir-assistant)](https://pypi.org/project/dir-assistant/)
+[![GitHub license](https://img.shields.io/github/license/curvedinf/dir-assistant)](LICENSE)
+[![GitHub last commit](https://img.shields.io/github/last-commit/curvedinf/dir-assistant)](https://github.com/curvedinf/dir-assistant/commits/main)
+[![GitHub stars](https://img.shields.io/github/stars/curvedinf/dir-assistant)](https://github.com/curvedinf/dir-assistant/stargazers)
+
 Chat with your current directory's files using a local or API LLM.
 
 ![(Demo GIF of dir-assistant being run)](demo.gif)
 
+## Summary
+
+`dir-assistant` is a CLI python application available through `pip` that recursively indexes all text 
+files in the current working directory so you can chat with them using a local or API LLM. By 
+"chat with them", it is meant that their contents will automatically be included in the prompts sent 
+to the LLM, with the most contextually relevant files included first. `dir-assistant` is designed 
+primarily for use as a coding aid and automation tool.
+
+### Features
+
+- Includes an interactive chat mode and a single prompt non-interactive mode.
 - Local platform support for CPU (OpenBLAS), Cuda, ROCm, Metal, Vulkan, and SYCL. 
 - API support for all major LLM APIs. More info in the 
 [LiteLLM Docs](https://docs.litellm.ai/docs/providers).
@@ -12,13 +28,37 @@ Chat with your current directory's files using a local or API LLM.
 prompt to an LLM called CGRAG (Contextually Guided Retrieval-Augmented Generation). You can read 
 [this blog post](https://medium.com/@djangoist/how-to-create-accurate-llm-responses-on-large-code-repositories-presenting-cgrag-a-new-feature-of-e77c0ffe432d) for more information about how it works.
 
+## Table of Contents
+1. [New Features](#new-features)
+   1. [Notable Upstream News](#notable-upstream-news)
+3. [Quickstart](#quickstart)
+    1. [Quickstart with Local Default Model](#quickstart-with-local-default-model)
+    2. [Quickstart with API Model](#quickstart-with-api-model)
+4. [Install](#install)
+5. [Embedding Model Configuration](#embedding-model-configuration)
+6. [Optional: Select A Hardware Platform](#optional-select-a-hardware-platform)
+7. [API Configuration](#api-configuration)
+8. [Local LLM Model Download](#local-llm-model-download)
+9. [Running](#running)
+   1. [Automated file update and git commit](#automated-file-update-and-git-commit)
+   2. [Additional directories](#additional-directories)
+   3. [Ignoring files](#ignoring-files)
+   4. [Overriding Configurations with Environment Variables](#overriding-configurations-with-environment-variables)
+14. [Upgrading](#upgrading)
+15. [Additional Help](#additional-help)
+16. [Contributors](#contributors)
+17. [Acknowledgements](#acknowledgements)
+18. [Limitations](#limitations)
+19. [Todos](#todos)
+20. [Additional Credits](#additional-credits)
+
 ## New Features
 
 * Automatically override configs by using matching environment variables
 * Run a single prompt and quit with the new `-s` CLI option
 * Persistent prompt history across sessions
 
-## Notable Upstream News
+### Notable Upstream News
 
 This section is dedicated to changes in libraries which can impact users of `dir-assistant`.
 

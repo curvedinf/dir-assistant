@@ -6,7 +6,7 @@ from colorama import Fore, Style
 from faiss import IndexFlatL2
 from sqlitedict import SqliteDict
 
-from dir_assistant.cli.config import get_file_path, STORAGE_PATH, HISTORY_FILENAME
+from dir_assistant.cli.config import HISTORY_FILENAME, STORAGE_PATH, get_file_path
 
 INDEX_CACHE_FILENAME = "index_cache.sqlite"
 INDEX_CACHE_PATH = "~/.cache/dir-assistant"
@@ -61,7 +61,9 @@ def get_files_with_contents(directory, ignore_paths, cache_db):
     return files_with_contents
 
 
-def create_file_index(embed, ignore_paths, embed_chunk_size, extra_dirs=[], verbose=False):
+def create_file_index(
+    embed, ignore_paths, embed_chunk_size, extra_dirs=[], verbose=False
+):
     cache_db = get_file_path(INDEX_CACHE_PATH, INDEX_CACHE_FILENAME)
 
     # Start with current directory
@@ -133,7 +135,9 @@ def process_file(embed, filepath, contents, embed_chunk_size, verbose=False):
     embeddings_list = []
 
     if verbose:
-        print(f"{Fore.LIGHTBLACK_EX}Creating embeddings for {filepath}{Style.RESET_ALL}")
+        print(
+            f"{Fore.LIGHTBLACK_EX}Creating embeddings for {filepath}{Style.RESET_ALL}"
+        )
     for line_number, line in enumerate(lines, start=1):
         # Process each line individually if needed
         line_content = line
@@ -204,7 +208,7 @@ def search_index(embed, index, query, all_chunks):
 def clear(args, config_dict):
     files = [
         get_file_path(INDEX_CACHE_PATH, INDEX_CACHE_FILENAME),
-        get_file_path(STORAGE_PATH, HISTORY_FILENAME)
+        get_file_path(STORAGE_PATH, HISTORY_FILENAME),
     ]
     for file in files:
         if os.path.exists(file):

@@ -13,10 +13,8 @@ from dir_assistant.cli.models import (
 )
 from dir_assistant.cli.platform_setup import platform
 from dir_assistant.cli.setkey import setkey
-from dir_assistant.cli.start import (
-    start, 
-    run_single_prompt
-)
+from dir_assistant.cli.start import run_single_prompt, start
+
 
 def main():
     # Setup argument parsing
@@ -25,29 +23,34 @@ def main():
     )
 
     parser.add_argument(
-        "-i", "--ignore",
+        "-i",
+        "--ignore",
         type=str,
         nargs="+",
         help="A list of space-separated filepaths to ignore.",
     )
     parser.add_argument(
-        "-d", "--dirs",
+        "-d",
+        "--dirs",
         type=str,
         nargs="+",
         help="A list of space-separated directories to work on. Your current directory will always be used.",
     )
     parser.add_argument(
-        "-s", "--single-prompt",
+        "-s",
+        "--single-prompt",
         type=str,
         help="Run a single prompt and output the final answer.",
     )
     parser.add_argument(
-        "-v", "--verbose",
+        "-v",
+        "--verbose",
         action="store_true",
         help="Show debug information during execution.",
     )
     parser.add_argument(
-        "-n", "--no-color",
+        "-n",
+        "--no-color",
         action="store_true",
         help="Disable colored output.",
     )
@@ -62,29 +65,34 @@ def main():
         help="Run dir-assistant in regular mode.",
     )
     start_parser.add_argument(
-        "-i", "--ignore",
+        "-i",
+        "--ignore",
         type=str,
         nargs="+",
         help="A list of space-separated filepaths to ignore.",
     )
     start_parser.add_argument(
-        "-d", "--dirs",
+        "-d",
+        "--dirs",
         type=str,
         nargs="+",
         help="A list of space-separated directories to work on. Your current directory will always be used.",
     )
     start_parser.add_argument(
-        "-s", "--single-prompt",
+        "-s",
+        "--single-prompt",
         type=str,
         help="Run a single prompt and output the final answer.",
     )
     start_parser.add_argument(
-        "-v", "--verbose",
+        "-v",
+        "--verbose",
         action="store_true",
         help="Show debug information during execution.",
     )
     start_parser.add_argument(
-        "-n", "--no-color",
+        "-n",
+        "--no-color",
         action="store_true",
         help="Disable colored output.",
     )
@@ -186,11 +194,11 @@ vulkan    - Vulkan""",
 
     # Add config override argument
     parser.add_argument(
-        '--config',
-        action='append',
-        help='Override config values in KEY=VALUE format. Can be used multiple times.',
-        dest='config_overrides',
-        default=[]
+        "--config",
+        action="append",
+        help="Override config values in KEY=VALUE format. Can be used multiple times.",
+        dest="config_overrides",
+        default=[],
     )
 
     # Parse the arguments
@@ -230,6 +238,7 @@ vulkan    - Vulkan""",
         setkey(args, config_dict)
     else:
         parser.print_help()
+
 
 if __name__ == "__main__":
     main()
