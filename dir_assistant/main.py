@@ -15,9 +15,7 @@ from dir_assistant.cli.platform_setup import platform
 from dir_assistant.cli.setkey import setkey
 from dir_assistant.cli.start import (
     start, 
-    run_single_prompt, 
-    get_config_overrides, 
-    parse_config_override
+    run_single_prompt
 )
 
 def main():
@@ -39,17 +37,17 @@ def main():
         help="A list of space-separated directories to work on. Your current directory will always be used.",
     )
     parser.add_argument(
-        "--single-prompt",
+        "-s", "--single-prompt",
         type=str,
         help="Run a single prompt and output the final answer.",
     )
     parser.add_argument(
-        "--verbose",
+        "-v", "--verbose",
         action="store_true",
         help="Show debug information during execution.",
     )
     parser.add_argument(
-        "--no-color",
+        "-n", "--no-color",
         action="store_true",
         help="Disable colored output.",
     )
@@ -76,17 +74,17 @@ def main():
         help="A list of space-separated directories to work on. Your current directory will always be used.",
     )
     start_parser.add_argument(
-        "--single-prompt",
+        "-s", "--single-prompt",
         type=str,
         help="Run a single prompt and output the final answer.",
     )
     start_parser.add_argument(
-        "--verbose",
+        "-v", "--verbose",
         action="store_true",
         help="Show debug information during execution.",
     )
     start_parser.add_argument(
-        "--no-color",
+        "-n", "--no-color",
         action="store_true",
         help="Disable colored output.",
     )

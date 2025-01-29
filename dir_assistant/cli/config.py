@@ -5,10 +5,10 @@ from subprocess import run
 import toml
 from dynaconf import Dynaconf
 
-from dir_assistant.cli.start import parse_config_override
-
 CONFIG_FILENAME = "config.toml"
 CONFIG_PATH = "~/.config/dir-assistant"
+STORAGE_PATH = "~/.local/share/dir-assistant/"
+HISTORY_FILENAME = "history.pth"
 CONFIG_DEFAULTS = {
     "SYSTEM_INSTRUCTIONS": "You are a helpful AI assistant.",
     "GLOBAL_IGNORES": [
@@ -27,6 +27,8 @@ CONFIG_DEFAULTS = {
     "USE_CGRAG": True,
     "PRINT_CGRAG": False,
     "COMMIT_TO_GIT": False,
+    "VERBOSE": False,
+    "NO_COLOR": False,
     "MODELS_PATH": "~/.local/share/dir-assistant/models/",
     "EMBED_MODEL": "",
     "LLM_MODEL": "",
@@ -77,31 +79,18 @@ def check_defaults(config_dict, defaults_dict):
     return config_dict
 
 
-def get_env_var_overrides(config_dict):
-    """Get configuration overrides from both environment variables and command line arguments"""
-    overrides = {}
+def set_environment_overrides(config_dict):
+    """Replace config values with environment variable overrides"""
+    def _override_config(config_branch, prefix=""):
+        for key, value in config_branch.items():
+            env_key = f"{prefix}__{key}" if prefix else key
+            if isinstance(value, dict):
+                config_branch[key] = _override_config(value, prefix=env_key)
+            elif env_key in environ:
+                config_branch[key] = environ[env_key]
+        return config_branch
 
-    # Some subcommands have a larger scope config dict, but we only want the DIR_ASSISTANT section
-    config_dict = config_dict["DIR_ASSISTANT"] if "DIR_ASSISTANT" in config_dict else config_dict
-
-    # Process all config keys that have matching environment variables
-    for key, value in config_dict.items():
-        # Env vars have DIR_ASSISTANT__ prepended so there are no collisions in more complex systems
-        env_key = f"DIR_ASSISTANT__{key}"
-        if env_key in os.environ:  # Only process if it's a valid environment variable
-            env_value = os.environ[env_key]
-            overrides[key] = coerce_setting_string_value(env_value)
-        elif isinstance(value, dict):  # Check if value is a dict-like collection
-            for sub_key, sub_value in value.items():
-                # Environment vars will be of the form DIR_ASSISTANT__GROUP__KEY
-                env_key = f"DIR_ASSISTANT__{key}__{sub_key}"
-                if env_key in os.environ:
-                    env_value = os.environ[env_key]
-                    if key not in overrides:
-                        overrides[key] = {}
-                    overrides[key][sub_key] = coerce_setting_string_value(env_value)
-
-    return overrides
+    return _override_config(config_dict)
 
 
 def coerce_setting_string_value(value_str):
@@ -144,33 +133,8 @@ def load_config(skip_environment_vars=False):
             config_dict["DIR_ASSISTANT"][key] = value
     save_config(config_dict)
 
-    # Override any config values present in environment variables
-    if args.config_overrides:
-        for override in args.config_overrides:
-            try:
-                key, value = parse_config_override(override)
-                if key in config_dict:
-                    config_dict[key] = value
-                else:
-                    print(f"Warning: Unknown config key '{key}' ignored")
-            except ValueError as e:
-                print(f"Warning: {str(e)}")
-
-    # Update config with environment variable overrides
-    config_dict.update(get_config_overrides(config_dict))
-
-    # Apply any environment variable overrides to config
-    overrides = get_config_overrides(config_dict)
-
-    # Update config with overrides
-    for key, value in overrides.items():
-        if args.verbose:
-            print(f"Debug: Applying config override {key}={value}")
-        if key == 'LITELLM_API_KEYS':
-            # Update API keys while preserving existing ones
-            config[key].update(value)
-        else:
-            config[key] = value
+    # Set any env-overridden config values
+    config_dict = set_environment_overrides(config_dict)
 
     # Set LiteLLM API keys only if not already set in environment
     for key, value in config_dict["DIR_ASSISTANT"]["LITELLM_API_KEYS"].items():

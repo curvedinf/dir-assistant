@@ -4,7 +4,7 @@ import sys
 import litellm
 from colorama import Fore, Style
 from prompt_toolkit import prompt
-from prompt_toolkit.history import InMemoryHistory
+from prompt_toolkit.history import FileHistory
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.keys import Keys
 
@@ -14,7 +14,7 @@ from dir_assistant.assistant.lite_llm_assistant import LiteLLMAssistant
 from dir_assistant.assistant.lite_llm_embed import LiteLlmEmbed
 from dir_assistant.assistant.llama_cpp_assistant import LlamaCppAssistant
 from dir_assistant.assistant.llama_cpp_embed import LlamaCppEmbed
-from dir_assistant.cli.config import get_file_path, load_config
+from dir_assistant.cli.config import get_file_path, STORAGE_PATH, HISTORY_FILENAME
 
 litellm.suppress_debug_info = True
 
@@ -89,6 +89,8 @@ def initialize_llm(args, config_dict):
     print_cgrag = config["PRINT_CGRAG"]
     output_acceptance_retries = config["OUTPUT_ACCEPTANCE_RETRIES"]
     commit_to_git = config["COMMIT_TO_GIT"]
+    verbose = config["VERBOSE"] or args.verbose
+    no_color = config["NO_COLOR"] or args.no_color
 
     # Check for basic missing model configs
     if active_model_is_local:
@@ -126,7 +128,7 @@ see readme for more information. Exiting..."""
     extra_dirs = args.dirs if args.dirs else []
 
     # Initialize the embedding model
-    if args.verbose:
+    if verbose:
         print(f"{Fore.LIGHTBLACK_EX}Loading embedding model...{Style.RESET_ALL}")
     if active_embed_is_local:
         embed = LlamaCppEmbed(
@@ -142,7 +144,7 @@ see readme for more information. Exiting..."""
         embed_chunk_size = lite_llm_embed_chunk_size
 
     # Create the file index
-    if args.verbose:
+    if verbose:
         print(f"{Fore.LIGHTBLACK_EX}Creating file embeddings and index...{Style.RESET_ALL}")
     index, chunks = create_file_index(embed, ignore_paths, embed_chunk_size, extra_dirs, args.verbose)
 
@@ -153,7 +155,7 @@ see readme for more information. Exiting..."""
 
     # Initialize the LLM model
     if active_model_is_local:
-        if args.verbose:
+        if verbose:
             print(f"{Fore.LIGHTBLACK_EX}Loading local LLM model...{Style.RESET_ALL}")
         llm = LlamaCppAssistant(
             llm_model_file,
@@ -168,9 +170,11 @@ see readme for more information. Exiting..."""
             print_cgrag,
             commit_to_git,
             llama_cpp_completion_options,
+            verbose=verbose,
+            no_color=no_color,
         )
     else:
-        if args.verbose:
+        if verbose:
             sys.stdout.write(
                 f"{Fore.LIGHTBLACK_EX}Loading remote LLM model...{Style.RESET_ALL}"
             )
@@ -188,7 +192,8 @@ see readme for more information. Exiting..."""
             use_cgrag,
             print_cgrag,
             commit_to_git,
-            verbose=args.verbose,
+            verbose=verbose,
+            no_color=no_color,
         )
 
     return llm
@@ -196,7 +201,7 @@ see readme for more information. Exiting..."""
 def start(args, config_dict):
     llm = initialize_llm(args, config_dict)
     llm.initialize_history()
-    llm.no_color = args.no_color  # Set no_color on the LLM instance
+    no_color = llm.no_color
 
     # Get variables needed for file watcher and startup art
     is_full_config = "DIR_ASSISTANT" in config_dict
@@ -209,22 +214,23 @@ def start(args, config_dict):
     active_embed_is_local = config["ACTIVE_EMBED_IS_LOCAL"]
     embed_chunk_size = config["LITELLM_EMBED_CHUNK_SIZE"] if not active_embed_is_local else embed.get_chunk_size()
 
-    # Start file watcher
+    # Start file watcher. It is running in another thread after this.
     watcher = start_file_watcher(
         ".", embed, ignore_paths, embed_chunk_size, llm.update_index_and_chunks
     )
 
     # Display the startup art
-    display_startup_art(commit_to_git, no_color=args.no_color)
+    display_startup_art(commit_to_git, no_color=no_color)
 
     # Initialize history for prompt input
-    history = InMemoryHistory()
+    # pth = prompt toolkit history
+    history = FileHistory(get_file_path(STORAGE_PATH, HISTORY_FILENAME))
 
     # Begin the conversation
     while True:
         # Get user input
-        color_prefix = "" if args.no_color else f"{Style.BRIGHT}{Fore.RED}"
-        color_suffix = "" if args.no_color else Style.RESET_ALL
+        color_prefix = "" if no_color else f"{Style.BRIGHT}{Fore.RED}"
+        color_suffix = "" if no_color else Style.RESET_ALL
         sys.stdout.write(
             f"{color_prefix}You (Press ALT-Enter, OPT-Enter, or CTRL-O to submit): \n\n{color_suffix}"
         )

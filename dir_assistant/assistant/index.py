@@ -1,11 +1,12 @@
 import os
+import sys
 
 import numpy as np
 from colorama import Fore, Style
 from faiss import IndexFlatL2
 from sqlitedict import SqliteDict
 
-from dir_assistant.cli.config import get_file_path
+from dir_assistant.cli.config import get_file_path, STORAGE_PATH, HISTORY_FILENAME
 
 INDEX_CACHE_FILENAME = "index_cache.sqlite"
 INDEX_CACHE_PATH = "~/.cache/dir-assistant"
@@ -203,9 +204,13 @@ def search_index(embed, index, query, all_chunks):
 
 
 def clear(args, config_dict):
-    cache_db = get_file_path(INDEX_CACHE_PATH, INDEX_CACHE_FILENAME)
-    if os.path.exists(cache_db):
-        os.remove(cache_db)
-        print(f"Deleted {cache_db}")
-    else:
-        print(f"{cache_db} does not exist.")
+    files = [
+        get_file_path(INDEX_CACHE_PATH, INDEX_CACHE_FILENAME),
+        get_file_path(STORAGE_PATH, HISTORY_FILENAME)
+    ]
+    for file in files:
+        if os.path.exists(file):
+            os.remove(file)
+            sys.stdout.write(f"Deleted {file}\n")
+        else:
+            sys.stdout.write(f"{file} does not exist.\n")
