@@ -203,21 +203,6 @@ vulkan    - Vulkan""",
         # The toml may be malformed, so we don't want to crash before it is opened.
         config_dict = load_config()
 
-    # Process config overrides
-    if args.config_overrides:
-        for override in args.config_overrides:
-            try:
-                key, value = parse_config_override(override)
-                if key in config_dict:
-                    config_dict[key] = value
-                else:
-                    print(f"Warning: Unknown config key '{key}' ignored")
-            except ValueError as e:
-                print(f"Warning: {str(e)}")
-    
-    # Update config with environment variable overrides
-    config_dict.update(get_config_overrides(config_dict))
-
     # Run the user's selected mode
     if args.mode == "start" or args.mode is None:
         if getattr(args, 'single_prompt', None):

@@ -54,70 +54,12 @@ def run_single_prompt(args, config_dict):
     response = llm.run_stream_processes(args.single_prompt, True)
     
     # Only print the final response
-    print(response)
-
-def get_config_overrides(config_dict):
-    """Get configuration overrides from both environment variables and command line arguments"""
-    overrides = {}
-    
-    # Check if we're working with the full config dict or just DIR_ASSISTANT section
-    is_full_config = "DIR_ASSISTANT" in config_dict
-    config = config_dict["DIR_ASSISTANT"] if is_full_config else config_dict
-    
-    # Process all environment variables that match config keys
-    for key in os.environ:
-        if key in config:  # Only process if it's a valid config key
-            env_value = os.environ[key]
-            overrides[key] = convert_value(env_value)
-        # Check for API keys
-        elif key.endswith('_API_KEY') and 'LITELLM_API_KEYS' in config:
-            env_value = os.environ[key]
-            if 'LITELLM_API_KEYS' not in overrides:
-                overrides['LITELLM_API_KEYS'] = {}
-            overrides['LITELLM_API_KEYS'][key] = env_value
-    
-    return overrides
-
-def convert_value(value_str):
-    """Convert string values to appropriate Python types"""
-    # Handle boolean values
-    if value_str.lower() in ('true', 'false'):
-        return value_str.lower() == 'true'
-    # Handle integer values
-    elif value_str.isdigit():
-        return int(value_str)
-    # Handle float values
-    elif value_str.replace('.', '').isdigit():
-        return float(value_str)
-    # Keep as string if no other type matches
-    return value_str
-
-def parse_config_override(override_str):
-    """Parse a key=value config override string"""
-    try:
-        key, value = override_str.split('=', 1)
-        return key.strip(), convert_value(value.strip())
-    except ValueError:
-        raise ValueError(f"Invalid config override format: {override_str}. Use KEY=VALUE format.")
+    sys.stdout.write(response)
 
 def initialize_llm(args, config_dict):
     # Check if we're working with the full config dict or just DIR_ASSISTANT section
-    is_full_config = "DIR_ASSISTANT" in config_dict
-    config = config_dict["DIR_ASSISTANT"] if is_full_config else config_dict
-    
-    # Apply any environment variable overrides to config
-    overrides = get_config_overrides(config_dict)
-    
-    # Update config with overrides
-    for key, value in overrides.items():
-        if args.verbose:
-            print(f"Debug: Applying config override {key}={value}")
-        if key == 'LITELLM_API_KEYS':
-            # Update API keys while preserving existing ones
-            config[key].update(value)
-        else:
-            config[key] = value
-    
+    config = config_dict["DIR_ASSISTANT"] if "DIR_ASSISTANT" in config_dict else config_dict
+
     # Main settings
     active_model_is_local = config["ACTIVE_MODEL_IS_LOCAL"]
     active_embed_is_local = config["ACTIVE_EMBED_IS_LOCAL"]
