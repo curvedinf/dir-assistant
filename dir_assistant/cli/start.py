@@ -241,7 +241,6 @@ def start(args, config_dict):
     display_startup_art(commit_to_git, no_color=no_color)
 
     # Initialize history for prompt input
-    # pth = prompt toolkit history
     history = FileHistory(get_file_path(STORAGE_PATH, HISTORY_FILENAME))
 
     # Begin the conversation

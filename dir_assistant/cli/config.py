@@ -8,7 +8,7 @@ from dynaconf import Dynaconf
 CONFIG_FILENAME = "config.toml"
 CONFIG_PATH = "~/.config/dir-assistant"
 STORAGE_PATH = "~/.local/share/dir-assistant/"
-HISTORY_FILENAME = "history.pth"
+HISTORY_FILENAME = "history.pth" # pth = prompt toolkit history
 CONFIG_DEFAULTS = {
     "SYSTEM_INSTRUCTIONS": "You are a helpful AI assistant.",
     "GLOBAL_IGNORES": [

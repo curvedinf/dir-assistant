@@ -192,15 +192,6 @@ vulkan    - Vulkan""",
     )
     setkey_parser.add_argument("api_key", type=str, help="The API key to set.")
 
-    # Add config override argument
-    parser.add_argument(
-        "--config",
-        action="append",
-        help="Override config values in KEY=VALUE format. Can be used multiple times.",
-        dest="config_overrides",
-        default=[],
-    )
-
     # Parse the arguments
     args = parser.parse_args()
 
