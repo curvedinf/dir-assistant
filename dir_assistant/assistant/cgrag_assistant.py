@@ -36,34 +36,36 @@ class CGRAGAssistant(BaseAssistant):
         # Display the assistant thinking message
         if self.use_cgrag and self.print_cgrag:
             sys.stdout.write(
-                f"{Style.BRIGHT}{Fore.BLUE}\nCGRAG Guidance: \n\n{Style.RESET_ALL}"
+                f"{self.get_color_prefix(Style.BRIGHT, Fore.BLUE)}\nCGRAG Guidance: \n\n{self.get_color_suffix()}"
             )
         else:
             sys.stdout.write(
-                f"{Style.BRIGHT}{Fore.GREEN}\nAssistant: \n\n{Style.RESET_ALL}"
+                f"{self.get_color_prefix(Style.BRIGHT, Fore.GREEN)}\nAssistant: \n\n{self.get_color_suffix()}"
             )
         if self.use_cgrag:
             sys.stdout.write(
-                f"{Style.BRIGHT}{Fore.WHITE}\r(generating contextual guidance...){Style.RESET_ALL}"
+                f"{self.get_color_prefix(Style.BRIGHT, Fore.WHITE)}\r(generating contextual guidance...){self.get_color_suffix()}"
             )
         else:
             sys.stdout.write(
-                f"{Style.BRIGHT}{Fore.WHITE}\r(thinking...){Style.RESET_ALL}"
+                f"{self.get_color_prefix(Style.BRIGHT, Fore.WHITE)}\r(thinking...){self.get_color_suffix()}"
             )
         sys.stdout.flush()
 
     def print_cgrag_output(self, cgrag_output):
         if self.print_cgrag:
-            sys.stdout.write(Style.BRIGHT + Fore.WHITE + "\r" + (" " * 36))
+            sys.stdout.write(self.get_color_prefix(Style.BRIGHT, Fore.WHITE) + "\r" + (" " * 36))
             sys.stdout.write(
-                Style.BRIGHT + Fore.WHITE + f"\r{cgrag_output}\n\n" + Style.RESET_ALL
+                self.get_color_prefix(Style.BRIGHT, Fore.WHITE) + f"\r{cgrag_output}\n\n" + self.get_color_suffix()
             )
             sys.stdout.write(
-                Style.BRIGHT + Fore.GREEN + "Assistant: \n\n" + Style.RESET_ALL
+                self.get_color_prefix(Style.BRIGHT, Fore.GREEN) + "Assistant: \n\n" + self.get_color_suffix()
             )
         else:
-            sys.stdout.write(Style.BRIGHT + Fore.WHITE + "\r" + (" " * 36))
-        sys.stdout.write("\r(thinking...)" + Style.RESET_ALL)
+            sys.stdout.write(self.get_color_prefix(Style.BRIGHT, Fore.WHITE) + "\r" + (" " * 36))
+        sys.stdout.write(
+            f"{self.get_color_prefix(Style.BRIGHT, Fore.WHITE)}\r(thinking...){self.get_color_suffix()}"
+        )
 
     def create_cgrag_prompt(self, base_prompt):
         return f"""What information related to the included files is important to answering the following 
@@ -94,13 +96,14 @@ function, and variable names as applicable to answering the user prompt.
             cgrag_generator = self.call_completion(cgrag_history)
             output_history = self.create_empty_history()
             output_history = self.run_completion_generator(
-                cgrag_generator, output_history, False
+                cgrag_generator, output_history, write_to_stdout and self.print_cgrag
             )
             relevant_full_text = self.build_relevant_full_text(
                 output_history["content"]
             )
-            self.print_cgrag_output(output_history["content"])
-            sys.stdout.flush()
+            if write_to_stdout and self.print_cgrag:
+                self.print_cgrag_output(output_history["content"])
+                sys.stdout.flush()
         else:
             relevant_full_text = self.build_relevant_full_text(user_input)
         prompt = self.create_prompt(user_input)

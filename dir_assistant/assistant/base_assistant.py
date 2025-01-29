@@ -28,6 +28,8 @@ class BaseAssistant:
         self.context_file_ratio = context_file_ratio
         self.context_size = 8192
         self.output_acceptance_retries = output_acceptance_retries
+        self.no_color = False  # Default to colored output
+        self.verbose = False
 
     def initialize_history(self):
         # This inititialization occurs separately from the constructor because child classes need to initialize
@@ -68,12 +70,42 @@ class BaseAssistant:
             relevant_full_text += relevant_chunk["text"] + "\n\n"
         return relevant_full_text
 
+    def get_color_prefix(self, style=None, fore=None):
+        if self.no_color:
+            return ""
+        result = ""
+        if style:
+            result += style
+        if fore:
+            result += fore
+        return result
+
+    def get_color_suffix(self):
+        return "" if self.no_color else Style.RESET_ALL
+
     def write_assistant_thinking_message(self):
+        color_prefix = self.get_color_prefix(Style.BRIGHT, Fore.GREEN)
+        color_suffix = self.get_color_suffix()
         sys.stdout.write(
-            f"{Style.BRIGHT}{Fore.GREEN}\nAssistant: \n\n{Style.RESET_ALL}"
+            f"{color_prefix}\nAssistant: \n\n{color_suffix}"
         )
-        sys.stdout.write(f"{Style.BRIGHT}{Fore.WHITE}\r(thinking...){Style.RESET_ALL}")
+        sys.stdout.write(
+            f"{self.get_color_prefix(Style.BRIGHT, Fore.WHITE)}\r(thinking...){color_suffix}"
+        )
         sys.stdout.flush()
+
+    def write_error_message(self, message):
+        color_prefix = self.get_color_prefix(Style.BRIGHT, Fore.RED)
+        color_suffix = self.get_color_suffix()
+        sys.stdout.write(f"{color_prefix}{message}{color_suffix}\n")
+        sys.stdout.flush()
+
+    def write_debug_message(self, message):
+        if self.verbose:
+            color_prefix = self.get_color_prefix(Style.BRIGHT, Fore.YELLOW)
+            color_suffix = self.get_color_suffix()
+            sys.stdout.write(f"{color_prefix}Debug: {message}{color_suffix}\n")
+            sys.stdout.flush()
 
     def create_user_history(self, temp_content, final_content):
         return {
@@ -114,7 +146,8 @@ class BaseAssistant:
         return user_input
 
     def run_pre_stream_processes(self, user_input, write_to_stdout):
-        self.write_assistant_thinking_message()
+        if not self.no_color and not self.verbose: # TODO: add an option to disable thinking message
+            self.write_assistant_thinking_message()
 
     def run_stream_processes(self, user_input, write_to_stdout):
         # Returns a string of the assistant's response
@@ -169,12 +202,12 @@ class BaseAssistant:
         # Display chat history
         output_history = self.create_empty_history()
         if write_to_stdout:
-            sys.stdout.write(Style.BRIGHT + Fore.WHITE + "\r" + (" " * 36) + "\r")
+            sys.stdout.write(f"{self.get_color_prefix(Style.BRIGHT, Fore.WHITE)}\r{' ' * 36}\r{self.get_color_suffix()}")
         output_history = self.run_completion_generator(
             completion_generator, output_history, write_to_stdout
         )
         if write_to_stdout:
-            sys.stdout.write(Style.RESET_ALL + "\n\n")
+            sys.stdout.write(f"{self.get_color_suffix()}\n\n")
             sys.stdout.flush()
 
         # Add the completion to the chat history

@@ -88,9 +88,9 @@ def load_config():
         if key not in config_dict["DIR_ASSISTANT"].keys():
             config_dict["DIR_ASSISTANT"][key] = value
     save_config(config_dict)
-    # Set OpenAI API key
+    # Set OpenAI API key only if not already set in environment
     for key, value in config_dict["DIR_ASSISTANT"]["LITELLM_API_KEYS"].items():
-        if key.endswith("_API_KEY"):
+        if key.endswith("_API_KEY") and value and key not in environ:
             environ[key] = value
     return config_dict
 
