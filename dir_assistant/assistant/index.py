@@ -64,8 +64,7 @@ def get_files_with_contents(directory, ignore_paths, cache_db):
 def create_file_index(embed, ignore_paths, embed_chunk_size, extra_dirs=[], verbose=False):
     cache_db = get_file_path(INDEX_CACHE_PATH, INDEX_CACHE_FILENAME)
 
-    if verbose:
-        print(f"{Fore.LIGHTBLACK_EX}Finding files to index...{Style.RESET_ALL}")
+    print(f"{Fore.LIGHTBLACK_EX}Indexing files...{Style.RESET_ALL}")
     # Start with current directory
     files_with_contents = get_files_with_contents(".", ignore_paths, cache_db)
 

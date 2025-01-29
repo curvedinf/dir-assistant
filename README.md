@@ -14,9 +14,20 @@ prompt to an LLM called CGRAG (Contextually Guided Retrieval-Augmented Generatio
 
 ## New Features
 
-* Automatically override configurations by using matching environment variables
+* Automatically override configs by using matching environment variables
 * Run a single prompt and quit with the new `-s` CLI option
 * Persistent prompt history across sessions
+
+## Notable Upstream News
+
+This section is dedicated to changes in libraries which can impact users of `dir-assistant`.
+
+#### llama-cpp-python
+
+* KV cache quants now available for most models. This enables reduced memory consumption per context token.
+* Improved flash attention implementation for ROCM. This drastically reduces VRAM usage for large contexts on AMD cards.
+
+These changes allow a 32B model with 128k context to comfortably run on all GPUs with at least 20GB of VRAM if enabled.
 
 ## Quickstart
 
@@ -408,7 +419,7 @@ please see [CONTRIBUTORS.md](CONTRIBUTORS.md).
 
 ## Limitations
 
-- Only tested on Ubuntu 22.04, Ubuntu 24.04, and MacOS. Please let us know if you run it successfully on other platforms by submitting an issue.
+- Only tested on Ubuntu 22.04, Ubuntu 24.04, and OSX. Please let us know if you run it successfully on other platforms by submitting an issue.
 - Dir-assistant only detects and reads text files at this time.
 
 ## Todos
