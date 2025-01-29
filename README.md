@@ -7,16 +7,16 @@ Chat with your current directory's files using a local or API LLM.
 - Local platform support for CPU (OpenBLAS), Cuda, ROCm, Metal, Vulkan, and SYCL. 
 - API support for all major LLM APIs. More info in the 
 [LiteLLM Docs](https://docs.litellm.ai/docs/providers).
-- Runs on Linux and macOS. Windows may work but we are still looking for testing feedback.
+- Runs on Linux and OSX. Windows may work, but we are still looking for testing feedback.
 - Uses a unique method for finding the most important files to include when submitting your
 prompt to an LLM called CGRAG (Contextually Guided Retrieval-Augmented Generation). You can read 
 [this blog post](https://medium.com/@djangoist/how-to-create-accurate-llm-responses-on-large-code-repositories-presenting-cgrag-a-new-feature-of-e77c0ffe432d) for more information about how it works.
 
 ## New Features
 
-* API embedding support with the new `ACTIVE_EMBED_IS_LOCAL = false` setting
-* Updated default local model to `QWQ-LCoT-7B-Instruct`
-* Improved prompt robustness and efficiency
+* Automatically override configurations by using matching environment variables
+* Run a single prompt and quit with the new `-s` CLI option
+* Persistent prompt history across sessions
 
 ## Quickstart
 
