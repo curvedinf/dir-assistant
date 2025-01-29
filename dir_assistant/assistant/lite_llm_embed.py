@@ -14,6 +14,8 @@ class LiteLlmEmbed(BaseEmbed):
     def create_embedding(self, text):
         if self.delay:
             sleep(self.delay)
+        if not text:
+            text = "--empty--"
         return embedding(model=self.lite_llm_model, input=text, timeout=600)["data"][0][
             "embedding"
         ]
@@ -23,5 +25,5 @@ class LiteLlmEmbed(BaseEmbed):
 
     def count_tokens(self, text):
         return token_counter(
-            model=self.lite_llm_model, messages=[{"user": "role", "content": text}]
+            model=self.lite_llm_model, messages=[{"role": "user", "content": text}]
         )

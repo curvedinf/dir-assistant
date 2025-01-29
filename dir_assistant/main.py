@@ -203,10 +203,7 @@ vulkan    - Vulkan""",
 
     # Run the user's selected mode
     if args.mode == "start" or args.mode is None:
-        if getattr(args, 'single_prompt', None):
-            run_single_prompt(args, config_dict["DIR_ASSISTANT"])
-        else:
-            start(args, config_dict["DIR_ASSISTANT"])
+        start(args, config_dict["DIR_ASSISTANT"])
     elif args.mode == "platform":
         platform(args, config_dict["DIR_ASSISTANT"])
     elif args.mode == "config":

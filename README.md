@@ -379,7 +379,10 @@ export DIR_ASSISTANT__COMMIT_TO_GIT=true
 # Change context ratio
 export DIR_ASSISTANT__CONTEXT_FILE_RATIO=0.7
 
-# Example running with overrides
+# Change llama.cpp embedding options
+export DIR_ASSISTANT__LLAMA_CPP_EMBED_OPTIONS__n_ctx=2048
+
+# Example setting multiple env vars inline with the command
 DIR_ASSISTANT__COMMIT_TO_GIT=true DIR_ASSISTANT__CONTEXT_FILE_RATIO=0.7 dir-assistant
 ```
 

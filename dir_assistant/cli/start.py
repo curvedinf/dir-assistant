@@ -37,26 +37,20 @@ def display_startup_art(commit_to_git, no_color=False):
 {Style.RESET_ALL}\n\n"""
     )
     color_prefix = Style.RESET_ALL if no_color else f"{Style.BRIGHT}{Fore.BLUE}"
-    sys.stdout.write(
-        f"{color_prefix}Type 'exit' to quit the conversation.\n"
-    )
+    print(f"{color_prefix}Type 'exit' to quit the conversation.")
     if commit_to_git:
-        sys.stdout.write(
-            f"{color_prefix}Type 'undo' to roll back the last commit.\n"
-        )
-    sys.stdout.write("\n")
+        print(f"{color_prefix}Type 'undo' to roll back the last commit.")
+    print("")
 
 def run_single_prompt(args, config_dict):
-    llm = initialize_llm(args, config_dict)
+    llm = initialize_llm(args, config_dict, chat_mode=False)
     llm.initialize_history()
-    llm.no_color = args.no_color
-    llm.verbose = args.verbose
     response = llm.run_stream_processes(args.single_prompt, True)
-    
+
     # Only print the final response
     sys.stdout.write(response)
 
-def initialize_llm(args, config_dict):
+def initialize_llm(args, config_dict, chat_mode=True):
     # Check if we're working with the full config dict or just DIR_ASSISTANT section
     config = config_dict["DIR_ASSISTANT"] if "DIR_ASSISTANT" in config_dict else config_dict
 
@@ -144,9 +138,9 @@ see readme for more information. Exiting..."""
         embed_chunk_size = lite_llm_embed_chunk_size
 
     # Create the file index
-    if verbose:
+    if verbose or chat_mode:
         print(f"{Fore.LIGHTBLACK_EX}Creating file embeddings and index...{Style.RESET_ALL}")
-    index, chunks = create_file_index(embed, ignore_paths, embed_chunk_size, extra_dirs, args.verbose)
+    index, chunks = create_file_index(embed, ignore_paths, embed_chunk_size, extra_dirs, verbose)
 
     # Set up the system instructions
     system_instructions_full = f"{system_instructions}\n\nThe user will ask questions relating \
@@ -175,7 +169,7 @@ see readme for more information. Exiting..."""
         )
     else:
         if verbose:
-            sys.stdout.write(
+            print(
                 f"{Fore.LIGHTBLACK_EX}Loading remote LLM model...{Style.RESET_ALL}"
             )
         llm = LiteLLMAssistant(
@@ -199,9 +193,22 @@ see readme for more information. Exiting..."""
     return llm
 
 def start(args, config_dict):
-    llm = initialize_llm(args, config_dict)
+    single_prompt = args.single_prompt
+
+    if single_prompt:
+        # For single prompt mode, many options are ignored
+        config_dict["NO_COLOR"] = True
+        config_dict["VERBOSE"] = False
+        config_dict["PRINT_CGRAG"] = False
+        config_dict["COMMIT_TO_GIT"] = False
+
+    llm = initialize_llm(args, config_dict, chat_mode=not single_prompt)
     llm.initialize_history()
-    no_color = llm.no_color
+
+    # If in single prompt mode, run the prompt and exit
+    if single_prompt:
+        llm.stream_chat(single_prompt)
+        exit(0)
 
     # Get variables needed for file watcher and startup art
     is_full_config = "DIR_ASSISTANT" in config_dict
@@ -220,6 +227,7 @@ def start(args, config_dict):
     )
 
     # Display the startup art
+    no_color = llm.no_color
     display_startup_art(commit_to_git, no_color=no_color)
 
     # Initialize history for prompt input
