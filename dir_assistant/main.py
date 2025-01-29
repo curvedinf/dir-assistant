@@ -1,7 +1,7 @@
 import argparse
 import warnings
 
-warnings.filterwarnings("ignore", category=SyntaxWarning)
+warnings.filterwarnings("ignore")
 
 from dir_assistant.assistant.index import clear
 from dir_assistant.cli.config import config, config_open, load_config
