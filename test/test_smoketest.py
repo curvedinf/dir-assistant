@@ -30,6 +30,8 @@ def run_dir_assistant_with_pty(cmd_args, cwd, input_commands):
             try:
                 data = os.read(master_fd, 1024).decode()
                 stdout += data
+                sys.stdout.write(data)
+                sys.stdout.flush()
                 if "You (Press ALT-Enter, OPT-Enter, or CTRL-O to submit):" in data:
                     break
             except OSError:
