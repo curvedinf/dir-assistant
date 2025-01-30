@@ -23,10 +23,9 @@ def run_dir_assistant_with_pty(cmd_args, cwd, input_commands):
         text=True
     )
     os.close(slave_fd)  # Close the slave fd in the parent process
-
     stdout = ""
     for cmd in input_commands:
-        os.write(master_fd, (cmd + "\n").encode())
+        os.write(master_fd, (cmd + "\x1b\r").encode())
         while True:
             try:
                 data = os.read(master_fd, 1024).decode()
@@ -35,7 +34,6 @@ def run_dir_assistant_with_pty(cmd_args, cwd, input_commands):
                     break
             except OSError:
                 break
-
     process.wait()
     os.close(master_fd)
     return stdout, process.returncode
