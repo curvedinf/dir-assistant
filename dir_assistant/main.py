@@ -13,7 +13,7 @@ from dir_assistant.cli.models import (
 )
 from dir_assistant.cli.platform_setup import platform
 from dir_assistant.cli.setkey import setkey
-from dir_assistant.cli.start import run_single_prompt, start
+from dir_assistant.cli.start import start
 
 
 def main():

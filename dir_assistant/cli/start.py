@@ -14,7 +14,7 @@ from dir_assistant.assistant.lite_llm_assistant import LiteLLMAssistant
 from dir_assistant.assistant.lite_llm_embed import LiteLlmEmbed
 from dir_assistant.assistant.llama_cpp_assistant import LlamaCppAssistant
 from dir_assistant.assistant.llama_cpp_embed import LlamaCppEmbed
-from dir_assistant.cli.config import HISTORY_FILENAME, STORAGE_PATH, get_file_path
+from dir_assistant.cli.config import HISTORY_FILENAME, STORAGE_PATH, get_file_path, VERSION
 
 litellm.suppress_debug_info = True
 
@@ -207,6 +207,9 @@ def start(args, config_dict):
         config_dict["VERBOSE"] = False
         config_dict["PRINT_CGRAG"] = False
         config_dict["COMMIT_TO_GIT"] = False
+
+    if config_dict["VERBOSE"]:
+        print(f"dir-assistant {VERSION}")
 
     llm = initialize_llm(args, config_dict, chat_mode=not single_prompt)
     llm.initialize_history()

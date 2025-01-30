@@ -5,6 +5,7 @@ from subprocess import run
 import toml
 from dynaconf import Dynaconf
 
+VERSION="1.3.0"
 CONFIG_FILENAME = "config.toml"
 CONFIG_PATH = "~/.config/dir-assistant"
 STORAGE_PATH = "~/.local/share/dir-assistant/"
@@ -88,7 +89,7 @@ def set_environment_overrides(config_dict):
             if isinstance(value, dict):
                 config_branch[key] = _override_config(value, prefix=env_key)
             elif env_key in environ:
-                config_branch[key] = environ[env_key]
+                config_branch[key] = coerce_setting_string_value(environ[env_key])
         return config_branch
 
     return _override_config(config_dict)
@@ -107,18 +108,6 @@ def coerce_setting_string_value(value_str):
         return float(value_str)
     # Keep as string if no other type matches
     return value_str
-
-
-def parse_config_override(override_str):
-    """Parse a key=value config override string"""
-    try:
-        key, value = override_str.split("=", 1)
-        return key.strip(), coerce_setting_string_value(value.strip())
-    except ValueError:
-        raise ValueError(
-            f"Invalid config override format: {override_str}. Use KEY=VALUE format."
-        )
-
 
 def load_config(skip_environment_vars=False):
     config_object = Dynaconf(
