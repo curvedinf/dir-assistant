@@ -5,11 +5,11 @@ from subprocess import run
 import toml
 from dynaconf import Dynaconf
 
-VERSION="1.3.0"
+VERSION = "1.3.0"
 CONFIG_FILENAME = "config.toml"
 CONFIG_PATH = "~/.config/dir-assistant"
 STORAGE_PATH = "~/.local/share/dir-assistant/"
-HISTORY_FILENAME = "history.pth" # pth = prompt toolkit history
+HISTORY_FILENAME = "history.pth"  # pth = prompt toolkit history
 CONFIG_DEFAULTS = {
     "SYSTEM_INSTRUCTIONS": "You are a helpful AI assistant.",
     "GLOBAL_IGNORES": [
@@ -108,6 +108,7 @@ def coerce_setting_string_value(value_str):
         return float(value_str)
     # Keep as string if no other type matches
     return value_str
+
 
 def load_config(skip_environment_vars=False):
     config_object = Dynaconf(

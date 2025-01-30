@@ -14,7 +14,12 @@ from dir_assistant.assistant.lite_llm_assistant import LiteLLMAssistant
 from dir_assistant.assistant.lite_llm_embed import LiteLlmEmbed
 from dir_assistant.assistant.llama_cpp_assistant import LlamaCppAssistant
 from dir_assistant.assistant.llama_cpp_embed import LlamaCppEmbed
-from dir_assistant.cli.config import HISTORY_FILENAME, STORAGE_PATH, get_file_path, VERSION
+from dir_assistant.cli.config import (
+    HISTORY_FILENAME,
+    STORAGE_PATH,
+    VERSION,
+    get_file_path,
+)
 
 litellm.suppress_debug_info = True
 

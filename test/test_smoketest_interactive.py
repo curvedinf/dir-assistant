@@ -1,9 +1,8 @@
-import pty
 import os
+import pty
 import subprocess
 import time
-
-from test.utils import read_until, send_input, ALT_ENTER
+from test.utils import ALT_ENTER, read_until, send_input
 
 
 def test_smoketest_interactive():
@@ -36,15 +35,21 @@ def test_smoketest_interactive():
             stderr=slave_fd,
             universal_newlines=True,
             bufsize=0,
-            env=new_env
+            env=new_env,
         )
 
         # Allow some time for the application to start
         time.sleep(1)
 
         # Read the startup messages until the main prompt is reached
-        output = read_until(master_fd, "You (Press ALT-Enter, OPT-Enter, or CTRL-O to submit):", timeout=60)
-        assert "Type 'exit' to quit the conversation." in output, "Startup prompt not found."
+        output = read_until(
+            master_fd,
+            "You (Press ALT-Enter, OPT-Enter, or CTRL-O to submit):",
+            timeout=60,
+        )
+        assert (
+            "Type 'exit' to quit the conversation." in output
+        ), "Startup prompt not found."
 
         # Prepare a multi-line prompt
         multi_line_prompt = "Describe the purpose of this codebase.\n\nThen say roughly how many lines of code it has."
@@ -53,7 +58,11 @@ def test_smoketest_interactive():
         send_input(master_fd, multi_line_prompt + ALT_ENTER)
 
         # Read the response from the assistant until "Goodbye!" is found
-        response = read_until(master_fd, "You (Press ALT-Enter, OPT-Enter, or CTRL-O to submit):", timeout=60)
+        response = read_until(
+            master_fd,
+            "You (Press ALT-Enter, OPT-Enter, or CTRL-O to submit):",
+            timeout=60,
+        )
         assert len(response) > 50
     finally:
         # Terminate the subprocess if it's still running

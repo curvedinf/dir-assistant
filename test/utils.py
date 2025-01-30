@@ -6,6 +6,7 @@ import time
 # Alt-Enter is often represented by sending an escape character followed by Enter
 ALT_ENTER = "\x1b\r"  # ESC + carriage return
 
+
 def read_until(master_fd, prompt, timeout=5):
     """
     Reads from the master file descriptor until the specified prompt is found

@@ -1,9 +1,8 @@
-import pty
 import os
+import pty
 import subprocess
 import time
-
-from test.utils import read_until, send_input, ALT_ENTER
+from test.utils import ALT_ENTER, read_until, send_input
 
 
 def test_smoketest_noninteractive():
@@ -28,7 +27,7 @@ def test_smoketest_noninteractive():
         capture_output=True,
         text=True,
         check=False,
-        env=new_env
+        env=new_env,
     )
 
     print(result.stdout)
