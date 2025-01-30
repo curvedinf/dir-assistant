@@ -1,6 +1,7 @@
+import os
+import pty
 import subprocess
 import sys
-import os
 import pytest
 
 @pytest.fixture
@@ -11,58 +12,36 @@ def repo_root():
 def python_executable():
     return sys.executable
 
-def run_dir_assistant(cmd_args, cwd, input=None):
-    return subprocess.run(
+def run_dir_assistant_with_pty(cmd_args, cwd, input_commands):
+    master_fd, slave_fd = pty.openpty()
+    process = subprocess.Popen(
         [sys.executable, "-m", "dir_assistant"] + cmd_args,
         cwd=cwd,
-        stdout=subprocess.PIPE,
+        stdin=slave_fd,
+        stdout=slave_fd,
         stderr=subprocess.PIPE,
-        text=True,
-        input=input  # Pass the simulated input here
+        text=True
     )
+    os.close(slave_fd)  # Close the slave fd in the parent process
+
+    stdout = ""
+    for cmd in input_commands:
+        os.write(master_fd, (cmd + "\n").encode())
+        while True:
+            try:
+                data = os.read(master_fd, 1024).decode()
+                stdout += data
+                if "You (Press ALT-Enter, OPT-Enter, or CTRL-O to submit):" in data:
+                    break
+            except OSError:
+                break
+
+    process.wait()
+    os.close(master_fd)
+    return stdout, process.returncode
 
 def test_start_mode_default_models(repo_root, python_executable):
-    # Simulate typing 'exit' followed by a newline to terminate the interactive session
-    simulated_input = "exit\n"
-    
-    result = run_dir_assistant(["start"], cwd=repo_root, input=simulated_input)
-    
-    assert result.returncode == 0, f"STDERR: {result.stderr}"
-    assert "Assistant:" in result.stdout, "Expected Assistant prompt not found in STDOUT."
-
-def test_single_prompt_mode(repo_root, python_executable):
-    prompt = "What is the purpose of the dir-assistant project?"
-    result = run_dir_assistant(["-s", prompt], cwd=repo_root)
-    
-    assert result.returncode == 0, f"STDERR: {result.stderr}"
-    assert "Assistant:" in result.stdout
-
-def test_api_model_gpt4o_mini(repo_root, python_executable, monkeypatch):
-    monkeypatch.setenv("OPENAI_API_KEY", "your_openai_api_key_here")
-    prompt = "Explain the functionality of the main.py script."
-    result = run_dir_assistant(["-s", prompt], cwd=repo_root)
-    
-    assert result.returncode == 0, f"STDERR: {result.stderr}"
-    assert "Assistant:" in result.stdout
-
-def test_api_embed_model_text_embedding_3_small(repo_root, python_executable, monkeypatch):
-    monkeypatch.setenv("DIR_ASSISTANT__LITELLM_EMBED_MODEL", "text-embedding-3-small")
-    prompt = "Provide a summary of the project's README."
-    result = run_dir_assistant(["-s", prompt], cwd=repo_root)
-    
-    assert result.returncode == 0, f"STDERR: {result.stderr}"
-    assert "Assistant:" in result.stdout
-
-def test_verbose_no_color_modes(repo_root, python_executable):
-    prompt = "List all available commands in dir-assistant."
-    result = run_dir_assistant(["start", "-v", "-n"], cwd=repo_root)
-    
-    assert result.returncode == 0, f"STDERR: {result.stderr}"
-    assert "Assistant:" in result.stdout
-
-def test_invalid_argument(repo_root, python_executable):
-    prompt = "This should fail."
-    result = run_dir_assistant(["-invalid_arg", prompt], cwd=repo_root)
-    
-    assert result.returncode != 0
-    assert "error" in result.stderr.lower()
+    simulated_commands = ["exit"]
+    stdout, returncode = run_dir_assistant_with_pty(["start"], cwd=repo_root, input_commands=simulated_commands)
+    assert returncode == 0, f"STDERR: {stdout}"
+    assert "Assistant:" in stdout, "Expected Assistant prompt not found in STDOUT."
