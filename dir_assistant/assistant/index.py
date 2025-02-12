@@ -24,26 +24,44 @@ def get_text_files(directory=".", ignore_paths=[]):
     for root, dirs, files in os.walk(directory):
         # Filter out directories that match ignore patterns
         dirs[:] = [d for d in dirs if not any(
-            os.path.normpath(os.path.join(root, d)).endswith(os.path.normpath(ignore_path))
-            or os.path.normpath(ignore_path) in os.path.normpath(os.path.join(root, d))
+            _is_path_ignored(os.path.join(root, d), ignore_path)
             for ignore_path in ignore_paths
         )]
         
         for i, filename in enumerate(files, start=1):
             filepath = os.path.join(root, filename)
-            normalized_filepath = os.path.normpath(filepath)
-            # Check if the filepath matches any ignore pattern
             if (
                 os.path.isfile(filepath)
-                and not any(
-                    normalized_filepath.endswith(os.path.normpath(ignore_path))
-                    or os.path.normpath(ignore_path) in normalized_filepath
-                    for ignore_path in ignore_paths
-                )
+                and not any(_is_path_ignored(filepath, ignore_path) for ignore_path in ignore_paths)
                 and is_text_file(filepath)
             ):
                 text_files.append(filepath)
     return text_files
+
+
+def _is_path_ignored(filepath, ignore_pattern):
+    """
+    Check if a filepath matches an ignore pattern.
+    Handles both file and directory patterns correctly.
+
+    For the path /src/resources/swagger/swagger-core.js.map and ignore pattern resources/swagger/:
+    Path components: ['src', 'resources', 'swagger', 'swagger-core.js.map']
+    Ignore pattern components: ['resources', 'swagger']
+    """
+    # Normalize both paths
+    norm_filepath = os.path.normpath(filepath)
+    norm_ignore = os.path.normpath(ignore_pattern.rstrip('/'))
+    
+    # Split paths into components
+    filepath_parts = norm_filepath.split(os.sep)
+    ignore_parts = norm_ignore.split(os.sep)
+    
+    # Check if the ignore pattern matches any part of the path
+    for i in range(len(filepath_parts) - len(ignore_parts) + 1):
+        if filepath_parts[i:i+len(ignore_parts)] == ignore_parts:
+            return True
+    
+    return False
 
 
 def get_files_with_contents(directory, ignore_paths, cache_db):
