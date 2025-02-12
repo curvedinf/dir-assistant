@@ -22,12 +22,24 @@ def is_text_file(filepath):
 def get_text_files(directory=".", ignore_paths=[]):
     text_files = []
     for root, dirs, files in os.walk(directory):
-        dirs[:] = [d for d in dirs if os.path.join(root, d) not in ignore_paths]
+        # Filter out directories that match ignore patterns
+        dirs[:] = [d for d in dirs if not any(
+            os.path.normpath(os.path.join(root, d)).endswith(os.path.normpath(ignore_path))
+            or os.path.normpath(ignore_path) in os.path.normpath(os.path.join(root, d))
+            for ignore_path in ignore_paths
+        )]
+        
         for i, filename in enumerate(files, start=1):
             filepath = os.path.join(root, filename)
+            normalized_filepath = os.path.normpath(filepath)
+            # Check if the filepath matches any ignore pattern
             if (
                 os.path.isfile(filepath)
-                and not any(ignore_path in filepath for ignore_path in ignore_paths)
+                and not any(
+                    normalized_filepath.endswith(os.path.normpath(ignore_path))
+                    or os.path.normpath(ignore_path) in normalized_filepath
+                    for ignore_path in ignore_paths
+                )
                 and is_text_file(filepath)
             ):
                 text_files.append(filepath)
