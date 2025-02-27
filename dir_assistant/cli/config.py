@@ -5,7 +5,7 @@ from subprocess import run
 import toml
 from dynaconf import Dynaconf
 
-VERSION = "1.3.0"
+VERSION = "1.3.1"
 CONFIG_FILENAME = "config.toml"
 CONFIG_PATH = "~/.config/dir-assistant"
 STORAGE_PATH = "~/.local/share/dir-assistant/"
@@ -47,12 +47,12 @@ CONFIG_DEFAULTS = {
     "LLAMA_CPP_COMPLETION_OPTIONS": {
         "frequency_penalty": 1.1,
     },
-    "LITELLM_MODEL": "gemini/gemini-1.5-flash-latest",
-    "LITELLM_CONTEXT_SIZE": 500000,
+    "LITELLM_MODEL": "gemini/gemini-2.0-flash",
+    "LITELLM_CONTEXT_SIZE": 200000,
     "LITELLM_MODEL_USES_SYSTEM_MESSAGE": False,
     "LITELLM_PASS_THROUGH_CONTEXT_SIZE": False,
     "LITELLM_EMBED_MODEL": "gemini/text-embedding-004",
-    "LITELLM_EMBED_CHUNK_SIZE": 2048,
+    "LITELLM_EMBED_CHUNK_SIZE": 4096,
     "LITELLM_EMBED_REQUEST_DELAY": 0,
     "LITELLM_API_KEYS": {
         "GEMINI_API_KEY": "",
