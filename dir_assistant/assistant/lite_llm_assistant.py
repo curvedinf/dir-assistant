@@ -1,4 +1,5 @@
 import sys
+from copy import deepcopy
 
 from colorama import Fore, Style
 from litellm import completion, token_counter
@@ -55,10 +56,16 @@ class LiteLLMAssistant(GitAssistant):
             self.chat_history[0]["role"] = "user"
 
     def call_completion(self, chat_history):
+        # Clean "tokens" from chat history. It causes an error for mistral.
+        chat_history_cleaned = deepcopy(chat_history)
+        for message in chat_history_cleaned:
+            if "tokens" in message:
+                del message["tokens"]
+
         if self.pass_through_context_size:
             return completion(
                 model=self.lite_llm_model,
-                messages=chat_history,
+                messages=chat_history_cleaned,
                 stream=True,
                 timeout=600,
                 num_ctx=self.context_size,
@@ -66,7 +73,7 @@ class LiteLLMAssistant(GitAssistant):
         else:
             return completion(
                 model=self.lite_llm_model,
-                messages=chat_history,
+                messages=chat_history_cleaned,
                 stream=True,
                 timeout=600,
             )
