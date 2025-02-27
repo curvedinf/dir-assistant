@@ -1,9 +1,45 @@
+import os
 import sys
 
 from colorama import Fore, Style
 from llama_cpp import Llama
 
 from dir_assistant.assistant.git_assistant import GitAssistant
+
+
+class suppress_stdout_stderr(object):
+    def __enter__(self):
+        self.outnull_file = open(os.devnull, "w")
+        self.errnull_file = open(os.devnull, "w")
+
+        self.old_stdout_fileno_undup = sys.stdout.fileno()
+        self.old_stderr_fileno_undup = sys.stderr.fileno()
+
+        self.old_stdout_fileno = os.dup(sys.stdout.fileno())
+        self.old_stderr_fileno = os.dup(sys.stderr.fileno())
+
+        self.old_stdout = sys.stdout
+        self.old_stderr = sys.stderr
+
+        os.dup2(self.outnull_file.fileno(), self.old_stdout_fileno_undup)
+        os.dup2(self.errnull_file.fileno(), self.old_stderr_fileno_undup)
+
+        sys.stdout = self.outnull_file
+        sys.stderr = self.errnull_file
+        return self
+
+    def __exit__(self, *_):
+        sys.stdout = self.old_stdout
+        sys.stderr = self.old_stderr
+
+        os.dup2(self.old_stdout_fileno, self.old_stdout_fileno_undup)
+        os.dup2(self.old_stderr_fileno, self.old_stderr_fileno_undup)
+
+        os.close(self.old_stdout_fileno)
+        os.close(self.old_stderr_fileno)
+
+        self.outnull_file.close()
+        self.errnull_file.close()
 
 
 class LlamaCppAssistant(GitAssistant):
@@ -39,17 +75,23 @@ class LlamaCppAssistant(GitAssistant):
             no_color,
             chat_mode,
         )
-        self.llm = Llama(model_path=model_path, **llama_cpp_options)
+        with suppress_stdout_stderr():
+            self.llm = Llama(model_path=model_path, **llama_cpp_options)
         self.context_size = self.llm.context_params.n_ctx
         self.completion_options = completion_options
-        print(
-            f"{Fore.LIGHTBLACK_EX}LLM context size: {self.context_size}{Style.RESET_ALL}"
-        )
+        if self.verbose and self.chat_mode:
+            if not self.no_color:
+                sys.stdout.write(Fore.LIGHTBLACK_EX)
+            sys.stdout.write(f"LLM context size: {self.context_size}")
+            if not self.no_color:
+                sys.stdout.write(Fore.RESET)
+            sys.stdout.flush()
 
     def call_completion(self, chat_history):
-        return self.llm.create_chat_completion(
-            messages=chat_history, stream=True, **self.completion_options
-        )
+        with suppress_stdout_stderr():
+            return self.llm.create_chat_completion(
+                messages=chat_history, stream=True, **self.completion_options
+            )
 
     def run_completion_generator(
         self, completion_output, output_message, write_to_stdout

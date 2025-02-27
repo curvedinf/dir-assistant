@@ -34,7 +34,7 @@ def get_text_files(directory=".", ignore_paths=[]):
     return text_files
 
 
-def get_files_with_contents(directory, ignore_paths, cache_db):
+def get_files_with_contents(directory, ignore_paths, cache_db, verbose):
     text_files = get_text_files(directory, ignore_paths)
     files_with_contents = []
     with SqliteDict(cache_db, autocommit=True) as cache:
@@ -48,9 +48,11 @@ def get_files_with_contents(directory, ignore_paths, cache_db):
                     with open(filepath, "r") as file:
                         contents = file.read()
                 except UnicodeDecodeError:
-                    print(
-                        f"{Fore.LIGHTBLACK_EX}Skipping {filepath} because it is not a text file.{Style.RESET_ALL}"
-                    )
+                    if verbose:
+                        sys.stdout.write(
+                            f"Skipping {filepath} because it is not a text file.\n"
+                        )
+                        sys.stdout.flush()
                 file_info = {
                     "filepath": os.path.abspath(filepath),
                     "contents": contents,
@@ -67,30 +69,36 @@ def create_file_index(
     cache_db = get_file_path(INDEX_CACHE_PATH, INDEX_CACHE_FILENAME)
 
     # Start with current directory
-    files_with_contents = get_files_with_contents(".", ignore_paths, cache_db)
+    files_with_contents = get_files_with_contents(".", ignore_paths, cache_db, verbose)
 
     # Add files from additional folders
     for folder in extra_dirs:
         if os.path.exists(folder):
-            folder_files = get_files_with_contents(folder, ignore_paths, cache_db)
+            folder_files = get_files_with_contents(
+                folder, ignore_paths, cache_db, verbose
+            )
             files_with_contents.extend(folder_files)
         else:
             if verbose:
-                print(
-                    f"{Fore.YELLOW}Warning: Additional folder {folder} does not exist{Style.RESET_ALL}"
+                sys.stdout.write(
+                    f"Warning: Additional folder {folder} does not exist\n"
                 )
+                sys.stdout.flush()
 
     if not files_with_contents:
         if verbose:
-            print(
-                f"{Fore.YELLOW}Warning: No text files found, creating first-file.txt...{Style.RESET_ALL}"
+            sys.stdout.write(
+                f"Warning: No text files found, creating first-file.txt...\n"
             )
+            sys.stdout.flush()
         with open("first-file.txt", "w") as file:
             file.write(
                 "Dir-assistant requires a file to be initialized, so this one was created because "
                 "the directory was empty."
             )
-        files_with_contents = get_files_with_contents(".", ignore_paths, cache_db)
+        files_with_contents = get_files_with_contents(
+            ".", ignore_paths, cache_db, verbose
+        )
 
     chunks = []
     embeddings_list = []
@@ -100,9 +108,8 @@ def create_file_index(
             cached_chunks = cache.get(f"{filepath}_chunks")
             if cached_chunks and cached_chunks["mtime"] == file_info["mtime"]:
                 if verbose:
-                    print(
-                        f"{Fore.LIGHTBLACK_EX}Using cached embeddings for {filepath}{Style.RESET_ALL}"
-                    )
+                    sys.stdout.write(f"Using cached embeddings for {filepath}\n")
+                    sys.stdout.flush()
                 chunks.extend(cached_chunks["chunks"])
                 embeddings_list.extend(cached_chunks["embeddings"])
                 continue
@@ -120,7 +127,8 @@ def create_file_index(
             }
 
     if verbose:
-        print(f"{Fore.LIGHTBLACK_EX}Creating index from embeddings...{Style.RESET_ALL}")
+        sys.stdout.write("Creating index from embeddings...\n")
+        sys.stdout.flush()
     embeddings = np.array(embeddings_list)
     index = IndexFlatL2(embeddings.shape[1])
     index.add(embeddings)
@@ -135,9 +143,8 @@ def process_file(embed, filepath, contents, embed_chunk_size, verbose=False):
     embeddings_list = []
 
     if verbose:
-        print(
-            f"{Fore.LIGHTBLACK_EX}Creating embeddings for {filepath}{Style.RESET_ALL}"
-        )
+        sys.stdout.write(f"Creating embeddings for {filepath}\n")
+        sys.stdout.flush()
     for line_number, line in enumerate(lines, start=1):
         # Process each line individually if needed
         line_content = line
@@ -198,9 +205,16 @@ def find_split_point(embed, line_content, max_size, header):
 
 def search_index(embed, index, query, all_chunks):
     query_embedding = embed.create_embedding(query)
-    distances, indices = index.search(
-        np.array([query_embedding]), 100
-    )  # 819,200 tokens max with default embedding
+    try:
+        distances, indices = index.search(
+            np.array([query_embedding]), 100
+        )  # 819,200 tokens max with default embedding
+    except AssertionError as e:
+        sys.stderr.write(
+            f"Assertion error during index search. Did you change your embedding model? "
+            f"Run 'dir_assistant clear' and try again.'\n"
+        )
+        raise e
     relevant_chunks = [all_chunks[i] for i in indices[0] if i != -1]
     return relevant_chunks
 

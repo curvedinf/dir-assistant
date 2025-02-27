@@ -130,8 +130,14 @@ see readme for more information. Exiting..."""
     extra_dirs = args.dirs if args.dirs else []
 
     # Initialize the embedding model
-    if verbose:
-        print(f"{Fore.LIGHTBLACK_EX}Loading embedding model...{Style.RESET_ALL}")
+    if verbose and chat_mode:
+        if not no_color:
+            sys.stdout.write(f"{Fore.LIGHTBLACK_EX}")
+        sys.stdout.write(f"Loading embedding model...\n")
+        if not no_color:
+            sys.stdout.write(f"{Style.RESET_ALL}")
+        sys.stdout.flush()
+
     if active_embed_is_local:
         embed = LlamaCppEmbed(
             model_path=embed_model_file, embed_options=llama_cpp_embed_options
@@ -147,9 +153,13 @@ see readme for more information. Exiting..."""
 
     # Create the file index
     if verbose or chat_mode:
-        print(
-            f"{Fore.LIGHTBLACK_EX}Creating file embeddings and index...{Style.RESET_ALL}"
-        )
+        if not no_color:
+            sys.stdout.write(f"{Fore.LIGHTBLACK_EX}")
+        sys.stdout.write(f"Creating file embeddings and index...\n")
+        if not no_color:
+            sys.stdout.write(f"{Style.RESET_ALL}")
+        sys.stdout.flush()
+
     index, chunks = create_file_index(
         embed, ignore_paths, embed_chunk_size, extra_dirs, verbose
     )
@@ -161,8 +171,14 @@ see readme for more information. Exiting..."""
 
     # Initialize the LLM model
     if active_model_is_local:
-        if verbose:
-            print(f"{Fore.LIGHTBLACK_EX}Loading local LLM model...{Style.RESET_ALL}")
+        if verbose and chat_mode:
+            if not no_color:
+                sys.stdout.write(f"{Fore.LIGHTBLACK_EX}")
+            sys.stdout.write(f"Loading local LLM model...\n")
+            if not no_color:
+                sys.stdout.write(f"{Style.RESET_ALL}")
+            sys.stdout.flush()
+
         llm = LlamaCppAssistant(
             llm_model_file,
             llama_cpp_options,
@@ -181,8 +197,14 @@ see readme for more information. Exiting..."""
             chat_mode=chat_mode,
         )
     else:
-        if verbose:
-            print(f"{Fore.LIGHTBLACK_EX}Loading remote LLM model...{Style.RESET_ALL}")
+        if verbose and chat_mode:
+            if not no_color:
+                sys.stdout.write(f"{Fore.LIGHTBLACK_EX}")
+            sys.stdout.write(f"Loading remote LLM model...\n")
+            if not no_color:
+                sys.stdout.write(f"{Style.RESET_ALL}")
+            sys.stdout.flush()
+
         llm = LiteLLMAssistant(
             lite_llm_model,
             lite_llm_model_uses_system_message,
@@ -214,9 +236,6 @@ def start(args, config_dict):
         config_dict["VERBOSE"] = False
         config_dict["PRINT_CGRAG"] = False
         config_dict["COMMIT_TO_GIT"] = False
-
-    if config_dict["VERBOSE"]:
-        print(f"dir-assistant {VERSION}")
 
     llm = initialize_llm(args, config_dict, chat_mode=not single_prompt)
     llm.initialize_history()

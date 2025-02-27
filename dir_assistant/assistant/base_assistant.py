@@ -173,7 +173,7 @@ class BaseAssistant:
     def run_accepted_output_processes(self, user_input, stream_output):
         # Run processes that should be run if the output is accepted
         if self.chat_mode and self.verbose:
-            sys.stdout.write(f'Response accepted, continuing...\n\n')
+            sys.stdout.write(f"Response accepted, continuing...\n\n")
 
     def run_bad_output_processes(self, user_input, stream_output):
         # Run processes that should be run if the output is bad
@@ -214,16 +214,23 @@ class BaseAssistant:
 
         # Display chat history
         output_history = self.create_empty_history()
-        if self.chat_mode and not self.no_color:
-            sys.stdout.write(
-                f"{self.get_color_prefix(Style.BRIGHT, Fore.WHITE)}\r{' ' * 36}\r{self.get_color_suffix()}"
-            )
+
+        if self.chat_mode:
+            if not self.no_color:
+                sys.stdout.write(f"{self.get_color_prefix(Style.BRIGHT, Fore.WHITE)}")
+            sys.stdout.write(f"\r{' ' * 36}\r")
+            if not self.no_color:
+                sys.stdout.write(f"{self.get_color_suffix()}")
             sys.stdout.flush()
+
         output_history = self.run_completion_generator(
             completion_generator, output_history, True
         )
-        if self.chat_mode and not self.no_color:
-            sys.stdout.write(f"{self.get_color_suffix()}\n\n")
+
+        if self.chat_mode:
+            if not self.no_color:
+                sys.stdout.write(f"{self.get_color_suffix()}")
+            sys.stdout.write("\n\n")
             sys.stdout.flush()
 
         # Add the completion to the chat history

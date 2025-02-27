@@ -1,10 +1,11 @@
 import argparse
+import sys
 import warnings
 
 warnings.filterwarnings("ignore")
 
 from dir_assistant.assistant.index import clear
-from dir_assistant.cli.config import config, config_open, load_config
+from dir_assistant.cli.config import VERSION, config, config_open, load_config
 from dir_assistant.cli.models import (
     models_download_embed,
     models_download_llm,
@@ -199,6 +200,13 @@ vulkan    - Vulkan""",
         # Do not load the config file if the user is opening the config file.
         # The toml may be malformed, so we don't want to crash before it is opened.
         config_dict = load_config()
+
+        # Print version info if verbose
+        if config_dict["DIR_ASSISTANT"]["VERBOSE"] and not args.single_prompt:
+            sys.stdout.write(f"dir-assistant {VERSION}\n")
+            sys.stdout.write(f"Released under MIT License\n")
+            sys.stdout.write(f"https://github.com/curvedinf/dir-assistant\n\n")
+            sys.stdout.flush()
 
     # Run the user's selected mode
     if args.mode == "start" or args.mode is None:

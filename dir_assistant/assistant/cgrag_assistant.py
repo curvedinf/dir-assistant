@@ -48,28 +48,23 @@ class CGRAGAssistant(BaseAssistant):
                 )
             if self.use_cgrag:
                 sys.stdout.write(
-                    f"{self.get_color_prefix(Style.BRIGHT, Fore.WHITE)}\r(generating contextual guidance...){self.get_color_suffix()}"
+                    f"{self.get_color_prefix(Style.BRIGHT, Fore.WHITE)}\r"
+                    f"(generating contextual guidance...){self.get_color_suffix()}"
                 )
             else:
                 sys.stdout.write(
                     f"{self.get_color_prefix(Style.BRIGHT, Fore.WHITE)}\r(thinking...){self.get_color_suffix()}"
                 )
+            if self.print_cgrag:
+                sys.stdout.write("\r")
             sys.stdout.flush()
 
     def print_cgrag_output(self, cgrag_output):
         if self.chat_mode:
             if self.print_cgrag:
                 sys.stdout.write(
-                    self.get_color_prefix(Style.BRIGHT, Fore.WHITE) + "\r" + (" " * 36)
-                )
-                sys.stdout.write(
-                    self.get_color_prefix(Style.BRIGHT, Fore.WHITE)
-                    + f"\r{cgrag_output}\n\n"
-                    + self.get_color_suffix()
-                )
-                sys.stdout.write(
                     self.get_color_prefix(Style.BRIGHT, Fore.GREEN)
-                    + "Assistant: \n\n"
+                    + "\n\nAssistant: \n\n"
                     + self.get_color_suffix()
                 )
             else:

@@ -81,9 +81,7 @@ Real response:
         if (
             not self.commit_to_git or not self.should_diff
         ) and not self.git_apply_error:
-            return super().run_post_stream_processes(
-                user_input, stream_output
-            )
+            return super().run_post_stream_processes(user_input, stream_output)
         else:
             if self.chat_mode:
                 sys.stdout.write(
