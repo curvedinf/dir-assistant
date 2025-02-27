@@ -107,7 +107,7 @@ class BaseAssistant:
 
     def create_user_history(self, temp_content, final_content):
         return {
-            "role": "assistant",
+            "role": "user",
             "content": temp_content,
             "tokens": self.embed.count_tokens(final_content),
         }
@@ -128,7 +128,15 @@ class BaseAssistant:
                 [self.count_tokens(message["content"]) for message in history_list]
             )
 
-    def create_empty_history(self, role="assistant"):
+        # Some LLMs require the first message to be from the user
+        if history_list[0]["role"] == "system":
+            while len(history_list) > 1 and history_list[1]["role"] == "assistant":
+                history_list.pop(1)
+        else:
+            while len(history_list) > 0 and history_list[0]["role"] == "assistant":
+                history_list.pop(0)
+
+    def create_empty_history(self, role="user"):
         return {"role": role, "content": "", "tokens": 0}
 
     def create_one_off_prompt_history(self, prompt):
