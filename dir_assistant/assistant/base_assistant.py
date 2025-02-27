@@ -20,6 +20,9 @@ class BaseAssistant:
         chunks,
         context_file_ratio,
         output_acceptance_retries,
+        verbose,
+        no_color,
+        chat_mode,
     ):
         self.system_instructions = system_instructions
         self.embed = embed
@@ -28,6 +31,9 @@ class BaseAssistant:
         self.context_file_ratio = context_file_ratio
         self.context_size = 8192
         self.output_acceptance_retries = output_acceptance_retries
+        self.no_color = no_color
+        self.verbose = verbose
+        self.chat_mode = chat_mode
 
     def initialize_history(self):
         # This inititialization occurs separately from the constructor because child classes need to initialize
@@ -68,16 +74,46 @@ class BaseAssistant:
             relevant_full_text += relevant_chunk["text"] + "\n\n"
         return relevant_full_text
 
+    def get_color_prefix(self, style=None, fore=None):
+        if self.no_color:
+            return ""
+        result = ""
+        if style:
+            result += style
+        if fore:
+            result += fore
+        return result
+
+    def get_color_suffix(self):
+        return "" if self.no_color else Style.RESET_ALL
+
     def write_assistant_thinking_message(self):
-        sys.stdout.write(
-            f"{Style.BRIGHT}{Fore.GREEN}\nAssistant: \n\n{Style.RESET_ALL}"
-        )
-        sys.stdout.write(f"{Style.BRIGHT}{Fore.WHITE}\r(thinking...){Style.RESET_ALL}")
-        sys.stdout.flush()
+        if self.chat_mode:
+            color_prefix = self.get_color_prefix(Style.BRIGHT, Fore.GREEN)
+            color_suffix = self.get_color_suffix()
+            sys.stdout.write(f"{color_prefix}\nAssistant: \n\n{color_suffix}")
+            sys.stdout.write(
+                f"{self.get_color_prefix(Style.BRIGHT, Fore.WHITE)}\r(thinking...){color_suffix}"
+            )
+            sys.stdout.flush()
+
+    def write_error_message(self, message):
+        if self.chat_mode:
+            color_prefix = self.get_color_prefix(Style.BRIGHT, Fore.RED)
+            color_suffix = self.get_color_suffix()
+            sys.stdout.write(f"{color_prefix}{message}{color_suffix}\n")
+            sys.stdout.flush()
+
+    def write_debug_message(self, message):
+        if self.verbose and self.chat_mode:
+            color_prefix = self.get_color_prefix(Style.BRIGHT, Fore.YELLOW)
+            color_suffix = self.get_color_suffix()
+            sys.stdout.write(f"{color_prefix}Debug: {message}{color_suffix}\n")
+            sys.stdout.flush()
 
     def create_user_history(self, temp_content, final_content):
         return {
-            "role": "assistant",
+            "role": "user",
             "content": temp_content,
             "tokens": self.embed.count_tokens(final_content),
         }
@@ -98,7 +134,15 @@ class BaseAssistant:
                 [self.count_tokens(message["content"]) for message in history_list]
             )
 
-    def create_empty_history(self, role="assistant"):
+        # Some LLMs require the first message to be from the user
+        if history_list[0]["role"] == "system":
+            while len(history_list) > 1 and history_list[1]["role"] == "assistant":
+                history_list.pop(1)
+        else:
+            while len(history_list) > 0 and history_list[0]["role"] == "assistant":
+                history_list.pop(0)
+
+    def create_empty_history(self, role="user"):
         return {"role": role, "content": "", "tokens": 0}
 
     def create_one_off_prompt_history(self, prompt):
@@ -113,46 +157,48 @@ class BaseAssistant:
     def create_prompt(self, user_input):
         return user_input
 
-    def run_pre_stream_processes(self, user_input, write_to_stdout):
+    def run_pre_stream_processes(self, user_input):
         self.write_assistant_thinking_message()
 
-    def run_stream_processes(self, user_input, write_to_stdout):
+    def run_stream_processes(self, user_input):
         # Returns a string of the assistant's response
         prompt = self.create_prompt(user_input)
         relevant_full_text = self.build_relevant_full_text(prompt)
-        return self.run_basic_chat_stream(prompt, relevant_full_text, write_to_stdout)
+        return self.run_basic_chat_stream(prompt, relevant_full_text)
 
-    def run_post_stream_processes(self, user_input, stream_output, write_to_stdout):
+    def run_post_stream_processes(self, user_input, stream_output):
         # Returns whether the output should be accepted
         return True
 
-    def run_accepted_output_processes(self, user_input, stream_output, write_to_stdout):
+    def run_accepted_output_processes(self, user_input, stream_output):
         # Run processes that should be run if the output is accepted
-        # sys.stdout.write(f'Response accepted, continuing...\n\n')
-        return
+        if self.chat_mode and self.verbose:
+            sys.stdout.write(f"Response accepted, continuing...\n\n")
 
-    def run_bad_output_processes(self, user_input, stream_output, write_to_stdout):
+    def run_bad_output_processes(self, user_input, stream_output):
         # Run processes that should be run if the output is bad
-        sys.stdout.write(f"Response rejected, ignoring...\n\n")
-        return
+        if self.chat_mode:
+            sys.stdout.write(f"Response rejected, ignoring...\n\n")
+            sys.stdout.flush()
 
     def stream_chat(self, user_input):
         # Main function for streaming assistant chat to the user.
         retries = 0
         accepted = False
+        stream_output = ""
         while retries < self.output_acceptance_retries:
-            self.run_pre_stream_processes(user_input, True)
-            stream_output = self.run_stream_processes(user_input, True)
-            accepted = self.run_post_stream_processes(user_input, stream_output, True)
+            self.run_pre_stream_processes(user_input)
+            stream_output = self.run_stream_processes(user_input)
+            accepted = self.run_post_stream_processes(user_input, stream_output)
             if accepted:
                 break
             retries += 1
         if accepted:
-            self.run_accepted_output_processes(user_input, stream_output, True)
+            self.run_accepted_output_processes(user_input, stream_output)
         else:
-            self.run_bad_output_processes(user_input, stream_output, True)
+            self.run_bad_output_processes(user_input, stream_output)
 
-    def run_basic_chat_stream(self, user_input, relevant_full_text, write_to_stdout):
+    def run_basic_chat_stream(self, user_input, relevant_full_text):
         # Add the user input to the chat history
         user_content = relevant_full_text + user_input
         self.add_user_history(user_content, user_input)
@@ -168,13 +214,23 @@ class BaseAssistant:
 
         # Display chat history
         output_history = self.create_empty_history()
-        if write_to_stdout:
-            sys.stdout.write(Style.BRIGHT + Fore.WHITE + "\r" + (" " * 36) + "\r")
+
+        if self.chat_mode:
+            if not self.no_color:
+                sys.stdout.write(f"{self.get_color_prefix(Style.BRIGHT, Fore.WHITE)}")
+            sys.stdout.write(f"\r{' ' * 36}\r")
+            if not self.no_color:
+                sys.stdout.write(f"{self.get_color_suffix()}")
+            sys.stdout.flush()
+
         output_history = self.run_completion_generator(
-            completion_generator, output_history, write_to_stdout
+            completion_generator, output_history, True
         )
-        if write_to_stdout:
-            sys.stdout.write(Style.RESET_ALL + "\n\n")
+
+        if self.chat_mode:
+            if not self.no_color:
+                sys.stdout.write(f"{self.get_color_suffix()}")
+            sys.stdout.write("\n\n")
             sys.stdout.flush()
 
         # Add the completion to the chat history

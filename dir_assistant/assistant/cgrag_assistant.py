@@ -17,6 +17,9 @@ class CGRAGAssistant(BaseAssistant):
         output_acceptance_retries,
         use_cgrag,
         print_cgrag,
+        verbose,
+        no_color,
+        chat_mode,
     ):
         super().__init__(
             system_instructions,
@@ -25,45 +28,52 @@ class CGRAGAssistant(BaseAssistant):
             chunks,
             context_file_ratio,
             output_acceptance_retries,
+            verbose,
+            no_color,
+            chat_mode,
         )
         self.use_cgrag = use_cgrag
         self.print_cgrag = print_cgrag
 
     def write_assistant_thinking_message(self):
-        # Disable CGRAG if the fileset is smaller than 4x the LLM context
-        # total_tokens = sum(chunk['tokens'] for chunk in self.chunks)
-
         # Display the assistant thinking message
-        if self.use_cgrag and self.print_cgrag:
-            sys.stdout.write(
-                f"{Style.BRIGHT}{Fore.BLUE}\nCGRAG Guidance: \n\n{Style.RESET_ALL}"
-            )
-        else:
-            sys.stdout.write(
-                f"{Style.BRIGHT}{Fore.GREEN}\nAssistant: \n\n{Style.RESET_ALL}"
-            )
-        if self.use_cgrag:
-            sys.stdout.write(
-                f"{Style.BRIGHT}{Fore.WHITE}\r(generating contextual guidance...){Style.RESET_ALL}"
-            )
-        else:
-            sys.stdout.write(
-                f"{Style.BRIGHT}{Fore.WHITE}\r(thinking...){Style.RESET_ALL}"
-            )
-        sys.stdout.flush()
+        if self.chat_mode:
+            if self.use_cgrag and self.print_cgrag:
+                sys.stdout.write(
+                    f"{self.get_color_prefix(Style.BRIGHT, Fore.BLUE)}\nCGRAG Guidance: \n\n{self.get_color_suffix()}"
+                )
+            else:
+                sys.stdout.write(
+                    f"{self.get_color_prefix(Style.BRIGHT, Fore.GREEN)}\nAssistant: \n\n{self.get_color_suffix()}"
+                )
+            if self.use_cgrag:
+                sys.stdout.write(
+                    f"{self.get_color_prefix(Style.BRIGHT, Fore.WHITE)}\r"
+                    f"(generating contextual guidance...){self.get_color_suffix()}"
+                )
+            else:
+                sys.stdout.write(
+                    f"{self.get_color_prefix(Style.BRIGHT, Fore.WHITE)}\r(thinking...){self.get_color_suffix()}"
+                )
+            if self.print_cgrag:
+                sys.stdout.write("\r")
+            sys.stdout.flush()
 
     def print_cgrag_output(self, cgrag_output):
-        if self.print_cgrag:
-            sys.stdout.write(Style.BRIGHT + Fore.WHITE + "\r" + (" " * 36))
+        if self.chat_mode:
+            if self.print_cgrag:
+                sys.stdout.write(
+                    self.get_color_prefix(Style.BRIGHT, Fore.GREEN)
+                    + "\n\nAssistant: \n\n"
+                    + self.get_color_suffix()
+                )
+            else:
+                sys.stdout.write(
+                    self.get_color_prefix(Style.BRIGHT, Fore.WHITE) + "\r" + (" " * 36)
+                )
             sys.stdout.write(
-                Style.BRIGHT + Fore.WHITE + f"\r{cgrag_output}\n\n" + Style.RESET_ALL
+                f"{self.get_color_prefix(Style.BRIGHT, Fore.WHITE)}\r(thinking...){self.get_color_suffix()}"
             )
-            sys.stdout.write(
-                Style.BRIGHT + Fore.GREEN + "Assistant: \n\n" + Style.RESET_ALL
-            )
-        else:
-            sys.stdout.write(Style.BRIGHT + Fore.WHITE + "\r" + (" " * 36))
-        sys.stdout.write("\r(thinking...)" + Style.RESET_ALL)
 
     def create_cgrag_prompt(self, base_prompt):
         return f"""What information related to the included files is important to answering the following 
@@ -80,7 +90,7 @@ prompt. Keep the list length to around 20 items. If the prompt is referencing co
 function, and variable names as applicable to answering the user prompt.
 """
 
-    def run_stream_processes(self, user_input, write_to_stdout):
+    def run_stream_processes(self, user_input):
         if self.use_cgrag:
             relevant_full_text = self.build_relevant_full_text(user_input)
             cgrag_prompt = self.create_cgrag_prompt(user_input)
@@ -94,14 +104,13 @@ function, and variable names as applicable to answering the user prompt.
             cgrag_generator = self.call_completion(cgrag_history)
             output_history = self.create_empty_history()
             output_history = self.run_completion_generator(
-                cgrag_generator, output_history, False
+                cgrag_generator, output_history, self.print_cgrag
             )
             relevant_full_text = self.build_relevant_full_text(
                 output_history["content"]
             )
             self.print_cgrag_output(output_history["content"])
-            sys.stdout.flush()
         else:
             relevant_full_text = self.build_relevant_full_text(user_input)
         prompt = self.create_prompt(user_input)
-        return self.run_basic_chat_stream(prompt, relevant_full_text, write_to_stdout)
+        return self.run_basic_chat_stream(prompt, relevant_full_text)

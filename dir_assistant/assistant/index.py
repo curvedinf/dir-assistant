@@ -1,11 +1,12 @@
 import os
+import sys
 
 import numpy as np
 from colorama import Fore, Style
 from faiss import IndexFlatL2
 from sqlitedict import SqliteDict
 
-from dir_assistant.cli.config import get_file_path
+from dir_assistant.cli.config import HISTORY_FILENAME, STORAGE_PATH, get_file_path
 
 INDEX_CACHE_FILENAME = "index_cache.sqlite"
 INDEX_CACHE_PATH = "~/.cache/dir-assistant"
@@ -33,7 +34,7 @@ def get_text_files(directory=".", ignore_paths=[]):
     return text_files
 
 
-def get_files_with_contents(directory, ignore_paths, cache_db):
+def get_files_with_contents(directory, ignore_paths, cache_db, verbose):
     text_files = get_text_files(directory, ignore_paths)
     files_with_contents = []
     with SqliteDict(cache_db, autocommit=True) as cache:
@@ -47,9 +48,11 @@ def get_files_with_contents(directory, ignore_paths, cache_db):
                     with open(filepath, "r") as file:
                         contents = file.read()
                 except UnicodeDecodeError:
-                    print(
-                        f"{Fore.LIGHTBLACK_EX}Skipping {filepath} because it is not a text file.{Style.RESET_ALL}"
-                    )
+                    if verbose:
+                        sys.stdout.write(
+                            f"Skipping {filepath} because it is not a text file.\n"
+                        )
+                        sys.stdout.flush()
                 file_info = {
                     "filepath": os.path.abspath(filepath),
                     "contents": contents,
@@ -60,33 +63,42 @@ def get_files_with_contents(directory, ignore_paths, cache_db):
     return files_with_contents
 
 
-def create_file_index(embed, ignore_paths, embed_chunk_size, extra_dirs=[]):
+def create_file_index(
+    embed, ignore_paths, embed_chunk_size, extra_dirs=[], verbose=False
+):
     cache_db = get_file_path(INDEX_CACHE_PATH, INDEX_CACHE_FILENAME)
 
-    print(f"{Fore.LIGHTBLACK_EX}Finding files to index...{Style.RESET_ALL}")
     # Start with current directory
-    files_with_contents = get_files_with_contents(".", ignore_paths, cache_db)
+    files_with_contents = get_files_with_contents(".", ignore_paths, cache_db, verbose)
 
     # Add files from additional folders
     for folder in extra_dirs:
         if os.path.exists(folder):
-            folder_files = get_files_with_contents(folder, ignore_paths, cache_db)
+            folder_files = get_files_with_contents(
+                folder, ignore_paths, cache_db, verbose
+            )
             files_with_contents.extend(folder_files)
         else:
-            print(
-                f"{Fore.YELLOW}Warning: Additional folder {folder} does not exist{Style.RESET_ALL}"
-            )
+            if verbose:
+                sys.stdout.write(
+                    f"Warning: Additional folder {folder} does not exist\n"
+                )
+                sys.stdout.flush()
 
     if not files_with_contents:
-        print(
-            f"{Fore.YELLOW}Warning: No text files found, creating first-file.txt...{Style.RESET_ALL}"
-        )
+        if verbose:
+            sys.stdout.write(
+                f"Warning: No text files found, creating first-file.txt...\n"
+            )
+            sys.stdout.flush()
         with open("first-file.txt", "w") as file:
             file.write(
                 "Dir-assistant requires a file to be initialized, so this one was created because "
                 "the directory was empty."
             )
-        files_with_contents = get_files_with_contents(".", ignore_paths, cache_db)
+        files_with_contents = get_files_with_contents(
+            ".", ignore_paths, cache_db, verbose
+        )
 
     chunks = []
     embeddings_list = []
@@ -95,16 +107,16 @@ def create_file_index(embed, ignore_paths, embed_chunk_size, extra_dirs=[]):
             filepath = file_info["filepath"]
             cached_chunks = cache.get(f"{filepath}_chunks")
             if cached_chunks and cached_chunks["mtime"] == file_info["mtime"]:
-                print(
-                    f"{Fore.LIGHTBLACK_EX}Using cached embeddings for {filepath}{Style.RESET_ALL}"
-                )
+                if verbose:
+                    sys.stdout.write(f"Using cached embeddings for {filepath}\n")
+                    sys.stdout.flush()
                 chunks.extend(cached_chunks["chunks"])
                 embeddings_list.extend(cached_chunks["embeddings"])
                 continue
 
             contents = file_info["contents"]
             file_chunks, file_embeddings = process_file(
-                embed, filepath, contents, embed_chunk_size
+                embed, filepath, contents, embed_chunk_size, verbose
             )
             chunks.extend(file_chunks)
             embeddings_list.extend(file_embeddings)
@@ -114,21 +126,25 @@ def create_file_index(embed, ignore_paths, embed_chunk_size, extra_dirs=[]):
                 "mtime": file_info["mtime"],
             }
 
-    print(f"{Fore.LIGHTBLACK_EX}Creating index from embeddings...{Style.RESET_ALL}")
+    if verbose:
+        sys.stdout.write("Creating index from embeddings...\n")
+        sys.stdout.flush()
     embeddings = np.array(embeddings_list)
     index = IndexFlatL2(embeddings.shape[1])
     index.add(embeddings)
     return index, chunks
 
 
-def process_file(embed, filepath, contents, embed_chunk_size):
+def process_file(embed, filepath, contents, embed_chunk_size, verbose=False):
     lines = contents.split("\n")
     current_chunk = ""
     start_line_number = 1
     chunks = []
     embeddings_list = []
 
-    print(f"{Fore.LIGHTBLACK_EX}Creating embeddings for {filepath}{Style.RESET_ALL}")
+    if verbose:
+        sys.stdout.write(f"Creating embeddings for {filepath}\n")
+        sys.stdout.flush()
     for line_number, line in enumerate(lines, start=1):
         # Process each line individually if needed
         line_content = line
@@ -189,17 +205,28 @@ def find_split_point(embed, line_content, max_size, header):
 
 def search_index(embed, index, query, all_chunks):
     query_embedding = embed.create_embedding(query)
-    distances, indices = index.search(
-        np.array([query_embedding]), 100
-    )  # 819,200 tokens max with default embedding
+    try:
+        distances, indices = index.search(
+            np.array([query_embedding]), 100
+        )  # 819,200 tokens max with default embedding
+    except AssertionError as e:
+        sys.stderr.write(
+            f"Assertion error during index search. Did you change your embedding model? "
+            f"Run 'dir_assistant clear' and try again.'\n"
+        )
+        raise e
     relevant_chunks = [all_chunks[i] for i in indices[0] if i != -1]
     return relevant_chunks
 
 
 def clear(args, config_dict):
-    cache_db = get_file_path(INDEX_CACHE_PATH, INDEX_CACHE_FILENAME)
-    if os.path.exists(cache_db):
-        os.remove(cache_db)
-        print(f"Deleted {cache_db}")
-    else:
-        print(f"{cache_db} does not exist.")
+    files = [
+        get_file_path(INDEX_CACHE_PATH, INDEX_CACHE_FILENAME),
+        get_file_path(STORAGE_PATH, HISTORY_FILENAME),
+    ]
+    for file in files:
+        if os.path.exists(file):
+            os.remove(file)
+            sys.stdout.write(f"Deleted {file}\n")
+        else:
+            sys.stdout.write(f"{file} does not exist.\n")

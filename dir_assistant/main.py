@@ -1,10 +1,11 @@
 import argparse
+import sys
 import warnings
 
-warnings.filterwarnings("ignore", category=SyntaxWarning)
+warnings.filterwarnings("ignore")
 
 from dir_assistant.assistant.index import clear
-from dir_assistant.cli.config import config, config_open, load_config
+from dir_assistant.cli.config import VERSION, config, config_open, load_config
 from dir_assistant.cli.models import (
     models_download_embed,
     models_download_llm,
@@ -23,16 +24,36 @@ def main():
     )
 
     parser.add_argument(
-        "-i" "--ignore",
+        "-i",
+        "--ignore",
         type=str,
         nargs="+",
         help="A list of space-separated filepaths to ignore.",
     )
     parser.add_argument(
-        "-d" "--dirs",
+        "-d",
+        "--dirs",
         type=str,
         nargs="+",
         help="A list of space-separated directories to work on. Your current directory will always be used.",
+    )
+    parser.add_argument(
+        "-s",
+        "--single-prompt",
+        type=str,
+        help="Run a single prompt and output the final answer.",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Show debug information during execution.",
+    )
+    parser.add_argument(
+        "-n",
+        "--no-color",
+        action="store_true",
+        help="Disable colored output.",
     )
 
     mode_subparsers = parser.add_subparsers(
@@ -45,16 +66,36 @@ def main():
         help="Run dir-assistant in regular mode.",
     )
     start_parser.add_argument(
-        "-i" "--ignore",
+        "-i",
+        "--ignore",
         type=str,
         nargs="+",
         help="A list of space-separated filepaths to ignore.",
     )
     start_parser.add_argument(
-        "-d" "--dirs",
+        "-d",
+        "--dirs",
         type=str,
         nargs="+",
         help="A list of space-separated directories to work on. Your current directory will always be used.",
+    )
+    start_parser.add_argument(
+        "-s",
+        "--single-prompt",
+        type=str,
+        help="Run a single prompt and output the final answer.",
+    )
+    start_parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Show debug information during execution.",
+    )
+    start_parser.add_argument(
+        "-n",
+        "--no-color",
+        action="store_true",
+        help="Disable colored output.",
     )
     start_subparsers = start_parser.add_subparsers(
         dest="start_mode", help="Operation mode for the config subcommand."
@@ -155,10 +196,17 @@ vulkan    - Vulkan""",
     # Parse the arguments
     args = parser.parse_args()
 
-    if args.mode != "config" or args.config_mode != "open":
+    if not (args.mode == "config" and args.config_mode == "open"):
         # Do not load the config file if the user is opening the config file.
         # The toml may be malformed, so we don't want to crash before it is opened.
         config_dict = load_config()
+
+        # Print version info if verbose
+        if config_dict["DIR_ASSISTANT"]["VERBOSE"] and not args.single_prompt:
+            sys.stdout.write(f"dir-assistant {VERSION}\n")
+            sys.stdout.write(f"Released under MIT License\n")
+            sys.stdout.write(f"https://github.com/curvedinf/dir-assistant\n\n")
+            sys.stdout.flush()
 
     # Run the user's selected mode
     if args.mode == "start" or args.mode is None:

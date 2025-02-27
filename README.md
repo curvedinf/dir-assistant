@@ -1,22 +1,74 @@
 # dir-assistant
 
+[![PyPI](https://img.shields.io/pypi/v/dir-assistant)](https://pypi.org/project/dir-assistant/)
+[![GitHub license](https://img.shields.io/github/license/curvedinf/dir-assistant)](LICENSE)
+[![GitHub last commit](https://img.shields.io/github/last-commit/curvedinf/dir-assistant)](https://github.com/curvedinf/dir-assistant/commits/main)
+[![PyPI - Downloads](https://img.shields.io/pypi/dm/dir-assistant)](https://pypi.org/project/dir-assistant/)
+[![GitHub stars](https://img.shields.io/github/stars/curvedinf/dir-assistant)](https://github.com/curvedinf/dir-assistant/stargazers)
+
 Chat with your current directory's files using a local or API LLM.
 
 ![(Demo GIF of dir-assistant being run)](demo.gif)
 
+## Summary
+
+`dir-assistant` is a CLI python application available through `pip` that recursively indexes all text 
+files in the current working directory so you can chat with them using a local or API LLM. By 
+"chat with them", it is meant that their contents will automatically be included in the prompts sent 
+to the LLM, with the most contextually relevant files included first. `dir-assistant` is designed 
+primarily for use as a coding aid and automation tool.
+
+### Features
+
+- Includes an interactive chat mode and a single prompt non-interactive mode.
+- When enabled, it will automatically make file updates and commit to git.
 - Local platform support for CPU (OpenBLAS), Cuda, ROCm, Metal, Vulkan, and SYCL. 
 - API support for all major LLM APIs. More info in the 
 [LiteLLM Docs](https://docs.litellm.ai/docs/providers).
-- Runs on Linux and macOS. Windows may work but we are still looking for testing feedback.
 - Uses a unique method for finding the most important files to include when submitting your
 prompt to an LLM called CGRAG (Contextually Guided Retrieval-Augmented Generation). You can read 
 [this blog post](https://medium.com/@djangoist/how-to-create-accurate-llm-responses-on-large-code-repositories-presenting-cgrag-a-new-feature-of-e77c0ffe432d) for more information about how it works.
 
+## Table of Contents
+1. [New Features](#new-features)
+   1. [Notable Upstream News](#notable-upstream-news)
+3. [Quickstart](#quickstart)
+    1. [Quickstart with Local Default Model](#quickstart-with-local-default-model)
+    2. [Quickstart with API Model](#quickstart-with-api-model)
+4. [Install](#install)
+5. [Embedding Model Configuration](#embedding-model-configuration)
+6. [Optional: Select A Hardware Platform](#optional-select-a-hardware-platform)
+7. [API Configuration](#api-configuration)
+8. [Local LLM Model Download](#local-llm-model-download)
+9. [Running](#running)
+   1. [Automated file update and git commit](#automated-file-update-and-git-commit)
+   2. [Additional directories](#additional-directories)
+   3. [Ignoring files](#ignoring-files)
+   4. [Overriding Configurations with Environment Variables](#overriding-configurations-with-environment-variables)
+14. [Upgrading](#upgrading)
+15. [Additional Help](#additional-help)
+16. [Contributors](#contributors)
+17. [Acknowledgements](#acknowledgements)
+18. [Limitations](#limitations)
+19. [Todos](#todos)
+20. [Additional Credits](#additional-credits)
+
 ## New Features
 
-* API embedding support with the new `ACTIVE_EMBED_IS_LOCAL = false` setting
-* Updated default local model to `QWQ-LCoT-7B-Instruct`
-* Improved prompt robustness and efficiency
+* Automatically override configs by using matching environment variables
+* Run a single prompt and quit with the new `-s` CLI option
+* Persistent prompt history across sessions
+
+### Notable Upstream News
+
+This section is dedicated to changes in libraries which can impact users of `dir-assistant`.
+
+#### llama-cpp-python
+
+* KV cache quants now available for most models. This enables reduced memory consumption per context token.
+* Improved flash attention implementation for ROCM. This drastically reduces VRAM usage for large contexts on AMD cards.
+
+These changes allow a 32B model with 128k context to comfortably run on all GPUs with at least 20GB of VRAM if enabled.
 
 ## Quickstart
 
@@ -274,7 +326,31 @@ dir-assistant
 Running `dir-assistant` will scan all files recursively in your current directory. The most relevant files will 
 automatically be sent to the LLM when you enter a prompt.
 
-## Automated file update and git commit
+`dir-assistant` is shorthand for `dir-assistant start`. All arguments below are applicable for both.
+
+#### Options for Running
+
+The following arguments are available while running `dir-assistant`:
+
+- `-i --ignore`: A list of space-separated filepaths to ignore
+- `-d --dirs`: A list of space-separated directories to work on (your current directory will always be used)
+- `-s --single-prompt`: Run a single prompt and output the final answer
+- `-v --verbose`: Show debug information during execution
+
+Example usage:
+
+```shell
+# Run a single prompt and exit
+dir-assistant -s "What does this codebase do?"
+
+# Show debug information
+dir-assistant -v
+
+# Ignore specific files and add additional directories
+dir-assistant -i "*.log" "*.tmp" -d "../other-project"
+```
+
+### Automated file update and git commit
 The `COMMIT_TO_GIT` feature allows `dir-assistant` to make changes directly to your files and commit the changes to git
 during the chat. By default, this feature is disabled, but after enabling it, the assistant will suggest file changes 
 and ask whether to apply the changes. If confirmed, it stages the changes and creates a git commit with the prompt 
@@ -296,14 +372,6 @@ COMMIT_TO_GIT = true
 
 Once enabled, the assistant will handle the Git commit process as part of its workflow. To undo a commit,
 type `undo` in the prompt.
-
-## Running
-
-```shell
-dir-assistant
-```
-Running `dir-assistant` will scan all files recursively in your current directory. The most relevant files will 
-automatically be sent to the LLM when you enter a prompt.
 
 ### Additional directories
 
@@ -338,6 +406,37 @@ GLOBAL_IGNORES = [
 ]
 ```
 
+### Overriding Configurations with Environment Variables
+
+Any configuration setting can be overridden using environment variables. The environment variable name should match the configuration key name:
+
+```shell
+# Override the model path
+export DIR_ASSISTANT__LLM_MODEL="mistral-7b-instruct.Q4_K_M.gguf"
+
+# Enable git commits
+export DIR_ASSISTANT__COMMIT_TO_GIT=true
+
+# Change context ratio
+export DIR_ASSISTANT__CONTEXT_FILE_RATIO=0.7
+
+# Change llama.cpp embedding options
+export DIR_ASSISTANT__LLAMA_CPP_EMBED_OPTIONS__n_ctx=2048
+
+# Example setting multiple env vars inline with the command
+DIR_ASSISTANT__COMMIT_TO_GIT=true DIR_ASSISTANT__CONTEXT_FILE_RATIO=0.7 dir-assistant
+```
+
+This allows multiple config profiles for your custom use cases.
+
+```shell
+# Run with different models
+DIR_ASSISTANT__LLM_MODEL="model1.gguf" dir-assistant -s "What does this codebase do?"
+DIR_ASSISTANT__LLM_MODEL="model2.gguf" dir-assistant -s "What does this codebase do?"
+
+# Test with different context ratios
+DIR_ASSISTANT__CONTEXT_FILE_RATIO=0.8 dir-assistant
+```
 ## Upgrading
 
 Some version upgrades may have incompatibility issues in the embedding index cache. Use this command to delete the
@@ -364,7 +463,7 @@ please see [CONTRIBUTORS.md](CONTRIBUTORS.md).
 
 ## Limitations
 
-- Only tested on Ubuntu 22.04, Ubuntu 24.04, and MacOS. Please let us know if you run it successfully on other platforms by submitting an issue.
+- Only tested on Ubuntu 22.04, Ubuntu 24.04, and OSX. Please let us know if you run it successfully on other platforms by submitting an issue.
 - Dir-assistant only detects and reads text files at this time.
 
 ## Todos
@@ -379,9 +478,9 @@ please see [CONTRIBUTORS.md](CONTRIBUTORS.md).
 - ~~Model download~~
 - ~~Commit to git~~
 - ~~API Embedding models~~
+- ~~Immediate mode for better compatibility with custom script automations~~
 - Web search
 - Daemon mode for API-based use
-- Immediate mode for better compatibility with external script automations
 
 ## Additional Credits
 

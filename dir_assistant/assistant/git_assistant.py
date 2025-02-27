@@ -19,6 +19,9 @@ class GitAssistant(CGRAGAssistant):
         use_cgrag,
         print_cgrag,
         commit_to_git,
+        verbose,
+        no_color,
+        chat_mode,
     ):
         super().__init__(
             system_instructions,
@@ -29,6 +32,9 @@ class GitAssistant(CGRAGAssistant):
             output_acceptance_retries,
             use_cgrag,
             print_cgrag,
+            verbose,
+            no_color,
+            chat_mode,
         )
         self.commit_to_git = commit_to_git
 
@@ -71,19 +77,20 @@ Real response:
             else:
                 return user_input
 
-    def run_post_stream_processes(self, user_input, stream_output, write_to_stdout):
+    def run_post_stream_processes(self, user_input, stream_output):
         if (
             not self.commit_to_git or not self.should_diff
         ) and not self.git_apply_error:
-            return super().run_post_stream_processes(
-                user_input, stream_output, write_to_stdout
-            )
+            return super().run_post_stream_processes(user_input, stream_output)
         else:
-            sys.stdout.write(
-                f"{Style.BRIGHT}{Fore.BLUE}Apply these changes? (Y/N): {Style.RESET_ALL}"
-            )
-            apply_changes = prompt("", multiline=False).strip().lower()
-            if write_to_stdout:
+            if self.chat_mode:
+                sys.stdout.write(
+                    f"{self.get_color_prefix(Style.BRIGHT, Fore.BLUE)}Apply these changes? (Y/N): {self.get_color_suffix()}"
+                )
+                apply_changes = prompt("", multiline=False).strip().lower()
+            else:
+                apply_changes = "n"
+            if self.chat_mode:
                 sys.stdout.write("\n")
             if apply_changes == "y":
                 output_lines = stream_output.split("\n")
@@ -102,9 +109,9 @@ Real response:
                     return False
                 os.system("git add .")
                 os.system(f'git commit -m "{user_input.strip()}"')
-                if write_to_stdout:
+                if self.chat_mode:
                     sys.stdout.write(
-                        f"\n{Style.BRIGHT}Changes committed.{Style.RESET_ALL}\n\n"
+                        f"\n{self.get_color_prefix(Style.BRIGHT)}Changes committed.{self.get_color_suffix()}\n\n"
                     )
                     sys.stdout.flush()
             return True

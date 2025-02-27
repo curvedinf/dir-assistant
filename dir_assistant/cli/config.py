@@ -5,8 +5,11 @@ from subprocess import run
 import toml
 from dynaconf import Dynaconf
 
+VERSION = "1.3.0"
 CONFIG_FILENAME = "config.toml"
 CONFIG_PATH = "~/.config/dir-assistant"
+STORAGE_PATH = "~/.local/share/dir-assistant/"
+HISTORY_FILENAME = "history.pth"  # pth = prompt toolkit history
 CONFIG_DEFAULTS = {
     "SYSTEM_INSTRUCTIONS": "You are a helpful AI assistant.",
     "GLOBAL_IGNORES": [
@@ -25,6 +28,8 @@ CONFIG_DEFAULTS = {
     "USE_CGRAG": True,
     "PRINT_CGRAG": False,
     "COMMIT_TO_GIT": False,
+    "VERBOSE": False,
+    "NO_COLOR": False,
     "MODELS_PATH": "~/.local/share/dir-assistant/models/",
     "EMBED_MODEL": "",
     "LLM_MODEL": "",
@@ -75,23 +80,60 @@ def check_defaults(config_dict, defaults_dict):
     return config_dict
 
 
-def load_config():
+def set_environment_overrides(config_dict):
+    """Replace config values with environment variable overrides"""
+
+    def _override_config(config_branch, prefix=""):
+        for key, value in config_branch.items():
+            env_key = f"{prefix}__{key}" if prefix else key
+            if isinstance(value, dict):
+                config_branch[key] = _override_config(value, prefix=env_key)
+            elif env_key in environ:
+                config_branch[key] = coerce_setting_string_value(environ[env_key])
+        return config_branch
+
+    return _override_config(config_dict)
+
+
+def coerce_setting_string_value(value_str):
+    """Convert string values to appropriate Python types"""
+    # Handle boolean values
+    if value_str.lower() in ("true", "false"):
+        return value_str.lower() == "true"
+    # Handle integer values
+    elif value_str.isdigit():
+        return int(value_str)
+    # Handle float values
+    elif value_str.replace(".", "").isdigit():
+        return float(value_str)
+    # Keep as string if no other type matches
+    return value_str
+
+
+def load_config(skip_environment_vars=False):
     config_object = Dynaconf(
         settings_files=[get_file_path(CONFIG_PATH, CONFIG_FILENAME)]
     )
     config_dict = config_object.as_dict()
+
     # If the config file is malformed, insert the DIR_ASSISTANT key
     if "DIR_ASSISTANT" not in config_dict.keys():
         config_dict["DIR_ASSISTANT"] = {}
+
     # Check for missing config options (maybe after a version upgrade)
     for key, value in CONFIG_DEFAULTS.items():
         if key not in config_dict["DIR_ASSISTANT"].keys():
             config_dict["DIR_ASSISTANT"][key] = value
     save_config(config_dict)
-    # Set OpenAI API key
+
+    # Set any env-overridden config values
+    config_dict = set_environment_overrides(config_dict)
+
+    # Set LiteLLM API keys only if not already set in environment
     for key, value in config_dict["DIR_ASSISTANT"]["LITELLM_API_KEYS"].items():
-        if key.endswith("_API_KEY"):
+        if key.endswith("_API_KEY") and value and key not in environ:
             environ[key] = value
+
     return config_dict
 
 

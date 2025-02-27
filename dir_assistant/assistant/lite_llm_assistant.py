@@ -1,4 +1,5 @@
 import sys
+from copy import deepcopy
 
 from colorama import Fore, Style
 from litellm import completion, token_counter
@@ -22,6 +23,9 @@ class LiteLLMAssistant(GitAssistant):
         use_cgrag,
         print_cgrag,
         commit_to_git,
+        verbose,
+        no_color,
+        chat_mode,
     ):
         super().__init__(
             system_instructions,
@@ -33,14 +37,22 @@ class LiteLLMAssistant(GitAssistant):
             use_cgrag,
             print_cgrag,
             commit_to_git,
+            verbose,
+            no_color,
+            chat_mode,
         )
         self.lite_llm_model = lite_llm_model
         self.context_size = lite_llm_context_size
         self.pass_through_context_size = lite_llm_pass_through_context_size
         self.lite_llm_model_uses_system_message = lite_llm_model_uses_system_message
-        print(
-            f"{Fore.LIGHTBLACK_EX}LiteLLM context size: {self.context_size}{Style.RESET_ALL}"
-        )
+        self.no_color = no_color
+        if self.chat_mode and self.verbose:
+            if self.no_color:
+                print(f"LiteLLM context size: {self.context_size}")
+            else:
+                print(
+                    f"{Fore.LIGHTBLACK_EX}LiteLLM context size: {self.context_size}{Style.RESET_ALL}"
+                )
 
     def initialize_history(self):
         super().initialize_history()
@@ -48,10 +60,16 @@ class LiteLLMAssistant(GitAssistant):
             self.chat_history[0]["role"] = "user"
 
     def call_completion(self, chat_history):
+        # Clean "tokens" from chat history. It causes an error for mistral.
+        chat_history_cleaned = deepcopy(chat_history)
+        for message in chat_history_cleaned:
+            if "tokens" in message:
+                del message["tokens"]
+
         if self.pass_through_context_size:
             return completion(
                 model=self.lite_llm_model,
-                messages=chat_history,
+                messages=chat_history_cleaned,
                 stream=True,
                 timeout=600,
                 num_ctx=self.context_size,
@@ -59,7 +77,7 @@ class LiteLLMAssistant(GitAssistant):
         else:
             return completion(
                 model=self.lite_llm_model,
-                messages=chat_history,
+                messages=chat_history_cleaned,
                 stream=True,
                 timeout=600,
             )
@@ -71,8 +89,15 @@ class LiteLLMAssistant(GitAssistant):
             delta = chunk["choices"][0]["delta"]
             if "content" in delta and delta["content"] != None:
                 output_message["content"] += delta["content"]
+
                 if write_to_stdout:
+                    if not self.no_color and self.chat_mode:
+                        sys.stdout.write(
+                            self.get_color_prefix(Style.BRIGHT, Fore.WHITE)
+                        )
                     sys.stdout.write(delta["content"])
+                    if not self.no_color and self.chat_mode:
+                        sys.stdout.write(self.get_color_suffix())
                     sys.stdout.flush()
         return output_message
 
