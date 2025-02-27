@@ -243,6 +243,8 @@ def start(args, config_dict):
     # If in single prompt mode, run the prompt and exit
     if single_prompt:
         llm.stream_chat(single_prompt)
+        sys.stdout.write("\n")
+        sys.stdout.flush()
         exit(0)
 
     # Get variables needed for file watcher and startup art

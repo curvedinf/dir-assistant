@@ -75,8 +75,11 @@ class LlamaCppAssistant(GitAssistant):
             no_color,
             chat_mode,
         )
-        with suppress_stdout_stderr():
+        if self.verbose:
             self.llm = Llama(model_path=model_path, **llama_cpp_options)
+        else:
+            with suppress_stdout_stderr():
+                self.llm = Llama(model_path=model_path, **llama_cpp_options)
         self.context_size = self.llm.context_params.n_ctx
         self.completion_options = completion_options
         if self.verbose and self.chat_mode:
@@ -88,10 +91,15 @@ class LlamaCppAssistant(GitAssistant):
             sys.stdout.flush()
 
     def call_completion(self, chat_history):
-        with suppress_stdout_stderr():
+        if self.verbose:
             return self.llm.create_chat_completion(
                 messages=chat_history, stream=True, **self.completion_options
             )
+        else:
+            with suppress_stdout_stderr():
+                return self.llm.create_chat_completion(
+                    messages=chat_history, stream=True, **self.completion_options
+                )
 
     def run_completion_generator(
         self, completion_output, output_message, write_to_stdout
