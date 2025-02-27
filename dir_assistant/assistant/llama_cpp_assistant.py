@@ -21,6 +21,9 @@ class LlamaCppAssistant(GitAssistant):
         print_cgrag,
         commit_to_git,
         completion_options,
+        verbose,
+        no_color,
+        chat_mode,
     ):
         super().__init__(
             system_instructions,
@@ -32,6 +35,9 @@ class LlamaCppAssistant(GitAssistant):
             use_cgrag,
             print_cgrag,
             commit_to_git,
+            verbose,
+            no_color,
+            chat_mode,
         )
         self.llm = Llama(model_path=model_path, **llama_cpp_options)
         self.context_size = self.llm.context_params.n_ctx

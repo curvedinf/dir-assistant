@@ -178,6 +178,7 @@ see readme for more information. Exiting..."""
             llama_cpp_completion_options,
             verbose=verbose,
             no_color=no_color,
+            chat_mode=chat_mode,
         )
     else:
         if verbose:
@@ -198,6 +199,7 @@ see readme for more information. Exiting..."""
             commit_to_git,
             verbose=verbose,
             no_color=no_color,
+            chat_mode=chat_mode,
         )
 
     return llm
