@@ -10,9 +10,9 @@ from dir_assistant.assistant.git_assistant import GitAssistant
 class LiteLLMAssistant(GitAssistant):
     def __init__(
         self,
-        lite_llm_model,
-        lite_llm_model_uses_system_message,
+        lite_llm_completion_options,
         lite_llm_context_size,
+        lite_llm_model_uses_system_message,
         lite_llm_pass_through_context_size,
         system_instructions,
         embed,
@@ -41,7 +41,7 @@ class LiteLLMAssistant(GitAssistant):
             no_color,
             chat_mode,
         )
-        self.lite_llm_model = lite_llm_model
+        self.completion_options = lite_llm_completion_options
         self.context_size = lite_llm_context_size
         self.pass_through_context_size = lite_llm_pass_through_context_size
         self.lite_llm_model_uses_system_message = lite_llm_model_uses_system_message
@@ -68,18 +68,16 @@ class LiteLLMAssistant(GitAssistant):
 
         if self.pass_through_context_size:
             return completion(
-                model=self.lite_llm_model,
+                **self.completion_options,
                 messages=chat_history_cleaned,
                 stream=True,
-                timeout=600,
                 num_ctx=self.context_size,
             )
         else:
             return completion(
-                model=self.lite_llm_model,
+                **self.completion_options,
                 messages=chat_history_cleaned,
                 stream=True,
-                timeout=600,
             )
 
     def run_completion_generator(
@@ -103,5 +101,5 @@ class LiteLLMAssistant(GitAssistant):
 
     def count_tokens(self, text):
         return token_counter(
-            model=self.lite_llm_model, messages=[{"user": "role", "content": text}]
+            model=self.completion_options["model"], messages=[{"user": "role", "content": text}]
         )
