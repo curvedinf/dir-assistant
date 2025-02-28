@@ -347,7 +347,7 @@ dir-assistant -s "What does this codebase do?"
 dir-assistant -v
 
 # Ignore specific files and add additional directories
-dir-assistant -i "*.log" "*.tmp" -d "../other-project"
+dir-assistant -i ".log" ".tmp" -d "../other-project"
 ```
 
 ### Automated file update and git commit
