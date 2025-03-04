@@ -2,15 +2,11 @@ import os
 import sys
 
 import numpy as np
-from colorama import Fore, Style
 from faiss import IndexFlatL2
 from sqlitedict import SqliteDict
 
-from dir_assistant.cli.config import HISTORY_FILENAME, STORAGE_PATH, get_file_path
-
-INDEX_CACHE_FILENAME = "index_cache.sqlite"
-INDEX_CACHE_PATH = "~/.cache/dir-assistant"
-
+from dir_assistant.cli.config import HISTORY_FILENAME, STORAGE_PATH, get_file_path, INDEX_CACHE_FILENAME, \
+    INDEX_CACHE_PATH
 
 TEXT_CHARS = bytearray({7, 8, 9, 10, 12, 13, 27} | set(range(0x20, 0x100)) - {0x7F})
 
