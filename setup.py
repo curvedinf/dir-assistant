@@ -20,7 +20,6 @@ setup(
     license="MIT",
     packages=find_packages(),
     install_requires=[
-        "llama-cpp-python",
         "faiss-cpu",
         "litellm",
         "colorama",
@@ -33,6 +32,11 @@ setup(
         "dynaconf",
         "toml",
     ],
+    extras_require={
+        "recommended": [
+            "llama-cpp-python",
+        ],
+    },
     entry_points={
         "console_scripts": [
             "dir-assistant=dir_assistant.main:main",

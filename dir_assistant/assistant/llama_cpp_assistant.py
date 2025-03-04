@@ -1,8 +1,11 @@
 import os
 import sys
 
-from colorama import Fore, Style
-from llama_cpp import Llama
+from colorama import Fore
+try:
+    from llama_cpp import Llama
+except:
+    pass
 
 from dir_assistant.assistant.git_assistant import GitAssistant
 
@@ -75,11 +78,22 @@ class LlamaCppAssistant(GitAssistant):
             no_color,
             chat_mode,
         )
-        if self.verbose:
-            self.llm = Llama(model_path=model_path, **llama_cpp_options)
-        else:
-            with suppress_stdout_stderr():
+        try:
+            if self.verbose:
                 self.llm = Llama(model_path=model_path, **llama_cpp_options)
+            else:
+                with suppress_stdout_stderr():
+                    self.llm = Llama(model_path=model_path, **llama_cpp_options)
+        except NameError:
+            sys.stderr.write(
+                "You currently have ACTIVE_MODEL_IS_LOCAL set to true but have not installed llama-cpp-python. "
+                "Choose one of the following to continue:\n"
+                "1) Set ACTIVE_MODEL_IS_LOCAL to false. Open the config file with 'dir-assistant config open'\n"
+                "2) Run 'pip install llama-cpp-python' and try again.\n"
+            )
+            sys.stderr.flush()
+            sys.exit(1)
+
         self.context_size = self.llm.context_params.n_ctx
         self.completion_options = completion_options
         if self.verbose and self.chat_mode:

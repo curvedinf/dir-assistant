@@ -5,6 +5,7 @@
 [![GitHub last commit](https://img.shields.io/github/last-commit/curvedinf/dir-assistant)](https://github.com/curvedinf/dir-assistant/commits/main)
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/dir-assistant)](https://pypi.org/project/dir-assistant/)
 [![GitHub stars](https://img.shields.io/github/stars/curvedinf/dir-assistant)](https://github.com/curvedinf/dir-assistant/stargazers)
+[![Ko-fi Link](kofi.webp)](https://ko-fi.com/A0A31B6VB6)
 
 Chat with your current directory's files using a local or API LLM.
 
@@ -39,6 +40,7 @@ prompt to an LLM called CGRAG (Contextually Guided Retrieval-Augmented Generatio
 5. [Embedding Model Configuration](#embedding-model-configuration)
 6. [Optional: Select A Hardware Platform](#optional-select-a-hardware-platform)
 7. [API Configuration](#api-configuration)
+   1. [Connecting to a Custom API Server](#connecting-to-a-custom-api-server). 
 8. [Local LLM Model Download](#local-llm-model-download)
 9. [Running](#running)
    1. [Automated file update and git commit](#automated-file-update-and-git-commit)
@@ -55,9 +57,10 @@ prompt to an LLM called CGRAG (Contextually Guided Retrieval-Augmented Generatio
 
 ## New Features
 
-* Automatically override configs by using matching environment variables
-* Run a single prompt and quit with the new `-s` CLI option
-* Persistent prompt history across sessions
+* Added `llama-cpp-python` as an optional dependency downloadable with `pip install dir-assistant[recommended]`
+* Official Windows support
+* Custom API server connections using the new LiteLLM completion settings config section. This enables 
+you to use your own GPU rig with `dir-assistant`.
 
 ### Notable Upstream News
 
@@ -81,7 +84,7 @@ To get started locally, you can download a default llm model. Default configurat
 requirements. To run via CPU:
 
 ```shell
-pip install dir-assistant
+pip install dir-assistant[recommended]
 dir-assistant models download-embed
 dir-assistant models download-llm
 cd directory/to/chat/with
@@ -108,7 +111,7 @@ dir-assistant platform -h
 `pip3` has been replaced with `pipx` starting in Ubuntu 24.04.
 
 ```shell
-pipx install dir-assistant
+pipx install dir-assistant[recommended]
 ...
 dir-assistant platform cuda --pipx
 ```
@@ -122,25 +125,9 @@ enter the following commands:
 
 ```shell
 pip install dir-assistant
-dir-assistant models download-embed
 dir-assistant setkey GEMINI_API_KEY xxxxxYOURAPIKEYHERExxxxx
 cd directory/to/chat/with
 dir-assistant
-```
-
-You can optionally hardware-accelerate your local embedding model so indexing is quicker:
-
-```shell
-...
-dir-assistant platform cuda
-cd directory/to/chat/with
-dir-assistant
-```
-
-See which platforms are supported using `-h`:
-
-```shell
-dir-assistant platform -h
 ```
 
 #### For Ubuntu 24.04
@@ -150,7 +137,6 @@ dir-assistant platform -h
 ```shell
 pipx install dir-assistant
 ...
-dir-assistant platform cuda --pipx
 ```
 
 ## Install
@@ -236,11 +222,13 @@ Once editing the file, change:
 
 ```toml
 [DIR_ASSISTANT]
-LITELLM_MODEL = "gemini/gemini-1.5-flash-latest"
 LITELLM_CONTEXT_SIZE = 500000
-...
+
 [DIR_ASSISTANT.LITELLM_API_KEYS]
 GEMINI_API_KEY = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+[DIR_ASSISTANT.LITELLM_COMPLETION_OPTIONS]
+model = "gemini/gemini-2.0-flash-latest"
 ```
 
 LiteLLM supports all major LLM APIs, including APIs hosted locally. View the available options in the 
@@ -254,9 +242,26 @@ dir-assistant setkey GEMINI_API_KEY xxxxxYOURAPIKEYHERExxxxx
 
 However, in most cases you will need to modify other options when changing APIs.
 
+### Connecting to a Custom API Server
+
+If you would like to connect to a custom API server, such as your own ollama, llama.cpp, LMStudio, 
+vLLM, or other OpenAPI-compatible API server, dir-assistant supports this. To configure for this,
+open the config with `dir-assistant config open` and make following changes (LMStudio's base_url
+shown for the example):
+
+```toml
+[DIR_ASSISTANT]
+ACTIVE_MODEL_IS_LOCAL = false
+
+[DIR_ASSISTANT.LITELLM_COMPLETION_OPTIONS]
+model = "openai/mistral-small-24b-instruct-2501"
+base_url = "http://localhost:1234/v1"
+```
+
 ## Local LLM Model Download
 
-If you want to use a local LLM, you can download a low requirements default model with:
+If you want to use a local LLM directly within `dir-assistant` using `llama-cpp-python`, 
+you can download a low requirements default model with:
 
 ```shell
 dir-assistant models download-llm

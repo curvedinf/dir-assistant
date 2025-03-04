@@ -68,7 +68,8 @@ def initialize_llm(args, config_dict, chat_mode=True):
     active_model_is_local = config["ACTIVE_MODEL_IS_LOCAL"]
     active_embed_is_local = config["ACTIVE_EMBED_IS_LOCAL"]
     context_file_ratio = config["CONTEXT_FILE_RATIO"]
-    system_instructions = config["SYSTEM_INSTRUCTIONS"]
+    system_instructions = f"""{config["SYSTEM_INSTRUCTIONS"]}
+The user is currently working in the following directory (CWD): {os.getcwd()}"""
 
     # Llama.cpp settings
     llm_model_file = get_file_path(config["MODELS_PATH"], config["LLM_MODEL"])
