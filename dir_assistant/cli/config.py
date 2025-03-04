@@ -5,7 +5,7 @@ from subprocess import run
 import toml
 from dynaconf import Dynaconf
 
-VERSION = "1.3.2"
+VERSION = "1.4.0"
 CONFIG_FILENAME = "config.toml"
 CONFIG_PATH = "~/.config/dir-assistant"
 STORAGE_PATH = "~/.local/share/dir-assistant/"
@@ -13,13 +13,13 @@ HISTORY_FILENAME = "history.pth"  # pth = prompt toolkit history
 CONFIG_DEFAULTS = {
     "SYSTEM_INSTRUCTIONS": "You are a helpful AI assistant.",
     "GLOBAL_IGNORES": [
-        ".git/",
-        ".vscode/",
         "node_modules/",
         "build/",
+        "dist/",
+        ".git/",
+        ".vscode/",
         ".idea/",
         "__pycache__",
-        "dist/",
     ],
     "CONTEXT_FILE_RATIO": 0.9,
     "ACTIVE_MODEL_IS_LOCAL": False,
@@ -34,11 +34,11 @@ CONFIG_DEFAULTS = {
     "EMBED_MODEL": "",
     "LLM_MODEL": "",
     "LLAMA_CPP_OPTIONS": {
-        "n_ctx": 10000,
+        "n_ctx": 10_000,
         "verbose": False,
     },
     "LLAMA_CPP_EMBED_OPTIONS": {
-        "n_ctx": 8192,
+        "n_ctx": 8_192,
         "n_batch": 512,
         "verbose": False,
         "rope_scaling_type": 2,
@@ -47,17 +47,24 @@ CONFIG_DEFAULTS = {
     "LLAMA_CPP_COMPLETION_OPTIONS": {
         "frequency_penalty": 1.1,
     },
-    "LITELLM_MODEL": "gemini/gemini-2.0-flash",
-    "LITELLM_CONTEXT_SIZE": 200000,
+    "LITELLM_CONTEXT_SIZE": 200_000,
+    "LITELLM_EMBED_CONTEXT_SIZE": 2_048,
     "LITELLM_MODEL_USES_SYSTEM_MESSAGE": False,
     "LITELLM_PASS_THROUGH_CONTEXT_SIZE": False,
-    "LITELLM_EMBED_MODEL": "gemini/text-embedding-004",
-    "LITELLM_EMBED_CHUNK_SIZE": 2048,
     "LITELLM_EMBED_REQUEST_DELAY": 0,
     "LITELLM_API_KEYS": {
         "GEMINI_API_KEY": "",
         "OPENAI_API_KEY": "",
         "ANTHROPIC_API_KEY": "",
+    },
+    # https://docs.litellm.ai/docs/completion/input#input-params-1
+    "LITELLM_COMPLETION_OPTIONS": {
+        "model": "gemini/gemini-2.0-flash",
+        "timeout": 600,
+    },
+    "LITELLM_EMBED_COMPLETION_OPTIONS": {
+        "model": "gemini/text-embedding-004",
+        "timeout": 600,
     },
 }
 

@@ -6,9 +6,9 @@ from dir_assistant.assistant.base_embed import BaseEmbed
 
 
 class LiteLlmEmbed(BaseEmbed):
-    def __init__(self, lite_llm_embed_model, chunk_size=8192, delay=0):
-        self.lite_llm_model = lite_llm_embed_model
-        self.chunk_size = chunk_size
+    def __init__(self, lite_llm_embed_completion_options, lite_llm_embed_context_size, delay=0):
+        self.lite_llm_embed_completion_options = lite_llm_embed_completion_options
+        self.chunk_size = lite_llm_embed_context_size
         self.delay = delay
 
     def create_embedding(self, text):
@@ -16,7 +16,7 @@ class LiteLlmEmbed(BaseEmbed):
             sleep(self.delay)
         if not text:
             text = "--empty--"
-        return embedding(model=self.lite_llm_model, input=text, timeout=600)["data"][0][
+        return embedding(**self.lite_llm_embed_completion_options, input=text)["data"][0][
             "embedding"
         ]
 
@@ -25,5 +25,5 @@ class LiteLlmEmbed(BaseEmbed):
 
     def count_tokens(self, text):
         return token_counter(
-            model=self.lite_llm_model, messages=[{"role": "user", "content": text}]
+            model=self.lite_llm_embed_completion_options["model"], messages=[{"role": "user", "content": text}]
         )

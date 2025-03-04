@@ -10,7 +10,7 @@ README = (HERE / "README.md").read_text()
 
 setup(
     name="dir-assistant",
-    version="1.3.2",
+    version="1.4.0",
     description="Chat with your current directory's files using a local or API LLM.",
     long_description=README,
     long_description_content_type="text/markdown",
@@ -20,7 +20,6 @@ setup(
     license="MIT",
     packages=find_packages(),
     install_requires=[
-        "llama-cpp-python",
         "faiss-cpu",
         "litellm",
         "colorama",
@@ -33,6 +32,11 @@ setup(
         "dynaconf",
         "toml",
     ],
+    extras_require={
+        "recommended": [
+            "llama-cpp-python",
+        ],
+    },
     entry_points={
         "console_scripts": [
             "dir-assistant=dir_assistant.main:main",

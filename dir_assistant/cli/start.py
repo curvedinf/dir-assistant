@@ -68,7 +68,8 @@ def initialize_llm(args, config_dict, chat_mode=True):
     active_model_is_local = config["ACTIVE_MODEL_IS_LOCAL"]
     active_embed_is_local = config["ACTIVE_EMBED_IS_LOCAL"]
     context_file_ratio = config["CONTEXT_FILE_RATIO"]
-    system_instructions = config["SYSTEM_INSTRUCTIONS"]
+    system_instructions = f"""{config["SYSTEM_INSTRUCTIONS"]}
+The user is currently working in the following directory (CWD): {os.getcwd()}"""
 
     # Llama.cpp settings
     llm_model_file = get_file_path(config["MODELS_PATH"], config["LLM_MODEL"])
@@ -78,12 +79,12 @@ def initialize_llm(args, config_dict, chat_mode=True):
     llama_cpp_completion_options = config["LLAMA_CPP_COMPLETION_OPTIONS"]
 
     # LiteLLM settings
-    lite_llm_model = config["LITELLM_MODEL"]
     lite_llm_context_size = config["LITELLM_CONTEXT_SIZE"]
+    lite_llm_embed_context_size = config["LITELLM_EMBED_CONTEXT_SIZE"]
+    lite_llm_completion_options = config["LITELLM_COMPLETION_OPTIONS"]
+    lite_llm_embed_completion_options = config["LITELLM_EMBED_COMPLETION_OPTIONS"]
     lite_llm_model_uses_system_message = config["LITELLM_MODEL_USES_SYSTEM_MESSAGE"]
     lite_llm_pass_through_context_size = config["LITELLM_PASS_THROUGH_CONTEXT_SIZE"]
-    lite_llm_embed_model = config["LITELLM_EMBED_MODEL"]
-    lite_llm_embed_chunk_size = config["LITELLM_EMBED_CHUNK_SIZE"]
     lite_llm_embed_request_delay = float(config["LITELLM_EMBED_REQUEST_DELAY"])
 
     # Assistant settings
@@ -102,9 +103,9 @@ def initialize_llm(args, config_dict, chat_mode=True):
     see readme for more information. Exiting..."""
             )
             exit(1)
-    elif lite_llm_model == "":
+    elif "model" not in lite_llm_completion_options or not lite_llm_completion_options["model"]:
         print(
-            """You must specify LITELLM_MODEL. Use 'dir-assistant config open' and see readme \
+            """You must specify LITELLM_COMPLETION_OPTIONS.model. Use 'dir-assistant config open' and see readme \
 for more information. Exiting..."""
         )
         exit(1)
@@ -117,9 +118,9 @@ for more information. Exiting..."""
 see readme for more information. Exiting..."""
             )
             exit(1)
-    elif lite_llm_embed_model == "":
+    elif "model" not in lite_llm_embed_completion_options or not lite_llm_embed_completion_options["model"]:
         print(
-            """You must specify LITELLM_EMBED_MODEL. Use 'dir-assistant config open' and \
+            """You must specify LITELLM_EMBED_COMPLETION_OPTIONS.model. Use 'dir-assistant config open' and \
 see readme for more information. Exiting..."""
         )
         exit(1)
@@ -145,11 +146,11 @@ see readme for more information. Exiting..."""
         embed_chunk_size = embed.get_chunk_size()
     else:
         embed = LiteLlmEmbed(
-            lite_llm_embed_model=lite_llm_embed_model,
-            chunk_size=lite_llm_embed_chunk_size,
+            lite_llm_embed_completion_options=lite_llm_embed_completion_options,
+            lite_llm_embed_context_size=lite_llm_embed_context_size,
             delay=lite_llm_embed_request_delay,
         )
-        embed_chunk_size = lite_llm_embed_chunk_size
+        embed_chunk_size = lite_llm_embed_context_size
 
     # Create the file index
     if verbose or chat_mode:
@@ -206,9 +207,9 @@ see readme for more information. Exiting..."""
             sys.stdout.flush()
 
         llm = LiteLLMAssistant(
-            lite_llm_model,
-            lite_llm_model_uses_system_message,
+            lite_llm_completion_options,
             lite_llm_context_size,
+            lite_llm_model_uses_system_message,
             lite_llm_pass_through_context_size,
             system_instructions,
             embed,
@@ -257,7 +258,7 @@ def start(args, config_dict):
     embed = llm.embed
     active_embed_is_local = config["ACTIVE_EMBED_IS_LOCAL"]
     embed_chunk_size = (
-        config["LITELLM_EMBED_CHUNK_SIZE"]
+        config["LITELLM_EMBED_CONTEXT_SIZE"]
         if not active_embed_is_local
         else embed.get_chunk_size()
     )
