@@ -62,7 +62,7 @@ prompt to an LLM called CGRAG (Contextually Guided Retrieval-Augmented Generatio
 
 * Added `llama-cpp-python` as an optional instead of required dependency downloadable 
 with `pip install dir-assistant[recommended]`
-* Official Windows support
+* Official Windows support. Note: The python installer via python.org is recommended for Windows.
 * Custom API server connections using the new LiteLLM completion settings config section. This enables 
 you to use your own GPU rig with `dir-assistant`. See 
 [Connecting to a Custom API Server](#connecting-to-a-custom-api-server). 
@@ -98,14 +98,15 @@ dir-assistant
 
 #### For Windows
 
-Scripts installed with `pip` are not added to the `PATH` on Windows, but you can directly run
-the `dir_assistant` module with `python`:
+Note: The [Python.org](https://python.org) installer is recommended for Windows. The Windows 
+Store installer does not add dir-assistant to your PATH so you will need to call it 
+with `python -m dir_assistant` if you decide to go that route.
 
 ```shell
 pip install dir-assistant
-python -m dir_assistant setkey GEMINI_API_KEY xxxxxYOURAPIKEYHERExxxxx
+dir-assistant setkey GEMINI_API_KEY xxxxxYOURAPIKEYHERExxxxx
 cd directory/to/chat/with
-python -m dir_assistant
+dir-assistant
 ```
 
 #### For Ubuntu 24.04
