@@ -96,6 +96,18 @@ cd directory/to/chat/with
 dir-assistant
 ```
 
+#### For Windows
+
+Scripts installed with `pip` are not added to the `PATH` on Windows, but you can directly run
+the `dir_assistant` module with `python`:
+
+```shell
+pip install dir-assistant
+python -m dir_assistant setkey GEMINI_API_KEY xxxxxYOURAPIKEYHERExxxxx
+cd directory/to/chat/with
+python -m dir_assistant
+```
+
 #### For Ubuntu 24.04
 
 `pip3` has been replaced with `pipx` starting in Ubuntu 24.04.
@@ -106,7 +118,6 @@ dir-assistant setkey GEMINI_API_KEY xxxxxYOURAPIKEYHERExxxxx
 cd directory/to/chat/with
 dir-assistant
 ```
-
 
 ### Quickstart Chat with Local Default Model
 
@@ -157,6 +168,8 @@ Then configure `dir-assistant` to connect to your custom LLM API server:
 For instructions on setting up LMStudio to host an API, follow their guide:
 
 https://lmstudio.ai/docs/app/api
+
+Note: You can run `dir-assistant` via `python -m dir_assistant` on Windows.
 
 #### For Ubuntu 24.04
 

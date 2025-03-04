@@ -7,8 +7,10 @@ from dynaconf import Dynaconf
 
 VERSION = "1.4.0"
 CONFIG_FILENAME = "config.toml"
-CONFIG_PATH = "~/.config/dir-assistant"
-STORAGE_PATH = "~/.local/share/dir-assistant/"
+CONFIG_PATH = join(expanduser("~"), ".config", "dir-assistant")
+STORAGE_PATH = join(expanduser("~"), ".local", "share", "dir-assistant")
+INDEX_CACHE_FILENAME = "index_cache.sqlite"
+INDEX_CACHE_PATH = join(expanduser("~"), ".cache", "dir-assistant")
 HISTORY_FILENAME = "history.pth"  # pth = prompt toolkit history
 CONFIG_DEFAULTS = {
     "SYSTEM_INSTRUCTIONS": "You are a helpful AI assistant.",
@@ -30,7 +32,7 @@ CONFIG_DEFAULTS = {
     "COMMIT_TO_GIT": False,
     "VERBOSE": False,
     "NO_COLOR": False,
-    "MODELS_PATH": "~/.local/share/dir-assistant/models/",
+    "MODELS_PATH": join(expanduser("~"), ".local", "share", "dir-assistant", "models"),
     "EMBED_MODEL": "",
     "LLM_MODEL": "",
     "LLAMA_CPP_OPTIONS": {
