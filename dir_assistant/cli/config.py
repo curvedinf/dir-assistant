@@ -5,7 +5,7 @@ from subprocess import run
 import toml
 from dynaconf import Dynaconf
 
-VERSION = "1.3.2"
+VERSION = "1.4.0"
 CONFIG_FILENAME = "config.toml"
 CONFIG_PATH = "~/.config/dir-assistant"
 STORAGE_PATH = "~/.local/share/dir-assistant/"

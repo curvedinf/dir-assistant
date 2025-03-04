@@ -60,7 +60,8 @@ prompt to an LLM called CGRAG (Contextually Guided Retrieval-Augmented Generatio
 
 ## New Features
 
-* Added `llama-cpp-python` as an optional dependency downloadable with `pip install dir-assistant[recommended]`
+* Added `llama-cpp-python` as an optional instead of required dependency downloadable 
+with `pip install dir-assistant[recommended]`
 * Official Windows support
 * Custom API server connections using the new LiteLLM completion settings config section. This enables 
 you to use your own GPU rig with `dir-assistant`. See 
@@ -293,8 +294,6 @@ rope_scaling_type = 2
 rope_freq_scale = 0.75
 n_gpu_layers = -1
 ```
-
-### Notes on Local
 
 ## Embedding Model Configuration
 
