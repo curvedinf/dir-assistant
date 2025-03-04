@@ -77,6 +77,30 @@ These changes allow a 32B model with 128k context to comfortably run on all GPUs
 
 In this section are recipes to run `dir-assistant` in basic capacity to get you started quickly.
 
+### Quickstart with API Model
+
+To get started using an API model, you can use Google Gemini 1.5 Flash, which is currently free.
+To begin, you need to sign up for [Google AI Studio](https://aistudio.google.com/) and 
+[create an API key](https://aistudio.google.com/app/apikey). After you create your API key,
+enter the following commands:
+
+```shell
+pip install dir-assistant
+dir-assistant setkey GEMINI_API_KEY xxxxxYOURAPIKEYHERExxxxx
+cd directory/to/chat/with
+dir-assistant
+```
+
+#### For Ubuntu 24.04
+
+`pip3` has been replaced with `pipx` starting in Ubuntu 24.04.
+
+```shell
+pipx install dir-assistant
+...
+```
+
+
 ### Quickstart with Local Default Model
 
 To get started locally, you can download a default llm model. Default configuration with this model requires 
@@ -116,29 +140,6 @@ pipx install dir-assistant[recommended]
 dir-assistant platform cuda --pipx
 ```
 
-### Quickstart with API Model
-
-To get started using an API model, you can use Google Gemini 1.5 Flash, which is currently free.
-To begin, you need to sign up for [Google AI Studio](https://aistudio.google.com/) and 
-[create an API key](https://aistudio.google.com/app/apikey). After you create your API key,
-enter the following commands:
-
-```shell
-pip install dir-assistant
-dir-assistant setkey GEMINI_API_KEY xxxxxYOURAPIKEYHERExxxxx
-cd directory/to/chat/with
-dir-assistant
-```
-
-#### For Ubuntu 24.04
-
-`pip3` has been replaced with `pipx` starting in Ubuntu 24.04.
-
-```shell
-pipx install dir-assistant
-...
-```
-
 ## Install
 
 Install with pip:
@@ -146,6 +147,18 @@ Install with pip:
 ```shell
 pip install dir-assistant
 ```
+
+You can also install `llama-cpp-python` as an optional dependency to enable dir-assistant to
+directly run local LLMs:
+
+```shell
+pip install dir-assistant[recommended]
+```
+
+_Note: `llama-cpp-python` is not updated often so may not run the latest models or have the latest
+features of Llama.cpp. You may have better results with a separate local LLM server and
+connect it to dir-assistant using the [custom API server](#connecting-to-a-custom-api-server)
+feature._
 
 The default configuration for `dir-assistant` is API-mode. If you download an LLM model with `download-llm`, 
 local-mode will automatically be set. To change from API-mode to local-mode, set the `ACTIVE_MODEL_IS_LOCAL` setting.
