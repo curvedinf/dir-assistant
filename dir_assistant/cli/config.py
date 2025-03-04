@@ -1,11 +1,12 @@
 from os import environ, getenv, makedirs
+from platform import system
 from os.path import expanduser, join
 from subprocess import run
 
 import toml
 from dynaconf import Dynaconf
 
-VERSION = "1.4.1"
+VERSION = "1.4.3"
 CONFIG_FILENAME = "config.toml"
 CONFIG_PATH = join(expanduser("~"), ".config", "dir-assistant")
 STORAGE_PATH = join(expanduser("~"), ".local", "share", "dir-assistant")
@@ -156,6 +157,6 @@ def config(args, config_dict):
 def config_open(args):
     config_file_path = get_file_path(CONFIG_PATH, CONFIG_FILENAME)
     editor = (
-        getenv("VISUAL") or getenv("EDITOR") or "nano"
+        getenv("VISUAL") or getenv("EDITOR") or ("notepad" if system() == "Windows" else "nano")
     )  # Default to nano if EDITOR not set
     run([editor, config_file_path])
