@@ -238,6 +238,8 @@ in terms of quality for complex coding tasks on large codebases as of writing ha
 with `voyage-code-3` and `gemini-2.0-flash-thinking-exp`. To use these models open the config 
 file with `dir-assistant config open` and modify this optimized configuration to suit your needs:
 
+_(Note: Don't forget to add your own API keys!)_
+
 ```toml
 [DIR_ASSISTANT]
 SYSTEM_INSTRUCTIONS = "You are a helpful AI assistant tasked with assisting my coding. "
