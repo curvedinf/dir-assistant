@@ -36,7 +36,10 @@ prompt to an LLM called CGRAG (Contextually Guided Retrieval-Augmented Generatio
 3. [Quickstart](#quickstart)
     1. [Quickstart with Local Default Model](#quickstart-with-local-default-model)
     2. [Quickstart with API Model](#quickstart-with-api-model)
-4. [Install](#install)
+    3. [Quickstart Non-interactive Prompt with API Model](#quickstart-non-interactive-prompt-with-api-model)
+4. [General Usage Tips](#general-usage-tips)
+    1. [Optimized Settings for Coding Assistance](#optimized-settings-for-coding-assistance)
+5. [Install](#install)
 5. [Embedding Model Configuration](#embedding-model-configuration)
 6. [Optional: Select A Hardware Platform](#optional-select-a-hardware-platform)
 7. [API Configuration](#api-configuration)
@@ -60,7 +63,8 @@ prompt to an LLM called CGRAG (Contextually Guided Retrieval-Augmented Generatio
 * Added `llama-cpp-python` as an optional dependency downloadable with `pip install dir-assistant[recommended]`
 * Official Windows support
 * Custom API server connections using the new LiteLLM completion settings config section. This enables 
-you to use your own GPU rig with `dir-assistant`.
+you to use your own GPU rig with `dir-assistant`. See 
+[Connecting to a Custom API Server](#connecting-to-a-custom-api-server). 
 
 ### Notable Upstream News
 
@@ -77,9 +81,9 @@ These changes allow a 32B model with 128k context to comfortably run on all GPUs
 
 In this section are recipes to run `dir-assistant` in basic capacity to get you started quickly.
 
-### Quickstart with API Model
+### Quickstart Chat with API Model
 
-To get started using an API model, you can use Google Gemini 1.5 Flash, which is currently free.
+To get started using an API model, you can use Google Gemini 2.0 Flash, which is currently free.
 To begin, you need to sign up for [Google AI Studio](https://aistudio.google.com/) and 
 [create an API key](https://aistudio.google.com/app/apikey). After you create your API key,
 enter the following commands:
@@ -97,14 +101,16 @@ dir-assistant
 
 ```shell
 pipx install dir-assistant
-...
+dir-assistant setkey GEMINI_API_KEY xxxxxYOURAPIKEYHERExxxxx
+cd directory/to/chat/with
+dir-assistant
 ```
 
 
-### Quickstart with Local Default Model
+### Quickstart Chat with Local Default Model
 
 To get started locally, you can download a default llm model. Default configuration with this model requires 
-8GB of memory on most hardware. You will be able to adjust the configuration to fit higher or lower memory 
+3GB of memory on most hardware. You will be able to adjust the configuration to fit higher or lower memory 
 requirements. To run via CPU:
 
 ```shell
@@ -130,6 +136,27 @@ See which platforms are supported using `-h`:
 dir-assistant platform -h
 ```
 
+#### For Windows
+
+It is not recommended to use `dir-assistant` directly with local LLMs on Windows. This is because
+`llama-cpp-python` requires a C compiler for installation via pip, and setting one up is not
+a trivial task on Windows like it is on other platforms. Instead, it is recommended to
+use another LLM server such as LMStudio and configure `dir-assistant` to use it as
+a custom API server. To do this, ensure you are installing `dir-assistant` without
+the `recommended` dependencies:
+
+```shell
+pip install dir-assistant
+```
+
+Then configure `dir-assistant` to connect to your custom LLM API server:
+
+[Connecting to a Custom API Server](#connecting-to-a-custom-api-server)
+
+For instructions on setting up LMStudio to host an API, follow their guide:
+
+https://lmstudio.ai/docs/app/api
+
 #### For Ubuntu 24.04
 
 `pip3` has been replaced with `pipx` starting in Ubuntu 24.04.
@@ -138,6 +165,34 @@ dir-assistant platform -h
 pipx install dir-assistant[recommended]
 ...
 dir-assistant platform cuda --pipx
+```
+
+### Quickstart Non-interactive Prompt with API Model
+
+The non-interactive mode of `dir-assistant` allows you to create scripts which analyze
+your files without user interaction.
+
+To get started using an API model, you can use Google Gemini 2.0 Flash, which is currently free.
+To begin, you need to sign up for [Google AI Studio](https://aistudio.google.com/) and 
+[create an API key](https://aistudio.google.com/app/apikey). After you create your API key,
+enter the following commands:
+
+```shell
+pip install dir-assistant
+dir-assistant setkey GEMINI_API_KEY xxxxxYOURAPIKEYHERExxxxx
+cd directory/to/chat/with
+dir-assistant -s "Describe the files in this directory"
+```
+
+#### For Ubuntu 24.04
+
+`pip3` has been replaced with `pipx` starting in Ubuntu 24.04.
+
+```shell
+pipx install dir-assistant
+dir-assistant setkey GEMINI_API_KEY xxxxxYOURAPIKEYHERExxxxx
+cd directory/to/chat/with
+dir-assistant -s "Describe the files in this directory"
 ```
 
 ## Install
@@ -170,6 +225,74 @@ local-mode will automatically be set. To change from API-mode to local-mode, set
 ```shell
 pipx install dir-assistant
 ```
+
+## General Usage Tips
+
+Dir-assistant is a powerful tool with many configuration options. This section provides some
+general tips for using `dir-assistant` to achieve the best results.
+
+### Optimized Settings for Coding Assistance
+
+There are quite literally thousands of models that can be used with `dir-assistant`. The best results
+in terms of quality for complex coding tasks on large codebases as of writing have been achieved 
+with `voyage-code-3` and `gemini-2.0-flash-thinking-exp`. To use these models open the config 
+file with `dir-assistant config open` and modify this optimized configuration to suit your needs:
+
+```toml
+[DIR_ASSISTANT]
+SYSTEM_INSTRUCTIONS = "You are a helpful AI assistant tasked with assisting my coding. "
+GLOBAL_IGNORES = [ ".gitignore", ".d", ".obj", ".sql", "js/vendors", ".tnn", ".env", "node_modules", ".min.js", ".min.css", "htmlcov", ".coveragerc", ".pytest_cache", ".egg-info", ".git/", ".vscode/", "node_modules/", "build/", ".idea/", "__pycache__", ]
+CONTEXT_FILE_RATIO = 0.9
+ACTIVE_MODEL_IS_LOCAL = false
+ACTIVE_EMBED_IS_LOCAL = false
+USE_CGRAG = true
+PRINT_CGRAG = false
+OUTPUT_ACCEPTANCE_RETRIES = 2
+COMMIT_TO_GIT = true
+VERBOSE = false
+NO_COLOR = false
+LITELLM_EMBED_REQUEST_DELAY = 0
+LITELLM_MODEL_USES_SYSTEM_MESSAGE = true
+LITELLM_PASS_THROUGH_CONTEXT_SIZE = false
+LITELLM_CONTEXT_SIZE = 30000
+LITELLM_EMBED_CONTEXT_SIZE = 4000
+MODELS_PATH = "~/.local/share/dir-assistant/models/"
+LLM_MODEL = "agentica-org_DeepScaleR-1.5B-Preview-Q4_K_M.gguf"
+EMBED_MODEL = "nomic-embed-text-v1.5.Q4_K_M.gguf"
+
+[DIR_ASSISTANT.LITELLM_API_KEYS]
+GEMINI_API_KEY = "yourkeyhere"
+VOYAGE_API_KEY = "yourkeyhere"
+
+[DIR_ASSISTANT.LITELLM_COMPLETION_OPTIONS]
+model = "gemini/gemini-2.0-flash"
+timeout = 600
+
+[DIR_ASSISTANT.LITELLM_EMBED_COMPLETION_OPTIONS]
+model = "voyage/voyage-code-3"
+timeout = 600
+
+[DIR_ASSISTANT.LLAMA_CPP_COMPLETION_OPTIONS]
+frequency_penalty = 1.1
+presence_penalty = 1.0
+
+[DIR_ASSISTANT.LLAMA_CPP_OPTIONS]
+n_ctx = 10000
+verbose = false
+n_gpu_layers = -1
+rope_scaling_type = 2
+rope_freq_scale = 0.75
+
+[DIR_ASSISTANT.LLAMA_CPP_EMBED_OPTIONS]
+n_ctx = 4000
+n_batch = 512
+verbose = false
+rope_scaling_type = 2
+rope_freq_scale = 0.75
+n_gpu_layers = -1
+```
+
+### Notes on Local
 
 ## Embedding Model Configuration
 
@@ -235,10 +358,10 @@ Once editing the file, change:
 
 ```toml
 [DIR_ASSISTANT]
-LITELLM_CONTEXT_SIZE = 500000
+LITELLM_CONTEXT_SIZE = 200000
 
 [DIR_ASSISTANT.LITELLM_API_KEYS]
-GEMINI_API_KEY = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+GEMINI_API_KEY = "xxxxxxxxxxxxxxxxxxx"
 
 [DIR_ASSISTANT.LITELLM_COMPLETION_OPTIONS]
 model = "gemini/gemini-2.0-flash-latest"
@@ -481,7 +604,6 @@ please see [CONTRIBUTORS.md](CONTRIBUTORS.md).
 
 ## Limitations
 
-- Only tested on Ubuntu 22.04, Ubuntu 24.04, and OSX. Please let us know if you run it successfully on other platforms by submitting an issue.
 - Dir-assistant only detects and reads text files at this time.
 
 ## Todos
@@ -497,6 +619,7 @@ please see [CONTRIBUTORS.md](CONTRIBUTORS.md).
 - ~~Commit to git~~
 - ~~API Embedding models~~
 - ~~Immediate mode for better compatibility with custom script automations~~
+- ~~Support for custom APIs~~
 - Web search
 - Daemon mode for API-based use
 
