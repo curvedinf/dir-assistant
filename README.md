@@ -170,8 +170,6 @@ For instructions on setting up LMStudio to host an API, follow their guide:
 
 https://lmstudio.ai/docs/app/api
 
-Note: You can run `dir-assistant` via `python -m dir_assistant` on Windows.
-
 #### For Ubuntu 24.04
 
 `pip3` has been replaced with `pipx` starting in Ubuntu 24.04.
@@ -253,7 +251,7 @@ in terms of quality for complex coding tasks on large codebases as of writing ha
 with `voyage-code-3` and `gemini-2.0-flash-thinking-exp`. To use these models open the config 
 file with `dir-assistant config open` and modify this optimized configuration to suit your needs:
 
-_(Note: Don't forget to add your own API keys!)_
+_Note: Don't forget to add your own API keys! Get them via [Google AI Studio](https://aistudio.google.com/) and [Voyage AI](https://voyage.ai/])._
 
 ```toml
 [DIR_ASSISTANT]
@@ -271,7 +269,7 @@ NO_COLOR = false
 LITELLM_EMBED_REQUEST_DELAY = 0
 LITELLM_MODEL_USES_SYSTEM_MESSAGE = true
 LITELLM_PASS_THROUGH_CONTEXT_SIZE = false
-LITELLM_CONTEXT_SIZE = 30000
+LITELLM_CONTEXT_SIZE = 200000
 LITELLM_EMBED_CONTEXT_SIZE = 4000
 MODELS_PATH = "~/.local/share/dir-assistant/models/"
 LLM_MODEL = "agentica-org_DeepScaleR-1.5B-Preview-Q4_K_M.gguf"
@@ -282,7 +280,7 @@ GEMINI_API_KEY = "yourkeyhere"
 VOYAGE_API_KEY = "yourkeyhere"
 
 [DIR_ASSISTANT.LITELLM_COMPLETION_OPTIONS]
-model = "gemini/gemini-2.0-flash"
+model = "gemini/gemini-2.0-flash-thinking-exp"
 timeout = 600
 
 [DIR_ASSISTANT.LITELLM_EMBED_COMPLETION_OPTIONS]
