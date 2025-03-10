@@ -377,7 +377,7 @@ LITELLM_CONTEXT_SIZE = 200000
 GEMINI_API_KEY = "xxxxxxxxxxxxxxxxxxx"
 
 [DIR_ASSISTANT.LITELLM_COMPLETION_OPTIONS]
-model = "gemini/gemini-2.0-flash-latest"
+model = "gemini/gemini-2.0-flash"
 ```
 
 LiteLLM supports all major LLM APIs, including APIs hosted locally. View the available options in the 
