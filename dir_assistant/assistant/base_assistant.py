@@ -281,39 +281,64 @@ class BaseAssistant:
         return {
             "thinking_start_finished": not self.hide_thinking,
             "thinking_end_finished": not self.hide_thinking,
-            "delta_after_thinking_finished": "",
+            "delta_after_thinking_finished": None,
         }
+
+    def is_done_thinking(self, context, content):
+        if not context["thinking_start_finished"]:
+            # Before the thinking start pattern is found, do not print output
+            if len(content) > len(self.thinking_start_pattern) + 20:
+                context["thinking_start_finished"] = True
+                if self.thinking_start_pattern not in content:
+                    # If the start pattern is not in the output, it's not thinking
+                    context["thinking_end_finished"] = True
+                    context["delta_after_thinking_finished"] = content
+            return False
+        elif not context["thinking_end_finished"]:
+            # While thinking, do not print output
+            if self.thinking_end_pattern in content:
+                context["thinking_end_finished"] = True
+                delta_after_thinking_finished_parts = content.split(
+                    self.thinking_end_pattern
+                )
+                # Get the last part of the string
+                context["delta_after_thinking_finished"] = delta_after_thinking_finished_parts[-1]
+            return False
+        return True
 
     def get_extra_delta_after_thinking(self, context, write_to_stdout):
         # If the thinking is complete, there may be some extra text after the thinking end pattern
         # This function returns that extra text if it exists.
-        if context["delta_after_thinking_finished"]:
-            output = context["delta_after_thinking_finished"].replace("\n", "")
-            context["delta_after_thinking_finished"] = ""
+        if context["delta_after_thinking_finished"] is not None:
+            output = context["delta_after_thinking_finished"].replace("\n", "").replace("\r", "")
+            context["delta_after_thinking_finished"] = None
             return output
-        return ""
+        return None
 
-    def is_done_thinking(self, context, output_message):
-        if not context["thinking_start_finished"]:
-            # Before the thinking start pattern is found, do not print output
-            if len(output_message["content"]) > len(self.thinking_start_pattern) + 20:
-                context["thinking_start_finished"] = True
-                if self.thinking_start_pattern not in output_message["content"]:
-                    # If the start pattern is not in the output, it's not thinking
-                    context["thinking_end_finished"] = True
-                    context["delta_after_thinking_finished"] = output_message["content"]
-            return False
-        elif not context["thinking_end_finished"]:
-            # While thinking, do not print output
-            if self.thinking_end_pattern in output_message["content"]:
-                context["thinking_end_finished"] = True
-                delta_after_thinking_finished_parts = output_message["content"].split(
-                    self.thinking_end_pattern
-                )
-                if len(delta_after_thinking_finished_parts) > 1:
-                    context["delta_after_thinking_finished"] = delta_after_thinking_finished_parts[1]
-            return False
-        return True
+    def run_completion_generator(
+        self, completion_output, output_message, write_to_stdout
+    ):
+        thinking_context = self.create_thinking_context(write_to_stdout)
+        for chunk in completion_output:
+            delta = chunk["choices"][0]["delta"]
+            if "content" in delta and delta["content"] != None:
+                output_message["content"] += delta["content"]
+                if self.is_done_thinking(thinking_context, output_message["content"]) and write_to_stdout:
+                    if not self.no_color and self.chat_mode:
+                        sys.stdout.write(
+                            self.get_color_prefix(Style.BRIGHT, Fore.WHITE)
+                        )
+                    extra_delta_after_thinking = self.get_extra_delta_after_thinking(thinking_context, write_to_stdout)
+                    if extra_delta_after_thinking is not None:
+                        # Remove the thinking message from the output now that it's complete and
+                        # print the delta after the thinking message
+                        sys.stdout.write(f"\r{' ' * 36}\r")
+                        sys.stdout.write(extra_delta_after_thinking)
+                    sys.stdout.write(delta["content"])
+                    if not self.no_color and self.chat_mode:
+                        sys.stdout.write(self.get_color_suffix())
+                    sys.stdout.flush()
+        return output_message
 
     def remove_thinking_message(self, output):
         # If hide thinking is enabled, remove the thinking message from any string
@@ -333,28 +358,3 @@ class BaseAssistant:
             completion_generator, self.create_empty_history(), False
         )["content"]
         return self.remove_thinking_message(output)
-
-    def run_completion_generator(
-        self, completion_output, output_message, write_to_stdout
-    ):
-        thinking_context = self.create_thinking_context(write_to_stdout)
-        for chunk in completion_output:
-            delta = chunk["choices"][0]["delta"]
-            if "content" in delta and delta["content"] != None:
-                extra_delta_after_thinking = self.get_extra_delta_after_thinking(thinking_context, write_to_stdout)
-                output_message["content"] += delta["content"]
-                if self.is_done_thinking(thinking_context, output_message) and write_to_stdout:
-                    if not self.no_color and self.chat_mode:
-                        sys.stdout.write(
-                            self.get_color_prefix(Style.BRIGHT, Fore.WHITE)
-                        )
-                    if extra_delta_after_thinking:
-                        # Remove the thinking message from the output now that it's complete and
-                        # print the delta after the thinking message
-                        sys.stdout.write(f"\r{' ' * 36}\r")
-                        sys.stdout.write(extra_delta_after_thinking)
-                    sys.stdout.write(delta["content"])
-                    if not self.no_color and self.chat_mode:
-                        sys.stdout.write(self.get_color_suffix())
-                    sys.stdout.flush()
-        return output_message
