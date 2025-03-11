@@ -137,7 +137,6 @@ def process_file(embed, filepath, contents, embed_chunk_size, verbose=False):
     start_line_number = 1
     chunks = []
     embeddings_list = []
-
     if verbose:
         sys.stdout.write(f"Creating embeddings for {filepath}\n")
         sys.stdout.flush()
@@ -149,7 +148,6 @@ def process_file(embed, filepath, contents, embed_chunk_size, verbose=False):
             chunk_header = f"---------------\n\nUser file '{filepath}' lines {start_line_number}-{line_number}:\n\n"
             proposed_text = chunk_header + proposed_chunk
             chunk_tokens = embed.count_tokens(proposed_text)
-
             if chunk_tokens <= embed_chunk_size:
                 current_chunk = proposed_chunk
                 break  # The line fits in the current chunk, break out of the inner loop
@@ -175,7 +173,10 @@ def process_file(embed, filepath, contents, embed_chunk_size, verbose=False):
                     current_chunk = ""
                     start_line_number = line_number  # Next chunk starts from this line
                     # Do not break; continue processing the line
-
+                    # Add this line to prevent infinite loops
+                    line_content = line_content.strip()  # Ensure there is actually some remaining string
+                    if not line_content:
+                        break
     # Add the remaining content as the last chunk
     if current_chunk:
         chunk_header = f"---------------\n\nUser file '{filepath}' lines {start_line_number}-{len(lines)}:\n\n"
@@ -188,15 +189,19 @@ def process_file(embed, filepath, contents, embed_chunk_size, verbose=False):
         )
         embedding = embed.create_embedding(chunk_header + current_chunk)
         embeddings_list.append(embedding)
-
     return chunks, embeddings_list
 
 
 def find_split_point(embed, line_content, max_size, header):
-    for split_point in range(1, len(line_content)):
-        if embed.count_tokens(header + line_content[:split_point] + "\n") >= max_size:
-            return split_point - 1
-    return len(line_content)
+    low = 0
+    high = len(line_content)
+    while low < high:
+        mid = (low + high) // 2
+        if embed.count_tokens(header + line_content[:mid] + "\n") < max_size:
+            low = mid + 1
+        else:
+            high = mid
+    return low - 1
 
 
 def search_index(embed, index, query, all_chunks):
