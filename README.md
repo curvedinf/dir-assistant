@@ -311,14 +311,16 @@ n_gpu_layers = -1
 
 You must use an embedding model regardless of whether you are running an LLM via local or API mode, but you can also
 choose whether the embedding model is local or API using the `ACTIVE_EMBED_IS_LOCAL` setting. Generally local embedding 
-will be faster, but API will be higher quality. To start, it is recommended to use a local model. You can download a 
+will be faster, but API will be higher quality. If you wish to use local embedding, you can download a 
 good default embedding model with:
 
 ```shell
+pip install dir-assistant[recommended]
 dir-assistant models download-embed
 ```
 
-If you would like to use another embedding model, open the models directory with:
+If you would like to use another local embedding model, download a gguf file and place it in the
+models directory. The models directory can be opened in a file browser using:
 
 ```shell
 dir-assistant models
@@ -389,14 +391,12 @@ There is a convenience subcommand for modifying and adding API keys:
 dir-assistant setkey GEMINI_API_KEY xxxxxYOURAPIKEYHERExxxxx
 ```
 
-However, in most cases you will need to modify other options when changing APIs.
-
 ### Connecting to a Custom API Server
 
 If you would like to connect to a custom API server, such as your own ollama, llama.cpp, LMStudio, 
 vLLM, or other OpenAPI-compatible API server, dir-assistant supports this. To configure for this,
 open the config with `dir-assistant config open` and make following changes (LMStudio's base_url
-shown for the example):
+shown for this example):
 
 ```toml
 [DIR_ASSISTANT]
@@ -413,6 +413,7 @@ If you want to use a local LLM directly within `dir-assistant` using `llama-cpp-
 you can download a low requirements default model with:
 
 ```shell
+pip install dir-assistant[recommended]
 dir-assistant models download-llm
 ```
 
@@ -603,7 +604,7 @@ dir-assistant clear
 ## Additional Help
 
 Use the `-h` argument with any command or subcommand to view more information. If your problem is beyond the scope of
-the helptext, please report a github issue.
+the helptext, please report a Github issue.
 
 ## Contributors
 

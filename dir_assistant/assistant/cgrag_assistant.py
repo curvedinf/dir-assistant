@@ -20,6 +20,9 @@ class CGRAGAssistant(BaseAssistant):
         verbose,
         no_color,
         chat_mode,
+        hide_thinking,
+        thinking_start_pattern,
+        thinking_end_pattern,
     ):
         super().__init__(
             system_instructions,
@@ -31,6 +34,9 @@ class CGRAGAssistant(BaseAssistant):
             verbose,
             no_color,
             chat_mode,
+            hide_thinking,
+            thinking_start_pattern,
+            thinking_end_pattern,
         )
         self.use_cgrag = use_cgrag
         self.print_cgrag = print_cgrag
@@ -105,6 +111,9 @@ function, and variable names as applicable to answering the user prompt.
             output_history = self.create_empty_history()
             output_history = self.run_completion_generator(
                 cgrag_generator, output_history, self.print_cgrag
+            )
+            output_history["content"] = self.remove_thinking_message(
+                output_history["content"]
             )
             relevant_full_text = self.build_relevant_full_text(
                 output_history["content"]

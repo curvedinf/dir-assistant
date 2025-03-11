@@ -1,7 +1,8 @@
 import os
 import sys
 
-from colorama import Fore
+from colorama import Fore, Style
+
 try:
     from llama_cpp import Llama
 except:
@@ -63,6 +64,9 @@ class LlamaCppAssistant(GitAssistant):
         verbose,
         no_color,
         chat_mode,
+        hide_thinking,
+        thinking_start_pattern,
+        thinking_end_pattern,
     ):
         super().__init__(
             system_instructions,
@@ -77,6 +81,9 @@ class LlamaCppAssistant(GitAssistant):
             verbose,
             no_color,
             chat_mode,
+            hide_thinking,
+            thinking_start_pattern,
+            thinking_end_pattern,
         )
         try:
             if self.verbose:
@@ -114,18 +121,6 @@ class LlamaCppAssistant(GitAssistant):
                 return self.llm.create_chat_completion(
                     messages=chat_history, stream=True, **self.completion_options
                 )
-
-    def run_completion_generator(
-        self, completion_output, output_message, write_to_stdout
-    ):
-        for chunk in completion_output:
-            delta = chunk["choices"][0]["delta"]
-            if "content" in delta:
-                output_message["content"] += delta["content"]
-                if write_to_stdout:
-                    sys.stdout.write(delta["content"])
-                    sys.stdout.flush()
-        return output_message
 
     def count_tokens(self, text):
         return len(self.llm.tokenize(bytes(text, "utf-8")))

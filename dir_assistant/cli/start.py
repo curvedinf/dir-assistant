@@ -17,7 +17,6 @@ from dir_assistant.assistant.llama_cpp_embed import LlamaCppEmbed
 from dir_assistant.cli.config import (
     HISTORY_FILENAME,
     STORAGE_PATH,
-    VERSION,
     get_file_path,
 )
 
@@ -94,6 +93,9 @@ The user is currently working in the following directory (CWD): {os.getcwd()}"""
     commit_to_git = config["COMMIT_TO_GIT"]
     verbose = config["VERBOSE"] or args.verbose
     no_color = config["NO_COLOR"] or args.no_color
+    hide_thinking = config["HIDE_THINKING"]
+    thinking_start_pattern = config["THINKING_START_PATTERN"]
+    thinking_end_pattern = config["THINKING_END_PATTERN"]
 
     # Check for basic missing model configs
     if active_model_is_local:
@@ -193,9 +195,12 @@ see readme for more information. Exiting..."""
             print_cgrag,
             commit_to_git,
             llama_cpp_completion_options,
-            verbose=verbose,
-            no_color=no_color,
-            chat_mode=chat_mode,
+            verbose,
+            no_color,
+            chat_mode,
+            hide_thinking,
+            thinking_start_pattern,
+            thinking_end_pattern,
         )
     else:
         if verbose and chat_mode:
@@ -220,9 +225,12 @@ see readme for more information. Exiting..."""
             use_cgrag,
             print_cgrag,
             commit_to_git,
-            verbose=verbose,
-            no_color=no_color,
-            chat_mode=chat_mode,
+            verbose,
+            no_color,
+            chat_mode,
+            hide_thinking,
+            thinking_start_pattern,
+            thinking_end_pattern,
         )
 
     return llm
