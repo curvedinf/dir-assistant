@@ -26,6 +26,9 @@ class LiteLLMAssistant(GitAssistant):
         verbose,
         no_color,
         chat_mode,
+        hide_thinking,
+        thinking_start_pattern,
+        thinking_end_pattern,
     ):
         super().__init__(
             system_instructions,
@@ -40,6 +43,9 @@ class LiteLLMAssistant(GitAssistant):
             verbose,
             no_color,
             chat_mode,
+            hide_thinking,
+            thinking_start_pattern,
+            thinking_end_pattern,
         )
         self.completion_options = lite_llm_completion_options
         self.context_size = lite_llm_context_size
@@ -79,25 +85,6 @@ class LiteLLMAssistant(GitAssistant):
                 messages=chat_history_cleaned,
                 stream=True,
             )
-
-    def run_completion_generator(
-        self, completion_output, output_message, write_to_stdout
-    ):
-        for chunk in completion_output:
-            delta = chunk["choices"][0]["delta"]
-            if "content" in delta and delta["content"] != None:
-                output_message["content"] += delta["content"]
-
-                if write_to_stdout:
-                    if not self.no_color and self.chat_mode:
-                        sys.stdout.write(
-                            self.get_color_prefix(Style.BRIGHT, Fore.WHITE)
-                        )
-                    sys.stdout.write(delta["content"])
-                    if not self.no_color and self.chat_mode:
-                        sys.stdout.write(self.get_color_suffix())
-                    sys.stdout.flush()
-        return output_message
 
     def count_tokens(self, text):
         return token_counter(

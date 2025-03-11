@@ -22,6 +22,9 @@ class GitAssistant(CGRAGAssistant):
         verbose,
         no_color,
         chat_mode,
+        hide_thinking,
+        thinking_start_pattern,
+        thinking_end_pattern,
     ):
         super().__init__(
             system_instructions,
@@ -35,6 +38,9 @@ class GitAssistant(CGRAGAssistant):
             verbose,
             no_color,
             chat_mode,
+            hide_thinking,
+            thinking_start_pattern,
+            thinking_end_pattern,
         )
         self.commit_to_git = commit_to_git
 
