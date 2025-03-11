@@ -32,7 +32,6 @@ prompt to an LLM called CGRAG (Contextually Guided Retrieval-Augmented Generatio
 
 ## Table of Contents
 1. [New Features](#new-features)
-   1. [Notable Upstream News](#notable-upstream-news)
 3. [Quickstart](#quickstart)
     1. [Quickstart with Local Default Model](#quickstart-with-local-default-model)
     2. [Quickstart with API Model](#quickstart-with-api-model)
@@ -60,23 +59,7 @@ prompt to an LLM called CGRAG (Contextually Guided Retrieval-Augmented Generatio
 
 ## New Features
 
-* Added `llama-cpp-python` as an optional instead of required dependency downloadable 
-with `pip install dir-assistant[recommended]`
-* Official Windows support. Note: The python installer via python.org is recommended for Windows.
-* Custom API server connections using the new LiteLLM completion settings config section. This enables 
-you to use your own GPU rig with `dir-assistant`. See 
-[Connecting to a Custom API Server](#connecting-to-a-custom-api-server). 
-
-### Notable Upstream News
-
-This section is dedicated to changes in libraries which can impact users of `dir-assistant`.
-
-#### llama-cpp-python
-
-* KV cache quants now available for most models. This enables reduced memory consumption per context token.
-* Improved flash attention implementation for ROCM. This drastically reduces VRAM usage for large contexts on AMD cards.
-
-These changes allow a 32B model with 128k context to comfortably run on all GPUs with at least 20GB of VRAM if enabled.
+* Added support for models that include a `<thinking></thinking>` block in their response
 
 ## Quickstart
 
@@ -634,6 +617,7 @@ please see [CONTRIBUTORS.md](CONTRIBUTORS.md).
 - ~~API Embedding models~~
 - ~~Immediate mode for better compatibility with custom script automations~~
 - ~~Support for custom APIs~~
+- ~~Support for thinking models~~
 - Web search
 - Daemon mode for API-based use
 
