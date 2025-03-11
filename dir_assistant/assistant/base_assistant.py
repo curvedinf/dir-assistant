@@ -310,7 +310,7 @@ class BaseAssistant:
         # If the thinking is complete, there may be some extra text after the thinking end pattern
         # This function returns that extra text if it exists.
         if context["delta_after_thinking_finished"] is not None:
-            output = context["delta_after_thinking_finished"].replace("\n", "").replace("\r", "")
+            output = context["delta_after_thinking_finished"]
             context["delta_after_thinking_finished"] = None
             return output
         return None

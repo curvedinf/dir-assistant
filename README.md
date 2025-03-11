@@ -38,7 +38,8 @@ prompt to an LLM called CGRAG (Contextually Guided Retrieval-Augmented Generatio
     3. [Quickstart Non-interactive Prompt with API Model](#quickstart-non-interactive-prompt-with-api-model)
 4. [General Usage Tips](#general-usage-tips)
     1. [Optimized Settings for Coding Assistance](#optimized-settings-for-coding-assistance)
-5. [Install](#install)
+5. [Examples](#examples)
+6. [Install](#install)
 5. [Embedding Model Configuration](#embedding-model-configuration)
 6. [Optional: Select A Hardware Platform](#optional-select-a-hardware-platform)
 7. [API Configuration](#api-configuration)
@@ -190,6 +191,10 @@ dir-assistant setkey GEMINI_API_KEY xxxxxYOURAPIKEYHERExxxxx
 cd directory/to/chat/with
 dir-assistant -s "Describe the files in this directory"
 ```
+
+## Examples
+
+See [examples](https://github.com/curvedinf/dir-assistant/tree/main/examples).
 
 ## Install
 
