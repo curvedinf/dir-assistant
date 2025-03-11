@@ -196,6 +196,27 @@ dir-assistant -s "Describe the files in this directory"
 
 See [examples](https://github.com/curvedinf/dir-assistant/tree/main/examples).
 
+```bash
+./reddit-stock-sentiment.sh 
+Downloading top posts from r/wallstreetbets...
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100  173k  100  173k    0     0   353k      0 --:--:-- --:--:-- --:--:--  353k
+Analyzing sentiment of stocks mentioned in subreddits...
+Sentiment Analysis Results:
+TSLA 6.5                            
+SPY 4.2
+NVDA 3.1
+BTC 2.8
+MSTR 2.5
+PLTR -4.5
+IONQ -5.2
+RGTI -6.1
+STRK -7.3
+TWLO -8.0
+```
+
+
 ## Install
 
 Install with pip:
