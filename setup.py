@@ -10,7 +10,7 @@ README = (HERE / "README.md").read_text()
 
 setup(
     name="dir-assistant",
-    version="1.4.3",
+    version="1.5.0",
     description="Chat with your current directory's files using a local or API LLM.",
     long_description=README,
     long_description_content_type="text/markdown",

@@ -60,7 +60,8 @@ prompt to an LLM called CGRAG (Contextually Guided Retrieval-Augmented Generatio
 
 ## New Features
 
-* Added support for models that include a `<thinking></thinking>` block in their response
+* Added support for models that include a `<thinking></thinking>` block in their response.
+* Added an [example script](#examples) for analyzing stock sentiment on reddit.
 
 ## Quickstart
 
