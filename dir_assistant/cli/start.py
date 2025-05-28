@@ -14,11 +14,7 @@ from dir_assistant.assistant.lite_llm_assistant import LiteLLMAssistant
 from dir_assistant.assistant.lite_llm_embed import LiteLlmEmbed
 from dir_assistant.assistant.llama_cpp_assistant import LlamaCppAssistant
 from dir_assistant.assistant.llama_cpp_embed import LlamaCppEmbed
-from dir_assistant.cli.config import (
-    HISTORY_FILENAME,
-    STORAGE_PATH,
-    get_file_path,
-)
+from dir_assistant.cli.config import HISTORY_FILENAME, STORAGE_PATH, get_file_path
 
 litellm.suppress_debug_info = True
 
@@ -105,7 +101,10 @@ The user is currently working in the following directory (CWD): {os.getcwd()}"""
     see readme for more information. Exiting..."""
             )
             exit(1)
-    elif "model" not in lite_llm_completion_options or not lite_llm_completion_options["model"]:
+    elif (
+        "model" not in lite_llm_completion_options
+        or not lite_llm_completion_options["model"]
+    ):
         print(
             """You must specify LITELLM_COMPLETION_OPTIONS.model. Use 'dir-assistant config open' and see readme \
 for more information. Exiting..."""
@@ -120,7 +119,10 @@ for more information. Exiting..."""
 see readme for more information. Exiting..."""
             )
             exit(1)
-    elif "model" not in lite_llm_embed_completion_options or not lite_llm_embed_completion_options["model"]:
+    elif (
+        "model" not in lite_llm_embed_completion_options
+        or not lite_llm_embed_completion_options["model"]
+    ):
         print(
             """You must specify LITELLM_EMBED_COMPLETION_OPTIONS.model. Use 'dir-assistant config open' and \
 see readme for more information. Exiting..."""

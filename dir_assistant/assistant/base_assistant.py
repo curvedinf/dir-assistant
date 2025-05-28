@@ -232,7 +232,9 @@ class BaseAssistant:
         output_history = self.run_completion_generator(
             completion_generator, output_history, True
         )
-        output_history["content"] = self.remove_thinking_message(output_history["content"])
+        output_history["content"] = self.remove_thinking_message(
+            output_history["content"]
+        )
 
         if self.chat_mode:
             if not self.no_color:
@@ -271,9 +273,7 @@ class BaseAssistant:
         # multiple completions are running in parallel
         if write_to_stdout and self.hide_thinking and self.chat_mode:
             if not self.no_color:
-                sys.stdout.write(
-                    self.get_color_prefix(Style.BRIGHT, Fore.WHITE)
-                )
+                sys.stdout.write(self.get_color_prefix(Style.BRIGHT, Fore.WHITE))
             sys.stdout.write("(thinking...)")
             if not self.no_color:
                 sys.stdout.write(self.get_color_suffix())
@@ -302,7 +302,9 @@ class BaseAssistant:
                     self.thinking_end_pattern
                 )
                 # Get the last part of the string
-                context["delta_after_thinking_finished"] = delta_after_thinking_finished_parts[-1]
+                context["delta_after_thinking_finished"] = (
+                    delta_after_thinking_finished_parts[-1]
+                )
             return False
         return True
 
@@ -323,12 +325,17 @@ class BaseAssistant:
             delta = chunk["choices"][0]["delta"]
             if "content" in delta and delta["content"] != None:
                 output_message["content"] += delta["content"]
-                if self.is_done_thinking(thinking_context, output_message["content"]) and write_to_stdout:
+                if (
+                    self.is_done_thinking(thinking_context, output_message["content"])
+                    and write_to_stdout
+                ):
                     if not self.no_color and self.chat_mode:
                         sys.stdout.write(
                             self.get_color_prefix(Style.BRIGHT, Fore.WHITE)
                         )
-                    extra_delta_after_thinking = self.get_extra_delta_after_thinking(thinking_context, write_to_stdout)
+                    extra_delta_after_thinking = self.get_extra_delta_after_thinking(
+                        thinking_context, write_to_stdout
+                    )
                     if extra_delta_after_thinking is not None:
                         # Remove the thinking message from the output now that it's complete and
                         # print the delta after the thinking message
@@ -345,7 +352,9 @@ class BaseAssistant:
         if self.hide_thinking:
             thinking_start_parts = output.split(self.thinking_start_pattern)
             if len(thinking_start_parts) > 1:
-                thinking_end_parts = thinking_start_parts[1].split(self.thinking_end_pattern)
+                thinking_end_parts = thinking_start_parts[1].split(
+                    self.thinking_end_pattern
+                )
                 if len(thinking_end_parts) > 1:
                     return thinking_end_parts[0]
         # If any condition for hide thinking fails, return the full output

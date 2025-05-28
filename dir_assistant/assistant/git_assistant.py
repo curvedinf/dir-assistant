@@ -101,7 +101,9 @@ Real response:
             if apply_changes == "y":
                 # Commit any user-generated changes
                 os.system("git add .")
-                os.system(f'git commit -m "Automatic commit of user changes (dir-assistant)"')
+                os.system(
+                    f'git commit -m "Automatic commit of user changes (dir-assistant)"'
+                )
                 output_lines = stream_output.split("\n")
                 changed_filepath = output_lines[0].strip()
                 file_slice = output_lines[1:]

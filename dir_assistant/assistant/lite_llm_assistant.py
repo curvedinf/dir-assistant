@@ -88,5 +88,6 @@ class LiteLLMAssistant(GitAssistant):
 
     def count_tokens(self, text):
         return token_counter(
-            model=self.completion_options["model"], messages=[{"user": "role", "content": text}]
+            model=self.completion_options["model"],
+            messages=[{"user": "role", "content": text}],
         )

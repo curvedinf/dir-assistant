@@ -405,8 +405,7 @@ dir-assistant setkey GEMINI_API_KEY xxxxxYOURAPIKEYHERExxxxx
 
 If you would like to connect to a custom API server, such as your own ollama, llama.cpp, LMStudio, 
 vLLM, or other OpenAPI-compatible API server, dir-assistant supports this. To configure for this,
-open the config with `dir-assistant config open` and make following changes (LMStudio's base_url
-shown for this example):
+open the config with `dir-assistant config open` and make following changes:
 
 ```toml
 [DIR_ASSISTANT]
@@ -414,7 +413,7 @@ ACTIVE_MODEL_IS_LOCAL = false
 
 [DIR_ASSISTANT.LITELLM_COMPLETION_OPTIONS]
 model = "openai/mistral-small-24b-instruct-2501"
-base_url = "http://localhost:1234/v1"
+api_base = "http://localhost:1234/v1"
 ```
 
 ## Local LLM Model Download

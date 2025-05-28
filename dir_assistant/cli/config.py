@@ -1,6 +1,6 @@
 from os import environ, getenv, makedirs
-from platform import system
 from os.path import expanduser, join
+from platform import system
 from subprocess import run
 
 import toml
@@ -160,6 +160,8 @@ def config(args, config_dict):
 def config_open(args):
     config_file_path = get_file_path(CONFIG_PATH, CONFIG_FILENAME)
     editor = (
-        getenv("VISUAL") or getenv("EDITOR") or ("notepad" if system() == "Windows" else "nano")
+        getenv("VISUAL")
+        or getenv("EDITOR")
+        or ("notepad" if system() == "Windows" else "nano")
     )  # Default to nano if EDITOR not set
     run([editor, config_file_path])

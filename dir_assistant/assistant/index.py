@@ -5,8 +5,13 @@ import numpy as np
 from faiss import IndexFlatL2
 from sqlitedict import SqliteDict
 
-from dir_assistant.cli.config import HISTORY_FILENAME, STORAGE_PATH, get_file_path, INDEX_CACHE_FILENAME, \
-    INDEX_CACHE_PATH
+from dir_assistant.cli.config import (
+    HISTORY_FILENAME,
+    INDEX_CACHE_FILENAME,
+    INDEX_CACHE_PATH,
+    STORAGE_PATH,
+    get_file_path,
+)
 
 TEXT_CHARS = bytearray({7, 8, 9, 10, 12, 13, 27} | set(range(0x20, 0x100)) - {0x7F})
 
@@ -174,7 +179,9 @@ def process_file(embed, filepath, contents, embed_chunk_size, verbose=False):
                     start_line_number = line_number  # Next chunk starts from this line
                     # Do not break; continue processing the line
                     # Add this line to prevent infinite loops
-                    line_content = line_content.strip()  # Ensure there is actually some remaining string
+                    line_content = (
+                        line_content.strip()
+                    )  # Ensure there is actually some remaining string
                     if not line_content:
                         break
     # Add the remaining content as the last chunk
