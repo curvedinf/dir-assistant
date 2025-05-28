@@ -62,7 +62,6 @@ User prompt:
                 self.should_diff = False
             else:
                 self.should_diff = None
-
             if self.should_diff:
                 return f"""User Prompt:
 {user_input}
@@ -72,12 +71,10 @@ the changes the user prompt requested. Do not provide an introduction, summary, 
 with the file's contents. Do not respond with surrounding markdown. Add the filename of the file as the
 first line of the response. It is okay to create a new file. Always respond with the entire contents of the 
 new version of the file. Ensure white space and new lines are consistent with the original.
-
 Example response:
 /home/user/hello_project/hello_world.py
 if __name__ == "__main__":
     print("Hello, World!")
-
 Real response:
 """
             else:
@@ -106,17 +103,38 @@ Real response:
                 )
                 output_lines = stream_output.split("\n")
                 changed_filepath = output_lines[0].strip()
-                file_slice = output_lines[1:]
-                if file_slice[0].startswith("```"):
-                    file_slice = file_slice[1:]
-                if file_slice[-1].endswith("```"):
-                    file_slice = file_slice[:-1]
-                cleaned_output = "\n".join(file_slice)
+
+                file_content_lines = []
+                if len(output_lines) > 1:
+                    file_content_lines = output_lines[1:]
+
+                # Remove leading blank lines
+                while file_content_lines and not file_content_lines[0].strip():
+                    file_content_lines.pop(0)
+
+                # Remove leading ``` or ```language
+                if file_content_lines and file_content_lines[0].strip().startswith(
+                    "```"
+                ):
+                    file_content_lines.pop(0)
+
+                # Remove trailing blank lines
+                while file_content_lines and not file_content_lines[-1].strip():
+                    file_content_lines.pop()
+
+                # Remove trailing ```
+                if file_content_lines and file_content_lines[-1].strip().endswith(
+                    "```"
+                ):
+                    file_content_lines.pop()
+
+                cleaned_output = "\n".join(file_content_lines)
                 try:
                     os.makedirs(os.path.dirname(changed_filepath), exist_ok=True)
                     with open(changed_filepath, "w") as changed_file:
                         changed_file.write(cleaned_output)
                 except Exception as e:
+                    # TODO: Add proper error handling/messaging
                     return False
                 os.system("git add .")
                 os.system(f'git commit -m "{user_input.strip()}"')
