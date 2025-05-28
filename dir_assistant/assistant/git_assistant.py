@@ -96,7 +96,7 @@ if __name__ == "__main__":
                 apply_changes = "n"
             if self.chat_mode:
                 sys.stdout.write("\n")
-            if apply_changes == "y":
+            if "y" in apply_changes:
                 # Commit any user-generated changes
                 os.system("git add .")
                 os.system(
@@ -135,8 +135,12 @@ if __name__ == "__main__":
                     with open(changed_filepath, "w") as changed_file:
                         changed_file.write(cleaned_output)
                 except Exception as e:
-                    # TODO: Add proper error handling/messaging
-                    return False
+                    if self.chat_mode:
+                        sys.stdout.write(
+                            f"\n{self.get_color_prefix(Style.BRIGHT)}Error while committing changes, skipping commit: {e}{self.get_color_suffix()}\n\n"
+                        )
+                        sys.stdout.flush()
+                    return True
                 os.system("git add .")
                 os.system(f'git commit -m "{user_input.strip()}"')
                 if self.chat_mode:
