@@ -71,11 +71,12 @@ the changes the user prompt requested. Do not provide an introduction, summary, 
 with the file's contents. Do not respond with surrounding markdown. Add the filename of the file as the
 first line of the response. It is okay to create a new file. Always respond with the entire contents of the 
 new version of the file. Ensure white space and new lines are consistent with the original.
+
 Example response:
+
 /home/user/hello_project/hello_world.py
 if __name__ == "__main__":
     print("Hello, World!")
-Real response:
 """
             else:
                 return user_input
