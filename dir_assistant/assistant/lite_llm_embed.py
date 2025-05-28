@@ -1,11 +1,15 @@
 from time import sleep
-from litellm import embedding, token_counter, exceptions as litellm_exceptions
+
+from litellm import embedding
+from litellm import exceptions as litellm_exceptions
+from litellm import token_counter
+
 from dir_assistant.assistant.base_embed import BaseEmbed
 
 
 class LiteLlmEmbed(BaseEmbed):
     def __init__(
-            self, lite_llm_embed_completion_options, lite_llm_embed_context_size, delay=0
+        self, lite_llm_embed_completion_options, lite_llm_embed_context_size, delay=0
     ):
         self.lite_llm_embed_completion_options = lite_llm_embed_completion_options
         self.chunk_size = lite_llm_embed_context_size

@@ -1,9 +1,13 @@
-import sys
 from copy import deepcopy
 from time import sleep
+
 from colorama import Fore, Style
-from litellm import completion, token_counter, exceptions as litellm_exceptions
+from litellm import completion
+from litellm import exceptions as litellm_exceptions
+from litellm import token_counter
+
 from dir_assistant.assistant.git_assistant import GitAssistant
+
 
 class LiteLLMAssistant(GitAssistant):
     def __init__(
@@ -93,13 +97,15 @@ class LiteLLMAssistant(GitAssistant):
             except litellm_exceptions.APIConnectionError as e:
                 current_retry += 1
                 if current_retry > max_retries:
-                    self.write_error_message(f"API Connection Error after {max_retries} retries: {e}")
+                    self.write_error_message(
+                        f"API Connection Error after {max_retries} retries: {e}"
+                    )
                     raise
                 self.write_debug_message(
                     f"API Connection Error (attempt {current_retry}/{max_retries}): {e}. Retrying in {retry_delay_seconds}s..."
                 )
                 sleep(retry_delay_seconds)
-            except Exception as e: # Catch other potential litellm exceptions
+            except Exception as e:  # Catch other potential litellm exceptions
                 self.write_error_message(f"LiteLLM completion error: {e}")
                 raise
 

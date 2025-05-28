@@ -1,13 +1,18 @@
 # dir-assistant
+
 [![PyPI](https://img.shields.io/pypi/v/dir-assistant)](https://pypi.org/project/dir-assistant/)
 [![GitHub license](https://img.shields.io/github/license/curvedinf/dir-assistant)](LICENSE)
 [![GitHub last commit](https://img.shields.io/github/last-commit/curvedinf/dir-assistant)](https://github.com/curvedinf/dir-assistant/commits/main)
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/dir-assistant)](https://pypi.org/project/dir-assistant/)
 [![GitHub stars](https://img.shields.io/github/stars/curvedinf/dir-assistant)](https://github.com/curvedinf/dir-assistant/stargazers)
 [![Ko-fi Link](kofi.webp)](https://ko-fi.com/A0A31B6VB6)
+
 Chat with your current directory's files using a local or API LLM.
+
 ![(Demo GIF of dir-assistant being run)](demo.gif)
+
 ## Summary
+
 `dir-assistant` is a CLI python application available through `pip` that recursively indexes all text 
 files in the current working directory so you can chat with them using a local or API LLM. By 
 "chat with them", it is meant that their contents will automatically be included in the prompts sent 
