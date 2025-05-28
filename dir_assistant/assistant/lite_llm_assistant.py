@@ -65,7 +65,8 @@ class LiteLLMAssistant(GitAssistant):
     def initialize_history(self):
         super().initialize_history()
         if not self.lite_llm_model_uses_system_message:
-            self.chat_history[0]["role"] = "user"
+            if self.chat_history and self.chat_history[0]["role"] == "system":
+                self.chat_history[0]["role"] = "user"
 
     def call_completion(self, chat_history):
         # Clean "tokens" from chat history. It causes an error for mistral.
@@ -73,12 +74,10 @@ class LiteLLMAssistant(GitAssistant):
         for message in chat_history_cleaned:
             if "tokens" in message:
                 del message["tokens"]
-
         # Hardcoded retry settings
         max_retries = 3
         retry_delay_seconds = 1
         current_retry = 0
-
         while current_retry <= max_retries:
             try:
                 if self.pass_through_context_size:
@@ -108,7 +107,6 @@ class LiteLLMAssistant(GitAssistant):
             except Exception as e:  # Catch other potential litellm exceptions
                 self.write_error_message(f"LiteLLM completion error: {e}")
                 raise
-
         # This line should ideally not be reached if the loop logic is correct (always returns or raises).
         # Added for robustness in case of unforeseen loop exit.
         raise Exception(
@@ -116,8 +114,16 @@ class LiteLLMAssistant(GitAssistant):
             "after exhausting retries or due to an unhandled state."
         )
 
-    def count_tokens(self, text):
+    def count_tokens(self, text, role="user"):
+        valid_roles = ["system", "user", "assistant"]
+        role_to_pass = role
+        if role not in valid_roles:
+            self.write_debug_message(
+                f"count_tokens received invalid role '{role}', defaulting to 'user'."
+            )
+            role_to_pass = "user"
+
         return token_counter(
             model=self.completion_options["model"],
-            messages=[{"user": "role", "content": text}],
+            messages=[{"role": role_to_pass, "content": text}],
         )

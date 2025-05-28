@@ -44,7 +44,9 @@ class BaseAssistant:
     def initialize_history(self):
         # This inititialization occurs separately from the constructor because child classes need to initialize
         # before count_tokens can be called.
-        system_instructions_tokens = self.count_tokens(self.system_instructions)
+        system_instructions_tokens = self.count_tokens(
+            self.system_instructions, role="system"
+        )
         self.chat_history = [
             {
                 "role": "system",
@@ -63,7 +65,7 @@ class BaseAssistant:
         # unimplemented on base class
         raise NotImplementedError
 
-    def count_tokens(self, text):
+    def count_tokens(self, text, role="user"):
         # unimplemented on base class
         raise NotImplementedError
 
@@ -74,7 +76,9 @@ class BaseAssistant:
         for i, relevant_chunk in enumerate(relevant_chunks, start=1):
             # Note: relevant_chunk["tokens"] is created with the embedding model, not the LLM, so it will
             # not be accurate for the purposes of maximizing the context of the LLM.
-            chunk_total_tokens += self.count_tokens(relevant_chunk["text"] + "\n\n")
+            chunk_total_tokens += self.count_tokens(
+                relevant_chunk["text"] + "\n\n", role="user"
+            )  # Assuming RAG text is like user content for token counting
             if chunk_total_tokens >= self.context_size * self.context_file_ratio:
                 break
             relevant_full_text += relevant_chunk["text"] + "\n\n"
@@ -121,7 +125,9 @@ class BaseAssistant:
         return {
             "role": "user",
             "content": temp_content,
-            "tokens": self.embed.count_tokens(final_content),
+            "tokens": self.embed.count_tokens(
+                final_content
+            ),  # This uses embed's token counter
         }
 
     def add_user_history(self, temp_content, final_content):
@@ -130,23 +136,104 @@ class BaseAssistant:
     def cull_history(self):
         self.cull_history_list(self.chat_history)
 
+    def find_truncation_point(self, text, target_tokens, role="user"):
+        # Helper to find how much of 'text' fits into 'target_tokens'
+        low = 0
+        high = len(text)
+        best_fit_text = ""
+
+        if self.count_tokens("", role=role) > target_tokens:
+            return ""
+
+        while low <= high:
+            mid = (low + high) // 2
+            substring = text[:mid]
+            tokens = self.count_tokens(substring, role=role)
+            if tokens <= target_tokens:
+                best_fit_text = substring
+                low = mid + 1
+            else:
+                high = mid - 1
+        return best_fit_text
+
     def cull_history_list(self, history_list):
-        sum_of_tokens = sum(
-            [self.count_tokens(message["content"]) for message in history_list]
+        current_total_tokens = sum(
+            self.count_tokens(message["content"], role=message["role"])
+            for message in history_list
         )
-        while sum_of_tokens > self.context_size:
-            history_list.pop(0)
-            sum_of_tokens = sum(
-                [self.count_tokens(message["content"]) for message in history_list]
+
+        # Phase 1: Pop older messages (all but the last one ideally) if oversized
+        while current_total_tokens > self.context_size and len(history_list) > 1:
+            popped_message = history_list.pop(0)
+            current_total_tokens -= self.count_tokens(
+                popped_message["content"], role=popped_message["role"]
+            )
+            self.write_debug_message(
+                f"Context too large. Dropped older message (role: {popped_message['role']}) to free up space."
             )
 
-        # Some LLMs require the first message to be from the user
-        if history_list[0]["role"] == "system":
-            while len(history_list) > 1 and history_list[1]["role"] == "assistant":
-                history_list.pop(1)
-        else:
-            while len(history_list) > 0 and history_list[0]["role"] == "assistant":
-                history_list.pop(0)
+        # Phase 2: If still oversized and only one message remains (the latest prompt), truncate it.
+        if current_total_tokens > self.context_size and len(history_list) == 1:
+            last_message = history_list[0]
+            original_content = last_message["content"]
+            original_tokens = self.count_tokens(
+                original_content, role=last_message["role"]
+            )
+
+            # The available tokens for this last message is based on the file ratio times the context size
+            available_tokens_for_last_message = self.context_size - (
+                self.context_size * self.context_file_ratio
+            )
+
+            if original_tokens > available_tokens_for_last_message:
+                self.write_error_message(
+                    f"\nLatest prompt is too large ({original_tokens} tokens) for history context ({available_tokens_for_last_message} tokens). Truncating it."
+                )
+                truncated_content = self.find_truncation_point(
+                    original_content,
+                    available_tokens_for_last_message,
+                    role=last_message["role"],
+                )
+                last_message["content"] = truncated_content
+                new_tokens_for_last_message = self.count_tokens(
+                    truncated_content, role=last_message["role"]
+                )
+                last_message["tokens"] = (
+                    new_tokens_for_last_message  # Update field if used, though culling relies on self.count_tokens
+                )
+                current_total_tokens = (
+                    new_tokens_for_last_message  # As it's the only message
+                )
+
+                if len(truncated_content) < len(original_content):
+                    self.write_debug_message(
+                        f"Latest message truncated to fit. Original length: {len(original_content)} chars, new length: {len(truncated_content)} chars. New tokens: {new_tokens_for_last_message}"
+                    )
+                elif not truncated_content and original_content:  # Content became empty
+                    self.write_error_message(
+                        f"Latest message (role: {last_message['role']}) was too large and had to be completely truncated to fit context. Original content: '{original_content[:50]}...'. This may lead to unexpected behavior."
+                    )
+                else:  # No effective truncation or content was already minimal
+                    self.write_debug_message(
+                        f"Latest message (role: {last_message['role']}) was too large but truncation logic couldn't shorten it effectively or content was minimal. Final tokens: {new_tokens_for_last_message}"
+                    )
+
+        # Phase 3: Role-based culling (original logic, now guarded and uses role for token counting if resizes occur)
+        if history_list:
+            if history_list[0]["role"] == "system":
+                while len(history_list) > 1 and history_list[1]["role"] == "assistant":
+                    popped_msg = history_list.pop(1)
+                    # current_total_tokens -= self.count_tokens(popped_msg["content"], role=popped_msg["role"]) # Optional: keep total tokens accurate
+                    self.write_debug_message(
+                        f"Removed leading assistant message (role: {popped_msg['role']}) after system prompt."
+                    )
+            else:
+                while history_list and history_list[0]["role"] == "assistant":
+                    popped_msg = history_list.pop(0)
+                    # current_total_tokens -= self.count_tokens(popped_msg["content"], role=popped_msg["role"]) # Optional
+                    self.write_debug_message(
+                        f"Removed leading assistant message (role: {popped_msg['role']})."
+                    )
 
     def create_empty_history(self, role="user"):
         return {"role": role, "content": "", "tokens": 0}
@@ -156,7 +243,7 @@ class BaseAssistant:
             {
                 "role": "user",
                 "content": prompt,
-                "tokens": self.count_tokens(prompt),
+                "tokens": self.count_tokens(prompt, role="user"),
             }
         ]
 
@@ -208,19 +295,16 @@ class BaseAssistant:
         # Add the user input to the chat history
         user_content = relevant_full_text + user_input
         self.add_user_history(user_content, user_input)
-
         # Remove old messages from the chat history if too large for context
         self.cull_history()
-
         # Get the generator from of the completion
         completion_generator = self.call_completion(self.chat_history)
-
         # Replace the RAG output with the user input. This reduces the size of the history for future prompts.
         self.chat_history[-1]["content"] = user_input
-
         # Display chat history
-        output_history = self.create_empty_history()
-
+        output_history = self.create_empty_history(
+            role="assistant"
+        )  # Set role for assistant
         if self.chat_mode:
             if not self.no_color:
                 sys.stdout.write(f"{self.get_color_prefix(Style.BRIGHT, Fore.WHITE)}")
@@ -228,22 +312,21 @@ class BaseAssistant:
             if not self.no_color:
                 sys.stdout.write(f"{self.get_color_suffix()}")
             sys.stdout.flush()
-
         output_history = self.run_completion_generator(
             completion_generator, output_history, True
         )
         output_history["content"] = self.remove_thinking_message(
             output_history["content"]
         )
-
         if self.chat_mode:
             if not self.no_color:
                 sys.stdout.write(f"{self.get_color_suffix()}")
             sys.stdout.write("\n\n")
             sys.stdout.flush()
-
         # Add the completion to the chat history
-        output_history["tokens"] = self.count_tokens(output_history["content"])
+        output_history["tokens"] = self.count_tokens(
+            output_history["content"], role="assistant"
+        )
         self.chat_history.append(output_history)
         return output_history["content"]
 
@@ -251,19 +334,15 @@ class BaseAssistant:
         # Remove old chunks and embeddings for this file
         self.chunks = [chunk for chunk in self.chunks if chunk["filepath"] != file_path]
         self.chunks.extend(new_chunks)
-
         # Find indices of old embeddings
         old_embedding_indices = [
             i for i, chunk in enumerate(self.chunks) if chunk["filepath"] == file_path
         ]
-
         if old_embedding_indices:
             # Convert list to numpy array
             old_embedding_indices = np.array(old_embedding_indices, dtype=np.int64)
-
             # Remove old embeddings from the index
             self.index.remove_ids(old_embedding_indices)
-
         # Add new embeddings to the index
         if new_embeddings:
             self.index.add(np.array(new_embeddings))
@@ -356,7 +435,16 @@ class BaseAssistant:
                     self.thinking_end_pattern
                 )
                 if len(thinking_end_parts) > 1:
-                    return thinking_end_parts[0]
+                    # This should be the content between <think> and </think>
+                    # The request implies removing the thinking block.
+                    # To remove it and keep text before and after:
+                    # return thinking_start_parts[0] + thinking_end_parts[1]
+                    # The current behavior seems to return the content *inside* the thinking tags.
+                    # Let's clarify. The prompt says "remove the thinking message".
+                    # This usually means remove <think>...</think> itself.
+                    # Current code returns thinking_end_parts[0] which is *inside* the tags.
+                    # To remove the block:
+                    return thinking_start_parts[0] + thinking_end_parts[1]
         # If any condition for hide thinking fails, return the full output
         return output
 
@@ -364,6 +452,8 @@ class BaseAssistant:
         one_off_history = self.create_one_off_prompt_history(prompt)
         completion_generator = self.call_completion(one_off_history)
         output = self.run_completion_generator(
-            completion_generator, self.create_empty_history(), False
+            completion_generator,
+            self.create_empty_history(role="assistant"),
+            False,  # Set role for assistant
         )["content"]
         return self.remove_thinking_message(output)
