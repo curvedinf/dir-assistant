@@ -1,11 +1,9 @@
 import sys
 from copy import deepcopy
-
+from time import sleep
 from colorama import Fore, Style
-from litellm import completion, token_counter
-
+from litellm import completion, token_counter, exceptions as litellm_exceptions
 from dir_assistant.assistant.git_assistant import GitAssistant
-
 
 class LiteLLMAssistant(GitAssistant):
     def __init__(
@@ -72,19 +70,45 @@ class LiteLLMAssistant(GitAssistant):
             if "tokens" in message:
                 del message["tokens"]
 
-        if self.pass_through_context_size:
-            return completion(
-                **self.completion_options,
-                messages=chat_history_cleaned,
-                stream=True,
-                num_ctx=self.context_size,
-            )
-        else:
-            return completion(
-                **self.completion_options,
-                messages=chat_history_cleaned,
-                stream=True,
-            )
+        # Hardcoded retry settings
+        max_retries = 3
+        retry_delay_seconds = 1
+        current_retry = 0
+
+        while current_retry <= max_retries:
+            try:
+                if self.pass_through_context_size:
+                    return completion(
+                        **self.completion_options,
+                        messages=chat_history_cleaned,
+                        stream=True,
+                        num_ctx=self.context_size,
+                    )
+                else:
+                    return completion(
+                        **self.completion_options,
+                        messages=chat_history_cleaned,
+                        stream=True,
+                    )
+            except litellm_exceptions.APIConnectionError as e:
+                current_retry += 1
+                if current_retry > max_retries:
+                    self.write_error_message(f"API Connection Error after {max_retries} retries: {e}")
+                    raise
+                self.write_debug_message(
+                    f"API Connection Error (attempt {current_retry}/{max_retries}): {e}. Retrying in {retry_delay_seconds}s..."
+                )
+                sleep(retry_delay_seconds)
+            except Exception as e: # Catch other potential litellm exceptions
+                self.write_error_message(f"LiteLLM completion error: {e}")
+                raise
+
+        # This line should ideally not be reached if the loop logic is correct (always returns or raises).
+        # Added for robustness in case of unforeseen loop exit.
+        raise Exception(
+            f"[dir-assistant] LiteLLMAssistant Error: Completion failed "
+            "after exhausting retries or due to an unhandled state."
+        )
 
     def count_tokens(self, text):
         return token_counter(
