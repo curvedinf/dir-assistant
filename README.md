@@ -155,7 +155,7 @@ To get started quickly with Anthropic's Claude models (e.g., Claude 3.7 Sonnet):
     LITELLM_MODEL_USES_SYSTEM_MESSAGE = true # Important for Claude
 
     [DIR_ASSISTANT.LITELLM_COMPLETION_OPTIONS]
-    model = "claude-3-7-sonnet-20240729" # Or your preferred Claude model
+    model = "anthropic/claude-3-7-sonnet-20240729" # Or your preferred Claude model
     ```
 4.  Navigate to your project directory and run:
     ```shell
