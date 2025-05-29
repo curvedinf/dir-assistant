@@ -141,8 +141,8 @@ cd directory/to/chat/with
 dir-assistant
 ```
 ### Quickstart Chat with API Model (Anthropic Claude)
-To get started quickly with Anthropic's Claude models (e.g., Claude 3.7 Sonnet):
-1.  Obtain an API key from [Anthropic](https://www.anthropic.com/claude).
+To get started quickly with Anthropic's Claude models (e.g., Claude 4.0 Sonnet):
+1.  Obtain an API key from [Anthropic](https://console.anthropic.com/).
 2.  Install `dir-assistant` and set your API key:
     ```shell
     pip install dir-assistant
@@ -152,10 +152,11 @@ To get started quickly with Anthropic's Claude models (e.g., Claude 3.7 Sonnet):
     ```toml
     [DIR_ASSISTANT]
     ACTIVE_MODEL_IS_LOCAL = false
-    LITELLM_MODEL_USES_SYSTEM_MESSAGE = true # Important for Claude
+    LITELLM_MODEL_USES_SYSTEM_MESSAGE = true
+    LITELLM_CONTEXT_SIZE = 200000
 
     [DIR_ASSISTANT.LITELLM_COMPLETION_OPTIONS]
-    model = "anthropic/claude-3-7-sonnet-20240729" # Or your preferred Claude model
+    model = "anthropic/claude-sonnet-4-20250514"
     ```
 4.  Navigate to your project directory and run:
     ```shell
@@ -191,10 +192,11 @@ To get started quickly with OpenAI's models (e.g., GPT-4o):
     ```toml
     [DIR_ASSISTANT]
     ACTIVE_MODEL_IS_LOCAL = false
-    LITELLM_MODEL_USES_SYSTEM_MESSAGE = true # Important for OpenAI models
+    LITELLM_MODEL_USES_SYSTEM_MESSAGE = true
+    LITELLM_CONTEXT_SIZE = 100000
 
     [DIR_ASSISTANT.LITELLM_COMPLETION_OPTIONS]
-    model = "gpt-4o" # Or your preferred OpenAI model
+    model = "o4-mini"
     ```
 4.  Navigate to your project directory and run:
     ```shell
