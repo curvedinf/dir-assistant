@@ -1,3 +1,5 @@
+#!/bin/sh
+
 # Array of investing-related subreddits
 SUBREDDITS=(
     "wallstreetbets"
