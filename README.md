@@ -432,9 +432,9 @@ Anthropic's Claude models are known for their strong reasoning and large context
     ANTHROPIC_API_KEY = "your_claude_key" # Or set via setkey command
 
     [DIR_ASSISTANT.LITELLM_COMPLETION_OPTIONS]
-    model = "claude-3-7-sonnet-20240729" # Latest Sonnet model identifier
-    # model = "claude-3-opus-20240229" # For highest capability
-    # model = "claude-3-haiku-20240307" # For speed
+    model = "anthropic/claude-3-7-sonnet-20240729" # Latest Sonnet model identifier
+    # model = "anthropic/claude-3-opus-20240229" # For highest capability
+    # model = "anthropic/claude-3-haiku-20240307" # For speed
     timeout = 600
     ```
     Refer to the [Quickstart for Claude](#quickstart-chat-with-api-model-anthropic-claude) for a streamlined setup.
