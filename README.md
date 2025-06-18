@@ -1,18 +1,13 @@
 # dir-assistant
-
 [![PyPI](https://img.shields.io/pypi/v/dir-assistant)](https://pypi.org/project/dir-assistant/)
 [![GitHub license](https://img.shields.io/github/license/curvedinf/dir-assistant)](LICENSE)
 [![GitHub last commit](https://img.shields.io/github/last-commit/curvedinf/dir-assistant)](https://github.com/curvedinf/dir-assistant/commits/main)
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/dir-assistant)](https://pypi.org/project/dir-assistant/)
 [![GitHub stars](https://img.shields.io/github/stars/curvedinf/dir-assistant)](https://github.com/curvedinf/dir-assistant/stargazers)
 [![Ko-fi Link](kofi.webp)](https://ko-fi.com/A0A31B6VB6)
-
 Chat with your current directory's files using a local or API LLM.
-
 ![(Demo GIF of dir-assistant being run)](demo.gif)
-
 ## Summary
-
 `dir-assistant` is a CLI python application available through `pip` that recursively indexes all text 
 files in the current working directory so you can chat with them using a local or API LLM. By 
 "chat with them", it is meant that their contents will automatically be included in the prompts sent 
@@ -27,6 +22,7 @@ primarily for use as a coding aid and automation tool.
 - Uses a unique method for finding the most important files to include when submitting your
 prompt to an LLM called CGRAG (Contextually Guided Retrieval-Augmented Generation). You can read 
 [this blog post](https://medium.com/@djangoist/how-to-create-accurate-llm-responses-on-large-code-repositories-presenting-cgrag-a-new-feature-of-e77c0ffe432d) for more information about how it works.
+- Optionally configure a separate, faster LLM for the CGRAG guidance step to reduce cost and latency.
 ## Table of Contents
 1. [New Features](#new-features)
 2. [Quickstart](#quickstart)
@@ -47,7 +43,8 @@ prompt to an LLM called CGRAG (Contextually Guided Retrieval-Augmented Generatio
       1. [Google Gemini](#google-gemini)
       2. [Anthropic Claude (e.g., Claude 3.7 Sonnet)](#anthropic-claude-eg-claude-37-sonnet)
       3. [OpenAI (e.g., GPT-4o)](#openai-eg-gpt-4o)
-   3. [Connecting to a Custom API Server](#connecting-to-a-custom-api-server)
+   3. [CGRAG-Specific Model Configuration](#cgrag-specific-model-configuration)
+   4. [Connecting to a Custom API Server](#connecting-to-a-custom-api-server)
 9. [Local LLM Model Download](#local-llm-model-download)
    1. [Configuring A Custom Local Model](#configuring-a-custom-local-model)
    2. [Llama.cpp Options](#llamacpp-options)
@@ -64,6 +61,7 @@ prompt to an LLM called CGRAG (Contextually Guided Retrieval-Augmented Generatio
 16. [Todos](#todos)
 17. [Additional Credits](#additional-credits)
 ## New Features
+* Added support for configuring a separate, faster LLM for the CGRAG guidance step.
 * Added support for models that include a `<thinking></thinking>` block in their response.
 * Added an [example script](#examples) for analyzing stock sentiment on reddit.
 ## Quickstart
@@ -112,7 +110,7 @@ pipx install dir-assistant[recommended]
 dir-assistant platform cuda --pipx
 ```
 ### Quickstart Chat with API Model (Google Gemini)
-To get started using an API model, you can use Google Gemini 2.0 Flash, which is currently free.
+To get started using an API model, you can use Google Gemini 1.5 Flash, which is currently free.
 To begin, you need to sign up for [Google AI Studio](https://aistudio.google.com/) and 
 [create an API key](https://aistudio.google.com/app/apikey). After you create your API key,
 enter the following commands:
@@ -141,7 +139,7 @@ cd directory/to/chat/with
 dir-assistant
 ```
 ### Quickstart Chat with API Model (Anthropic Claude)
-To get started quickly with Anthropic's Claude models (e.g., Claude 4.0 Sonnet):
+To get started quickly with Anthropic's Claude models (e.g., Claude 3.7 Sonnet):
 1.  Obtain an API key from [Anthropic](https://console.anthropic.com/).
 2.  Install `dir-assistant` and set your API key:
     ```shell
@@ -154,9 +152,8 @@ To get started quickly with Anthropic's Claude models (e.g., Claude 4.0 Sonnet):
     ACTIVE_MODEL_IS_LOCAL = false
     LITELLM_MODEL_USES_SYSTEM_MESSAGE = true
     LITELLM_CONTEXT_SIZE = 200000
-
     [DIR_ASSISTANT.LITELLM_COMPLETION_OPTIONS]
-    model = "anthropic/claude-sonnet-4-20250514"
+    model = "anthropic/claude-3-7-sonnet-20240729"
     ```
 4.  Navigate to your project directory and run:
     ```shell
@@ -179,7 +176,6 @@ dir-assistant setkey ANTHROPIC_API_KEY xxxxxYOURAPIKEYHERExxxxx
 cd directory/to/chat/with
 dir-assistant
 ```
-
 ### Quickstart Chat with API Model (OpenAI)
 To get started quickly with OpenAI's models (e.g., GPT-4o):
 1.  Obtain an API key from [OpenAI](https://platform.openai.com/api-keys).
@@ -193,10 +189,9 @@ To get started quickly with OpenAI's models (e.g., GPT-4o):
     [DIR_ASSISTANT]
     ACTIVE_MODEL_IS_LOCAL = false
     LITELLM_MODEL_USES_SYSTEM_MESSAGE = true
-    LITELLM_CONTEXT_SIZE = 100000
-
+    LITELLM_CONTEXT_SIZE = 128000
     [DIR_ASSISTANT.LITELLM_COMPLETION_OPTIONS]
-    model = "o4-mini"
+    model = "gpt-4o"
     ```
 4.  Navigate to your project directory and run:
     ```shell
@@ -219,11 +214,10 @@ dir-assistant setkey OPENAI_API_KEY xxxxxYOURAPIKEYHERExxxxx
 cd directory/to/chat/with
 dir-assistant
 ```
-
 ### Quickstart Non-interactive Prompt with API Model
 The non-interactive mode of `dir-assistant` allows you to create scripts which analyze
 your files without user interaction.
-To get started using an API model, you can use Google Gemini 2.0 Flash, which is currently free.
+To get started using an API model, you can use Google Gemini 1.5 Flash, which is currently free.
 To begin, you need to sign up for [Google AI Studio](https://aistudio.google.com/) and 
 [create an API key](https://aistudio.google.com/app/apikey). After you create your API key,
 enter the following commands:
@@ -262,6 +256,76 @@ RGTI -6.1
 STRK -7.3
 TWLO -8.0
 ```
+## General Usage Tips
+Dir-assistant is a powerful tool with many configuration options. This section provides some
+general tips for using `dir-assistant` to achieve the best results.
+### Optimized Settings for Coding Assistance
+There are quite literally thousands of models that can be used with `dir-assistant`. For complex coding tasks on large codebases, we recommend a high-quality embedding model combined with a powerful primary LLM and a fast, inexpensive secondary LLM for CGRAG guidance. As of writing, a strong combination is `voyage-code-3` (embeddings), `claude-3-7-sonnet` (primary), and `gemini-1.5-flash` (CGRAG).
+
+To use these models, open the config file with `dir-assistant config open` and use the following configuration as a template.
+_Note: Don't forget to add your API keys! Get them from [Anthropic](https://www.anthropic.com/claude), [Google AI Studio](https://aistudio.google.com/), and [Voyage AI](https://voyage.ai/)._
+```toml
+[DIR_ASSISTANT]
+SYSTEM_INSTRUCTIONS = "You are a helpful AI assistant tasked with assisting my coding."
+GLOBAL_IGNORES = [ ".gitignore", ".d", ".obj", ".sql", "js/vendors", ".tnn", ".env", "node_modules", ".min.js", ".min.css", "htmlcov", ".coveragerc", ".pytest_cache", ".egg-info", ".git/", ".vscode/", "build/", ".idea/", "__pycache__", ]
+CONTEXT_FILE_RATIO = 0.9
+ACTIVE_MODEL_IS_LOCAL = false
+ACTIVE_EMBED_IS_LOCAL = false
+USE_CGRAG = true
+PRINT_CGRAG = false
+OUTPUT_ACCEPTANCE_RETRIES = 2
+COMMIT_TO_GIT = true
+VERBOSE = false
+NO_COLOR = false
+LITELLM_EMBED_REQUEST_DELAY = 0
+LITELLM_MODEL_USES_SYSTEM_MESSAGE = true # Important for models like Claude and some Gemini models
+LITELLM_PASS_THROUGH_CONTEXT_SIZE = false
+LITELLM_CONTEXT_SIZE = 200000 # Main model context size (e.g., Claude 3.7 Sonnet)
+LITELLM_EMBED_CONTEXT_SIZE = 4000 # Embedding model context size
+LITELLM_CGRAG_CONTEXT_SIZE = 200000 # CGRAG model context size
+MODELS_PATH = "~/.local/share/dir-assistant/models/"
+LLM_MODEL = "" # Local model, overridden by API settings below
+EMBED_MODEL = "" # Local embedding model, overridden by API settings below
+
+[DIR_ASSISTANT.LITELLM_API_KEYS]
+ANTHROPIC_API_KEY = "your_anthropic_key_here"
+GEMINI_API_KEY = "your_google_key_here"
+VOYAGE_API_KEY = "your_voyage_key_here"
+
+# Main model for generating the final, high-quality response
+[DIR_ASSISTANT.LITELLM_COMPLETION_OPTIONS]
+model = "anthropic/claude-3-7-sonnet-20240729"
+timeout = 600
+
+# Optional: A faster, cheaper model for the initial CGRAG guidance step
+[DIR_ASSISTANT.LITELLM_CGRAG_COMPLETION_OPTIONS]
+model = "gemini/gemini-1.5-flash-latest"
+timeout = 300
+
+# High-quality embedding model specialized for code
+[DIR_ASSISTANT.LITELLM_EMBED_COMPLETION_OPTIONS]
+model = "voyage/voyage-code-3"
+timeout = 600
+
+[DIR_ASSISTANT.LLAMA_CPP_COMPLETION_OPTIONS]
+frequency_penalty = 1.1
+presence_penalty = 1.0
+
+[DIR_ASSISTANT.LLAMA_CPP_OPTIONS]
+n_ctx = 10000
+verbose = false
+n_gpu_layers = -1
+rope_scaling_type = 2
+rope_freq_scale = 0.75
+
+[DIR_ASSISTANT.LLAMA_CPP_EMBED_OPTIONS]
+n_ctx = 4000
+n_batch = 512
+verbose = false
+rope_scaling_type = 2
+rope_freq_scale = 0.75
+n_gpu_layers = -1
+```
 ## Install
 Install with pip:
 ```shell
@@ -282,62 +346,6 @@ local-mode will automatically be set. To change from API-mode to local-mode, set
 `pip3` has been replaced with `pipx` starting in Ubuntu 24.04.
 ```shell
 pipx install dir-assistant
-```
-## General Usage Tips
-Dir-assistant is a powerful tool with many configuration options. This section provides some
-general tips for using `dir-assistant` to achieve the best results.
-### Optimized Settings for Coding Assistance
-There are quite literally thousands of models that can be used with `dir-assistant`. The best results
-in terms of quality for complex coding tasks on large codebases as of writing have been achieved 
-with `voyage-code-3` (for embeddings) and `gemini/gemini-2.0-flash-thinking-exp` (for completions). To use these models open the config 
-file with `dir-assistant config open` and modify this optimized configuration to suit your needs:
-_Note: Don't forget to add your own API keys! Get them via [Google AI Studio](https://aistudio.google.com/) and [Voyage AI](https://voyage.ai/])._
-```toml
-[DIR_ASSISTANT]
-SYSTEM_INSTRUCTIONS = "You are a helpful AI assistant tasked with assisting my coding. "
-GLOBAL_IGNORES = [ ".gitignore", ".d", ".obj", ".sql", "js/vendors", ".tnn", ".env", "node_modules", ".min.js", ".min.css", "htmlcov", ".coveragerc", ".pytest_cache", ".egg-info", ".git/", ".vscode/", "node_modules/", "build/", ".idea/", "__pycache__", ]
-CONTEXT_FILE_RATIO = 0.9
-ACTIVE_MODEL_IS_LOCAL = false
-ACTIVE_EMBED_IS_LOCAL = false
-USE_CGRAG = true
-PRINT_CGRAG = false
-OUTPUT_ACCEPTANCE_RETRIES = 2
-COMMIT_TO_GIT = true
-VERBOSE = false
-NO_COLOR = false
-LITELLM_EMBED_REQUEST_DELAY = 0
-LITELLM_MODEL_USES_SYSTEM_MESSAGE = true # Important for models like Gemini thinking/experimental and Claude
-LITELLM_PASS_THROUGH_CONTEXT_SIZE = false
-LITELLM_CONTEXT_SIZE = 200000
-LITELLM_EMBED_CONTEXT_SIZE = 4000
-MODELS_PATH = "~/.local/share/dir-assistant/models/"
-LLM_MODEL = "agentica-org_DeepScaleR-1.5B-Preview-Q4_K_M.gguf" # This is for local, overridden by API settings below
-EMBED_MODEL = "nomic-embed-text-v1.5.Q4_K_M.gguf" # This is for local, overridden by API settings below
-[DIR_ASSISTANT.LITELLM_API_KEYS]
-GEMINI_API_KEY = "yourkeyhere"
-VOYAGE_API_KEY = "yourkeyhere"
-[DIR_ASSISTANT.LITELLM_COMPLETION_OPTIONS]
-model = "gemini/gemini-2.0-flash-thinking-exp"
-timeout = 600
-[DIR_ASSISTANT.LITELLM_EMBED_COMPLETION_OPTIONS]
-model = "voyage/voyage-code-3"
-timeout = 600
-[DIR_ASSISTANT.LLAMA_CPP_COMPLETION_OPTIONS]
-frequency_penalty = 1.1
-presence_penalty = 1.0
-[DIR_ASSISTANT.LLAMA_CPP_OPTIONS]
-n_ctx = 10000
-verbose = false
-n_gpu_layers = -1
-rope_scaling_type = 2
-rope_freq_scale = 0.75
-[DIR_ASSISTANT.LLAMA_CPP_EMBED_OPTIONS]
-n_ctx = 4000
-n_batch = 512
-verbose = false
-rope_scaling_type = 2
-rope_freq_scale = 0.75
-n_gpu_layers = -1
 ```
 ## Embedding Model Configuration
 You must use an embedding model regardless of whether you are running an LLM via local or API mode, but you can also
@@ -390,12 +398,9 @@ dir-assistant setkey YOUR_API_KEY_NAME xxxxxYOURAPIKEYVALUExxxxx
 # Example: dir-assistant setkey GEMINI_API_KEY your_actual_gemini_key
 ```
 Alternatively, you can add keys directly to the `[DIR_ASSISTANT.LITELLM_API_KEYS]` section in your config file.
-
 LiteLLM supports all major LLM APIs. View the available options and model identifiers in the [LiteLLM providers list](https://docs.litellm.ai/docs/providers).
-
 ### Configuring for Specific API Providers
 Below are example configurations for some popular API providers. Remember to replace placeholder API keys and model names with your actual credentials and desired models.
-
 #### Google Gemini
 Google's Gemini models, like Gemini 1.5 Flash or Gemini 1.5 Pro, are excellent choices. Gemini 1.5 Flash is often available with a generous free tier.
 1.  **Get API Key:** From [Google AI Studio](https://aistudio.google.com/).
@@ -406,17 +411,14 @@ Google's Gemini models, like Gemini 1.5 Flash or Gemini 1.5 Pro, are excellent c
     ACTIVE_MODEL_IS_LOCAL = false
     LITELLM_CONTEXT_SIZE = 200000 # Gemini 1.5 Flash default, Pro is 1M (can be 2M)
     # LITELLM_MODEL_USES_SYSTEM_MESSAGE = false # Default, but some Gemini models might benefit if set to true
-
     [DIR_ASSISTANT.LITELLM_API_KEYS]
     GEMINI_API_KEY = "your_gemini_key" # Or set via setkey command
-
     [DIR_ASSISTANT.LITELLM_COMPLETION_OPTIONS]
-    model = "gemini/gemini-1.5-flash-latest" # Default is gemini/gemini-2.0-flash
+    model = "gemini/gemini-1.5-flash-latest" # Default is gemini-1.5-flash-latest
     # model = "gemini/gemini-1.5-pro-latest" # For higher capability
     timeout = 600
     ```
     Refer to the [Quickstart for Gemini](#quickstart-chat-with-api-model-google-gemini) for a streamlined setup. The [Optimized Settings](#optimized-settings-for-coding-assistance) section also features a Gemini configuration.
-
 #### Anthropic Claude (e.g., Claude 3.7 Sonnet)
 Anthropic's Claude models are known for their strong reasoning and large context windows.
 1.  **Get API Key:** From [Anthropic](https://www.anthropic.com/claude).
@@ -427,10 +429,8 @@ Anthropic's Claude models are known for their strong reasoning and large context
     ACTIVE_MODEL_IS_LOCAL = false
     LITELLM_MODEL_USES_SYSTEM_MESSAGE = true # Claude models use system messages
     LITELLM_CONTEXT_SIZE = 200000 # Claude 3.7 Sonnet supports 200K tokens
-
     [DIR_ASSISTANT.LITELLM_API_KEYS]
     ANTHROPIC_API_KEY = "your_claude_key" # Or set via setkey command
-
     [DIR_ASSISTANT.LITELLM_COMPLETION_OPTIONS]
     model = "anthropic/claude-3-7-sonnet-20240729" # Latest Sonnet model identifier
     # model = "anthropic/claude-3-opus-20240229" # For highest capability
@@ -438,7 +438,6 @@ Anthropic's Claude models are known for their strong reasoning and large context
     timeout = 600
     ```
     Refer to the [Quickstart for Claude](#quickstart-chat-with-api-model-anthropic-claude) for a streamlined setup.
-
 #### OpenAI (e.g., GPT-4o)
 OpenAI models like GPT-4o offer a balance of performance and cutting-edge features.
 1.  **Get API Key:** From [OpenAI Platform](https://platform.openai.com/api-keys).
@@ -449,10 +448,8 @@ OpenAI models like GPT-4o offer a balance of performance and cutting-edge featur
     ACTIVE_MODEL_IS_LOCAL = false
     LITELLM_MODEL_USES_SYSTEM_MESSAGE = true # OpenAI models use system messages
     LITELLM_CONTEXT_SIZE = 128000 # GPT-4o supports 128K tokens
-
     [DIR_ASSISTANT.LITELLM_API_KEYS]
     OPENAI_API_KEY = "your_openai_key" # Or set via setkey command
-
     [DIR_ASSISTANT.LITELLM_COMPLETION_OPTIONS]
     model = "gpt-4o" # Latest flagship model
     # model = "gpt-4-turbo"
@@ -460,7 +457,30 @@ OpenAI models like GPT-4o offer a balance of performance and cutting-edge featur
     timeout = 600
     ```
     Refer to the [Quickstart for OpenAI](#quickstart-chat-with-api-model-openai) for a streamlined setup.
+### CGRAG-Specific Model Configuration
+When using CGRAG (`USE_CGRAG = true`), `dir-assistant` performs two calls to the LLM:
+1.  **Guidance Call**: A first call to generate a list of relevant concepts to improve file retrieval.
+2.  **Response Call**: A second call with the improved context to generate the final answer.
 
+You can optionally specify a different, often faster and cheaper, model for the initial guidance call. This can significantly reduce API costs and improve response times without sacrificing the quality of the final answer, which is still handled by your primary model.
+
+To configure a separate model for CGRAG, add the `LITELLM_CGRAG_COMPLETION_OPTIONS` section to your config file (`dir-assistant config open`):
+```toml
+[DIR_ASSISTANT]
+# ... other settings
+USE_CGRAG = true
+
+# Main model for generating the final, high-quality response
+[DIR_ASSISTANT.LITELLM_COMPLETION_OPTIONS]
+model = "anthropic/claude-3-7-sonnet-20240729"
+timeout = 600
+
+# Optional: A faster, cheaper model for the initial CGRAG guidance step
+[DIR_ASSISTANT.LITELLM_CGRAG_COMPLETION_OPTIONS]
+model = "gemini/gemini-1.5-flash-latest"
+timeout = 300
+```
+If the `LITELLM_CGRAG_COMPLETION_OPTIONS` section or its `model` key is not specified, `dir-assistant` will default to using the model defined in `LITELLM_COMPLETION_OPTIONS` for both calls. You can also set `LITELLM_CGRAG_CONTEXT_SIZE` to specify a different context size for the CGRAG model.
 ### Connecting to a Custom API Server
 If you would like to connect to a custom API server, such as your own ollama, llama.cpp, LMStudio, 
 vLLM, or other OpenAPI-compatible API server, dir-assistant supports this. To configure for this,
@@ -468,7 +488,6 @@ open the config with `dir-assistant config open` and make following changes:
 ```toml
 [DIR_ASSISTANT]
 ACTIVE_MODEL_IS_LOCAL = false # Ensure API mode
-
 [DIR_ASSISTANT.LITELLM_COMPLETION_OPTIONS]
 # The 'model' parameter here might be a model name known to your custom server,
 # or it might be a LiteLLM-style prefix if your server uses it.
@@ -478,7 +497,6 @@ api_base = "http://localhost:1234/v1" # URL to your server's OpenAI-compatible e
 # api_key = "sk-xxxxxxxxxx" # If your custom server requires an API key, set it here or as an environment variable
 ```
 Ensure that `ACTIVE_MODEL_IS_LOCAL` is set to `false`. The `model` name should be what your custom server expects. Some servers might also require an `api_key` even if hosted locally.
-
 ## Local LLM Model Download
 If you want to use a local LLM directly within `dir-assistant` using `llama-cpp-python`, 
 you can download a low requirements default model with:
@@ -641,6 +659,7 @@ please see [CONTRIBUTORS.md](CONTRIBUTORS.md).
 - ~~Immediate mode for better compatibility with custom script automations~~
 - ~~Support for custom APIs~~
 - ~~Support for thinking models~~
+- ~~CGRAG-specific LLM configuration~~
 - Web search
 - Daemon mode for API-based use
 ## Additional Credits
