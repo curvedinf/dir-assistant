@@ -558,3 +558,6 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 /.pypirc
+
+# Deus Stulti artifacts
+stulti/
