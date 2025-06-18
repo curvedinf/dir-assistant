@@ -1,0 +1,6 @@
+--- DEUS STULTI ARTIFACT ---
+Timestamp: 2025-06-18T16:42:52.986976
+Git Branch: feature_cgrag-llm-config
+----------------------------
+
+Modify the `run_stream_processes` method in `dir_assistant/assistant/cgrag_assistant.py`. When making the `self.call_completion(cgrag_history)` call for the CGRAG prompt, pass the new `is_cgrag_call=True` argument to explicitly signal that this completion request is for the CGRAG model.
