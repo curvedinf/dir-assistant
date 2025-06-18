@@ -51,7 +51,7 @@ CONFIG_DEFAULTS = {
     "LLAMA_CPP_COMPLETION_OPTIONS": {
         "frequency_penalty": 1.1,
     },
-    "LITELLM_CONTEXT_SIZE": 200_000,
+    "LITELLM_CONTEXT_SIZE": 50_000,
     "LITELLM_EMBED_CONTEXT_SIZE": 2_048,
     "LITELLM_MODEL_USES_SYSTEM_MESSAGE": False,
     "LITELLM_PASS_THROUGH_CONTEXT_SIZE": False,
@@ -66,10 +66,10 @@ CONFIG_DEFAULTS = {
         "model": "gemini/gemini-2.0-flash",
         "timeout": 600,
     },
-    "LITELLM_CGRAG_CONTEXT_SIZE": 200_000,
+    "LITELLM_CGRAG_CONTEXT_SIZE": 150_000,
     "LITELLM_CGRAG_PASS_THROUGH_CONTEXT_SIZE": False,
     "LITELLM_CGRAG_COMPLETION_OPTIONS": {
-        "model": "gemini/gemini-2.0-flash",
+        "model": "gemini/gemini-2.0-flash-lite",
         "timeout": 600,
     },
 }
