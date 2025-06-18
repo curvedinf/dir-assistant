@@ -1,0 +1,1 @@
+Add a new config section and associated code so that the user can configure a separate CGRAG model. If the section does not exist or does not have the configs, default to the existing main LiteLLM model. Only implement this feature for LiteLLM and not for Local LLMs.
