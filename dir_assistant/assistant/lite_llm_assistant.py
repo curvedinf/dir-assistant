@@ -1,14 +1,10 @@
 from copy import deepcopy
 from time import sleep
-
 from colorama import Fore, Style
 from litellm import completion
 from litellm import exceptions as litellm_exceptions
 from litellm import token_counter
-
 from dir_assistant.assistant.git_assistant import GitAssistant
-
-
 class LiteLLMAssistant(GitAssistant):
     def __init__(
         self,
@@ -16,6 +12,9 @@ class LiteLLMAssistant(GitAssistant):
         lite_llm_context_size,
         lite_llm_model_uses_system_message,
         lite_llm_pass_through_context_size,
+        cgrag_lite_llm_completion_options,
+        cgrag_lite_llm_context_size,
+        cgrag_lite_llm_pass_through_context_size,
         system_instructions,
         embed,
         index,
@@ -53,6 +52,9 @@ class LiteLLMAssistant(GitAssistant):
         self.context_size = lite_llm_context_size
         self.pass_through_context_size = lite_llm_pass_through_context_size
         self.lite_llm_model_uses_system_message = lite_llm_model_uses_system_message
+        self.cgrag_completion_options = cgrag_lite_llm_completion_options
+        self.cgrag_context_size = cgrag_lite_llm_context_size
+        self.cgrag_pass_through_context_size = cgrag_lite_llm_pass_through_context_size
         self.no_color = no_color
         if self.chat_mode and self.verbose:
             if self.no_color:
@@ -61,13 +63,11 @@ class LiteLLMAssistant(GitAssistant):
                 print(
                     f"{Fore.LIGHTBLACK_EX}LiteLLM context size: {self.context_size}{Style.RESET_ALL}"
                 )
-
     def initialize_history(self):
         super().initialize_history()
         if not self.lite_llm_model_uses_system_message:
             if self.chat_history and self.chat_history[0]["role"] == "system":
                 self.chat_history[0]["role"] = "user"
-
     def call_completion(self, chat_history):
         # Clean "tokens" from chat history. It causes an error for mistral.
         chat_history_cleaned = deepcopy(chat_history)
@@ -113,7 +113,6 @@ class LiteLLMAssistant(GitAssistant):
             f"[dir-assistant] LiteLLMAssistant Error: Completion failed "
             "after exhausting retries or due to an unhandled state."
         )
-
     def count_tokens(self, text, role="user"):
         valid_roles = ["system", "user", "assistant"]
         role_to_pass = role
@@ -122,8 +121,8 @@ class LiteLLMAssistant(GitAssistant):
                 f"count_tokens received invalid role '{role}', defaulting to 'user'."
             )
             role_to_pass = "user"
-
         return token_counter(
             model=self.completion_options["model"],
             messages=[{"role": role_to_pass, "content": text}],
         )
+
