@@ -58,10 +58,22 @@ class LiteLLMAssistant(GitAssistant):
         self.no_color = no_color
         if self.chat_mode and self.verbose:
             if self.no_color:
+                print(f"LiteLLM completion options: {self.completion_options}")
                 print(f"LiteLLM context size: {self.context_size}")
+                print(f"LiteLLM CGRAG completion options: {self.cgrag_completion_options}")
+                print(f"LiteLLM CGRAG context size: {self.cgrag_context_size}")
             else:
                 print(
+                    f"{Fore.LIGHTBLACK_EX}LiteLLM completion options: {self.completion_options}{Style.RESET_ALL}"
+                )
+                print(
                     f"{Fore.LIGHTBLACK_EX}LiteLLM context size: {self.context_size}{Style.RESET_ALL}"
+                )
+                print(
+                    f"{Fore.LIGHTBLACK_EX}LiteLLM CGRAG completion options: {self.cgrag_completion_options}{Style.RESET_ALL}"
+                )
+                print(
+                    f"{Fore.LIGHTBLACK_EX}LiteLLM CGRAG context size: {self.cgrag_context_size}{Style.RESET_ALL}"
                 )
     def initialize_history(self):
         super().initialize_history()
