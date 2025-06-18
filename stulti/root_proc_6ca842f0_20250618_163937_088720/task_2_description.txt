@@ -1,6 +1,0 @@
---- DEUS STULTI ARTIFACT ---
-Timestamp: 2025-06-18T16:41:01.884517
-Git Branch: feature_cgrag-llm-config
-----------------------------
-
-Modify the `__init__` method of `dir_assistant/assistant/lite_llm_assistant.py` to accept new parameters for `cgrag_lite_llm_completion_options`, `cgrag_lite_llm_context_size`, and `cgrag_lite_llm_pass_through_context_size`. Store these new parameters as instance variables for later use.

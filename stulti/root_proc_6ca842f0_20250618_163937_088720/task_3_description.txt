@@ -1,6 +1,0 @@
---- DEUS STULTI ARTIFACT ---
-Timestamp: 2025-06-18T16:41:35.770938
-Git Branch: feature_cgrag-llm-config
-----------------------------
-
-Update the `call_completion` method signature in `dir_assistant/assistant/base_assistant.py` to include a new boolean parameter `is_cgrag_call` with a default value of `False`. This allows subclasses to indicate if a call is specifically for CGRAG processing.
