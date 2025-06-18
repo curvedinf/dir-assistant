@@ -1,0 +1,6 @@
+--- DEUS STULTI ARTIFACT ---
+Timestamp: 2025-06-18T16:42:04.069299
+Git Branch: feature_cgrag-llm-config
+----------------------------
+
+Modify the `call_completion` method in `dir_assistant/assistant/lite_llm_assistant.py`. Update its signature to match the one in `BaseAssistant` (adding `is_cgrag_call=False`). Inside the method, add logic to conditionally use the CGRAG-specific completion options, context size, and pass-through context size (stored in task 2) if `is_cgrag_call` is `True`. Otherwise, use the standard LiteLLM options.
