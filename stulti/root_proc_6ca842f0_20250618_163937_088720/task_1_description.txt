@@ -1,0 +1,6 @@
+--- DEUS STULTI ARTIFACT ---
+Timestamp: 2025-06-18T16:40:09.138312
+Git Branch: feature_cgrag-llm-config
+----------------------------
+
+Modify `dir_assistant/cli/config.py` to add new default configuration options for the CGRAG LiteLLM model, including `LITELLM_CGRAG_CONTEXT_SIZE`, `LITELLM_CGRAG_PASS_THROUGH_CONTEXT_SIZE`, and `LITELLM_CGRAG_COMPLETION_OPTIONS`. These new options will default to the values of their non-CGRAG counterparts (`LITELLM_CONTEXT_SIZE`, `LITELLM_PASS_THROUGH_CONTEXT_SIZE`, and `LITELLM_COMPLETION_OPTIONS`) to ensure backward compatibility and a sensible default behavior.

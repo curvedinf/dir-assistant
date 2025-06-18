@@ -2,10 +2,8 @@ from os import environ, getenv, makedirs
 from os.path import expanduser, join
 from platform import system
 from subprocess import run
-
 import toml
 from dynaconf import Dynaconf
-
 VERSION = "1.6.0"
 CONFIG_FILENAME = "config.toml"
 CONFIG_PATH = join(expanduser("~"), ".config", "dir-assistant")
@@ -68,34 +66,27 @@ CONFIG_DEFAULTS = {
         "model": "gemini/gemini-2.0-flash",
         "timeout": 600,
     },
-    "LITELLM_EMBED_COMPLETION_OPTIONS": {
-        "model": "gemini/text-embedding-004",
+    "LITELLM_CGRAG_CONTEXT_SIZE": 200_000,
+    "LITELLM_CGRAG_PASS_THROUGH_CONTEXT_SIZE": False,
+    "LITELLM_CGRAG_COMPLETION_OPTIONS": {
+        "model": "gemini/gemini-2.0-flash",
         "timeout": 600,
     },
 }
-
-
 def get_file_path(path, filename):
     expanded_path = expanduser(path)
     makedirs(expanded_path, exist_ok=True)
     return join(expanded_path, filename)
-
-
 def save_config(config_dict):
     with open(get_file_path(CONFIG_PATH, CONFIG_FILENAME), "w") as config_file:
         toml.dump(config_dict, config_file)
-
-
 def check_defaults(config_dict, defaults_dict):
     for key, value in defaults_dict.items():
         if key not in config_dict.keys():
             config_dict[key] = value
     return config_dict
-
-
 def set_environment_overrides(config_dict):
     """Replace config values with environment variable overrides"""
-
     def _override_config(config_branch, prefix=""):
         for key, value in config_branch.items():
             env_key = f"{prefix}__{key}" if prefix else key
@@ -104,10 +95,7 @@ def set_environment_overrides(config_dict):
             elif env_key in environ:
                 config_branch[key] = coerce_setting_string_value(environ[env_key])
         return config_branch
-
     return _override_config(config_dict)
-
-
 def coerce_setting_string_value(value_str):
     """Convert string values to appropriate Python types"""
     # Handle boolean values
@@ -121,42 +109,31 @@ def coerce_setting_string_value(value_str):
         return float(value_str)
     # Keep as string if no other type matches
     return value_str
-
-
 def load_config(skip_environment_vars=False):
     config_object = Dynaconf(
         settings_files=[get_file_path(CONFIG_PATH, CONFIG_FILENAME)]
     )
     config_dict = config_object.as_dict()
-
     # If the config file is malformed, insert the DIR_ASSISTANT key
     if "DIR_ASSISTANT" not in config_dict.keys():
         config_dict["DIR_ASSISTANT"] = {}
-
     # Check for missing config options (maybe after a version upgrade)
     for key, value in CONFIG_DEFAULTS.items():
         if key not in config_dict["DIR_ASSISTANT"].keys():
             config_dict["DIR_ASSISTANT"][key] = value
     save_config(config_dict)
-
     # Set any env-overridden config values
     config_dict = set_environment_overrides(config_dict)
-
     # Set LiteLLM API keys only if not already set in environment
     for key, value in config_dict["DIR_ASSISTANT"]["LITELLM_API_KEYS"].items():
         if key.endswith("_API_KEY") and value and key not in environ:
             environ[key] = value
-
     return config_dict
-
-
 def config(args, config_dict):
     # List the current configuration
     config_file_path = get_file_path(CONFIG_PATH, CONFIG_FILENAME)
     print(f"Configuration file: {config_file_path}\n")
     print(toml.dumps(config_dict))
-
-
 def config_open(args):
     config_file_path = get_file_path(CONFIG_PATH, CONFIG_FILENAME)
     editor = (
@@ -165,3 +142,4 @@ def config_open(args):
         or ("notepad" if system() == "Windows" else "nano")
     )  # Default to nano if EDITOR not set
     run([editor, config_file_path])
+
