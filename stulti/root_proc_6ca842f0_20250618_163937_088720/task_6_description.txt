@@ -1,0 +1,6 @@
+--- DEUS STULTI ARTIFACT ---
+Timestamp: 2025-06-18T16:43:08.569717
+Git Branch: feature_cgrag-llm-config
+----------------------------
+
+Modify `initialize_llm` function in `dir_assistant/cli/start.py`. Retrieve the newly added CGRAG LiteLLM configuration values from the `config_dict` (i.e., `LITELLM_CGRAG_CONTEXT_SIZE`, `LITELLM_CGRAG_PASS_THROUGH_CONTEXT_SIZE`, and `LITELLM_CGRAG_COMPLETION_OPTIONS`). Pass these retrieved values as arguments to the `LiteLLMAssistant` constructor when initializing the LLM.
