@@ -31,7 +31,9 @@ def display_startup_art(commit_to_git, no_color=False):
    / /\\ \\  \\___ \\\\___ \\  | |  \\___ \\   | | / /\\ \\ | . ` |  | |   
   / ____ \\ ____) |___) |_| |_ ____) |  | |/ ____ \\| |\\  |  | |   
  /_/    \\_\\_____/_____/|_____|_____/   |_/_/    \\_\\_| \\_|  |_|   
-{Style.RESET_ALL}\\n\\n"""
+{Style.RESET_ALL}
+
+"""
     )
     color_prefix = Style.RESET_ALL if no_color else f"{Style.BRIGHT}{Fore.BLUE}"
     print(f"{color_prefix}Type 'exit' to quit the conversation.")
