@@ -120,10 +120,10 @@ class BaseAssistant:
                 "last_modified_timestamp": last_modified,
             }
         if self.verbose and self.chat_mode:
-            print(f"K nearest neighbors: {k_nearest_neighbors}")
-            print(f"Prompt history: {prompt_history}")
-            print(f"Combined artifact metadata: {combined_artifact_metadata}")
-            print(f"Prefix cache metadata: {prefix_cache_metadata}")
+            print(f"K nearest neighbors: {len(k_nearest_neighbors)}")
+            print(f"Prompt history: {len(prompt_history)}")
+            print(f"Combined artifact metadata: {len(combined_artifact_metadata)}")
+            print(f"Prefix cache metadata: {len(prefix_cache_metadata)}")
         optimized_artifact_ids, matched_prefix = self.rag_optimizer.optimize_rag_for_caching(
             k_nearest_neighbors_with_distances=k_nearest_neighbors,
             prompt_history=prompt_history,
@@ -131,8 +131,8 @@ class BaseAssistant:
             prefix_cache_metadata=prefix_cache_metadata,
         )
         if self.verbose and self.chat_mode:
-            print(f"Optimized artifacts: {optimized_artifact_ids}")
-            print(f"Length of matched prefix: {len(matched_prefix)}")
+            print(f"Optimized artifacts: {len(optimized_artifact_ids)}")
+            print(f"Matched prefix size: {len(matched_prefix)}")
         self.last_optimized_artifacts = optimized_artifact_ids
         self.last_matched_prefix = matched_prefix
         relevant_full_text = ""
