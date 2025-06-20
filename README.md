@@ -483,28 +483,37 @@ This feature is always on and works in the background. You can fine-tune its beh
 
 # The percentage of the least relevant files (based on RAG distance) that can
 # be replaced by more historically relevant files from the cache.
+# A higher value allows more aggressive replacement of less relevant files
+# with potentially more useful, historically-used files.
 # Range: 0.0 to 1.0. A value of 0.3 means 30% of the initial RAG results
 # are considered for replacement.
 ARTIFACT_EXCLUDABLE_FACTOR = 0.3
 
 # The time-to-live (in seconds) for a cached context prefix. If a prefix isn't
 # used within this time, it's considered expired and won't be used for optimization.
+# This prevents outdated context orderings from being used.
 # Default is 3600 (1 hour).
 API_CONTEXT_CACHE_TTL = 3600
 
 # Weights used by the optimizer to score and reorder file artifacts.
 # Adjusting these can change how aggressively the optimizer prioritizes
-# different factors.
+# different factors when deciding the final order of files in the prompt.
 [DIR_ASSISTANT.RAG_OPTIMIZER_WEIGHTS]
 # How much to value artifacts that appear frequently in past prompts.
+# Higher value prioritizes popular files.
 frequency = 1.0
 # How much to penalize artifacts for appearing later in past prompts.
+# A negative weight is not recommended. This helps push more consistently
+# important files to the front.
 position = 1.0
 # How much to value files that have not been modified recently (more stable).
+# This assumes that stable, unchanged files are more foundational.
 stability = 1.0
 # How much to value prefix orderings that have appeared frequently in history.
+# This helps reuse successful prompt structures.
 historical_hits = 1.0
 # How much to value prefix orderings that are currently in the active cache.
+# This gives a boost to very recently successful prompt structures.
 cache_hits = 1.0
 ```
 ### Connecting to a Custom API Server
