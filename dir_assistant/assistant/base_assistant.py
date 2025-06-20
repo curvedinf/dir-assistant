@@ -67,7 +67,7 @@ class BaseAssistant:
         )
         self.rag_optimizer = RagOptimizer(
             weights=self.rag_optimizer_weights,
-            excludable_factor=self.artifact_excludable_factor,
+            artifact_excludable_factor=self.artifact_excludable_factor,
         )
 
     def close(self):
@@ -136,7 +136,7 @@ class BaseAssistant:
                 "last_modified_timestamp": last_modified,
             }
 
-        optimized_artifact_ids, matched_prefix = self.rag_optimizer.optimize(
+        optimized_artifact_ids, matched_prefix = self.rag_optimizer.optimize_rag_for_caching(
             k_nearest_neighbors_with_distances=k_nearest_neighbors,
             prompt_history=prompt_history,
             artifact_metadata=combined_artifact_metadata,

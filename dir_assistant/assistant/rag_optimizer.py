@@ -40,7 +40,7 @@ class RagOptimizer:
         """
         k = len(k_nearest_neighbors_with_distances)
         if k == 0:
-            return []
+            return [], ""
 
         # 1. Identify Replaceable Artifacts
         num_to_replace = math.floor(k * self.artifact_excludable_factor)
@@ -78,7 +78,7 @@ class RagOptimizer:
 
             frequency = stats.get("frequency", 0)
             positions = stats.get("positions", [])
-            last_modified = stats.get("last_modified", time.time())
+            last_modified = stats.get("last_modified_timestamp", time.time())
             stability_score = time.time() - last_modified
             avg_position = self._calculate_average(positions)
 
@@ -98,10 +98,11 @@ class RagOptimizer:
 
         # 5. Find the Best Prefix Order for Maximum Cache Hits
         if not initial_sorted_artifacts:
-            return []
+            return [], ""
 
         best_ordering = initial_sorted_artifacts
         max_prefix_match_score = -1
+        best_prefix_string = ""
 
         n_to_permute = min(len(initial_sorted_artifacts), self.TOP_N_PERMUTATIONS)
         top_n_artifacts = initial_sorted_artifacts[:n_to_permute]
@@ -124,6 +125,7 @@ class RagOptimizer:
                 max_prefix_match_score = current_prefix_score
                 remaining_artifacts = [art for art in initial_sorted_artifacts if art not in perm]
                 best_ordering = perm + remaining_artifacts
+                best_prefix_string = current_prefix_string
 
-        # 6. Return the final, optimized order
-        return best_ordering
+        # 6. Return the final, optimized order and the matched prefix
+        return best_ordering, best_prefix_string
