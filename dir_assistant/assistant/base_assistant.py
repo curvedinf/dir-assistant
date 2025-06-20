@@ -120,10 +120,9 @@ class BaseAssistant:
                 "last_modified_timestamp": last_modified,
             }
         if self.verbose and self.chat_mode:
-            print(f"K nearest neighbors: {len(k_nearest_neighbors)}")
-            print(f"Prompt history: {len(prompt_history)}")
-            print(f"Combined artifact metadata: {len(combined_artifact_metadata)}")
-            print(f"Prefix cache metadata: {len(prefix_cache_metadata)}")
+            print(f"K nearest neighbors: {k_nearest_neighbors}")
+            print(f"Prompt history: {prompt_history}")
+            print(f"Prefix cache metadata: {prefix_cache_metadata}")
         optimized_artifact_ids, matched_prefix = self.rag_optimizer.optimize_rag_for_caching(
             k_nearest_neighbors_with_distances=k_nearest_neighbors,
             prompt_history=prompt_history,
@@ -131,8 +130,8 @@ class BaseAssistant:
             prefix_cache_metadata=prefix_cache_metadata,
         )
         if self.verbose and self.chat_mode:
-            print(f"Optimized artifacts: {len(optimized_artifact_ids)}")
-            print(f"Matched prefix size: {len(matched_prefix)}")
+            print(f"Optimized artifacts: {optimized_artifact_ids}")
+            print(f"Matched prefix: {matched_prefix}")
         self.last_optimized_artifacts = optimized_artifact_ids
         self.last_matched_prefix = matched_prefix
         relevant_full_text = ""
@@ -276,9 +275,24 @@ class BaseAssistant:
         sys.stdout.write("\n\n")
         sys.stdout.flush()
         return final_response
-    def update_index_and_chunks(self, index, chunks):
-        self.index = index
-        self.chunks = chunks
+    def update_index_and_chunks(self, file_path, new_chunks, new_embeddings):
+        # Find indices of all chunks from the old file
+        indices_to_remove = {
+            i for i, chunk in enumerate(self.chunks) if chunk["filepath"] == file_path
+        }
+        if indices_to_remove:
+            # Remove from faiss index. The IDs are the original indices.
+            self.index.remove_ids(np.array(list(indices_to_remove), dtype=np.int64))
+            # Rebuild python list of chunks without the removed items.
+            self.chunks = [
+                chunk
+                for i, chunk in enumerate(self.chunks)
+                if i not in indices_to_remove
+            ]
+        # Add new chunks and embeddings
+        self.chunks.extend(new_chunks)
+        if new_embeddings:
+            self.index.add(np.array(new_embeddings, dtype=np.float32))
         if self.chat_mode:
             sys.stdout.write(
                 f"\n{self.get_color_prefix(Style.BRIGHT, Fore.YELLOW)}"
