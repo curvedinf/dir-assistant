@@ -1,287 +1,110 @@
-# Dir-Assistant: Your AI-Powered Directory Assistant
-Dir-assistant is a powerful command-line tool that brings the intelligence of Large Language Models (LLMs) to your local file system. It recursively scans your current directory and any other specified directories, builds a context of your files, and allows you to chat with an AI that has a deep understanding of your project's structure and content.
-It supports both local LLMs (via `llama-cpp-python`) and a wide range of API-based models (via `LiteLLM`), including those from OpenAI, Anthropic, and Google.
-![Dir-Assistant Demo](https://github.com/user-attachments/assets/757a7027-e439-4d32-95f2-51ab85c1c876)
-_Above: Dir-assistant writes code to update itself with a new feature_
+# Dir-Assistant
+
+Dir-Assistant is a command-line tool that allows you to chat with an LLM about the files in your current directory. It automatically includes the most relevant files in the context of your conversation, making it a powerful companion for coding, analysis, and other file-based tasks.
+
+![Dir-Assistant Demo](./docs/images/demo.gif)
+
 ## Features
--   **Recursive Directory Scanning:** Automatically includes all text files from the current and specified directories.
--   **Intelligent Context Building:** Uses Retrieval-Augmented Generation (RAG) to find the most relevant file chunks for your prompt.
--   **Local & API Model Support:**
-    -   Run local GGUF models directly for privacy and offline use.
-    -   Connect to any API supported by LiteLLM (OpenAI, Anthropic, Google, etc.).
--   **Contextually-Guided RAG (CGRAG):** An advanced, two-step process that first uses the LLM to generate a "guidance" query, leading to more accurate file retrieval before generating the final answer.
--   **RAG Caching and Optimization:** Intelligently caches and reorders file context to reduce API costs and latency on subsequent, similar prompts.
--   **Hardware Acceleration:** Supports CUDA, ROCm, Metal, Vulkan, and SYCL for `llama-cpp-python` to accelerate local model inference.
--   **Automated Git Commits:** Can be configured to automatically apply file changes and commit them to your Git repository.
--   **File Watching:** Automatically re-indexes files when they are modified.
--   **Flexible Configuration:** Extensive configuration options via a TOML file and environment variables.
-## Quickstart: Chat with API Model (Google Gemini)
-This quickstart gets you running with Google's Gemini 1.5 Flash model, which has a generous free tier.
-1.  **Install `dir-assistant`:**
+
+-   **Automatic Context:** Recursively scans your directory and finds the most relevant files for your prompt.
+-   **Local & API Models:** Supports both local GGUF models via `llama-cpp-python` and API-based models via `LiteLLM`.
+-   **Chat & Single-Prompt Modes:** Use it as an interactive chat assistant or for one-off questions.
+-   **File Watching:** Automatically re-indexes files when they change.
+-   **CGRAG:** Contextually-Guided Retrieval-Augmented Generation for more accurate file retrieval.
+-   **RAG Caching:** Optimizes context and reduces API costs by caching and reordering file artifacts.
+-   **Git Integration:** Can automatically commit file changes made during a chat session.
+-   **Configurable:** Extensive configuration options, including environment variable overrides.
+
+## Quickstart (Chat with API Model - OpenAI)
+
+1.  **Install:**
     ```shell
     pip install dir-assistant
     ```
-    _For Ubuntu 24.04, use `pipx install dir-assistant`._
-2.  **Get a Google API Key:**
-    -   Go to [Google AI Studio](https://aistudio.google.com/).
-    -   Click "Get API Key" and create a new key.
-3.  **Set the API Key:**
+2.  **Get API Key:** From [OpenAI Platform](https://platform.openai.com/api-keys).
+3.  **Set Key & Configure:**
     ```shell
-    dir-assistant setkey GEMINI_API_KEY your_api_key_here
+    dir-assistant setkey OPENAI_API_KEY your_openai_key
+    dir-assistant config --set ACTIVE_MODEL_IS_LOCAL=false
+    dir-assistant config --set LITELLM_COMPLETION_OPTIONS.model=gpt-4o
     ```
-4.  **Start chatting:**
+4.  **Run:**
     ```shell
     dir-assistant
     ```
-    The assistant will now use the Gemini API.
-## Quickstart: Chat with API Model (Anthropic Claude)
-This quickstart gets you running with Anthropic's powerful Claude models.
-1.  **Install `dir-assistant`:**
+
+## Quickstart (Chat with API Model - Anthropic Claude)
+
+1.  **Install:**
     ```shell
     pip install dir-assistant
     ```
-2.  **Get an Anthropic API Key:**
-    -   Sign up at [Anthropic](https://www.anthropic.com/claude).
-    -   Navigate to your account settings to get an API key.
-3.  **Set the API Key:**
+2.  **Get API Key:** From [Anthropic Console](https://console.anthropic.com/dashboard).
+3.  **Set Key & Configure:**
     ```shell
-    dir-assistant setkey ANTHROPIC_API_KEY your_api_key_here
+    dir-assistant setkey ANTHROPIC_API_KEY your_claude_key
+    dir-assistant config --set ACTIVE_MODEL_IS_LOCAL=false
+    dir-assistant config --set LITELLM_MODEL_USES_SYSTEM_MESSAGE=true
+    dir-assistant config --set LITELLM_COMPLETION_OPTIONS.model=anthropic/claude-3-7-sonnet-20240729
     ```
-4.  **Configure the Model:**
-    Open the config file:
-    ```shell
-    dir-assistant config open
-    ```
-    Set the model to Claude and enable system messages:
-    ```toml
-    [DIR_ASSISTANT]
-    # ...
-    ACTIVE_MODEL_IS_LOCAL = false
-    LITELLM_MODEL_USES_SYSTEM_MESSAGE = true
-    [DIR_ASSISTANT.LITELLM_COMPLETION_OPTIONS]
-    model = "anthropic/claude-3-7-sonnet-20240729"
-    ```
-5.  **Start chatting:**
+4.  **Run:**
     ```shell
     dir-assistant
     ```
-## Quickstart: Chat with API Model (OpenAI)
-This quickstart gets you running with OpenAI's models like GPT-4o.
-1.  **Install `dir-assistant`:**
+
+## Quickstart (Chat with Local Model)
+
+1.  **Install with hardware acceleration:**
     ```shell
-    pip install dir-assistant
-    ```
-2.  **Get an OpenAI API Key:**
-    -   Go to the [OpenAI Platform](https://platform.openai.com/api-keys).
-    -   Create a new secret key.
-3.  **Set the API Key:**
-    ```shell
-    dir-assistant setkey OPENAI_API_KEY your_api_key_here
-    ```
-4.  **Configure the Model:**
-    Open the config file:
-    ```shell
-    dir-assistant config open
-    ```
-    Set the model to GPT-4o and enable system messages:
-    ```toml
-    [DIR_ASSISTANT]
-    # ...
-    ACTIVE_MODEL_IS_LOCAL = false
-    LITELLM_MODEL_USES_SYSTEM_MESSAGE = true
-    [DIR_ASSISTANT.LITELLM_COMPLETION_OPTIONS]
-    model = "gpt-4o"
-    ```
-5.  **Start chatting:**
-    ```shell
-    dir-assistant
-    ```
-## Quickstart: Chat with a Local Model
-This guide helps you set up `dir-assistant` to run an LLM on your own machine.
-1.  **Install with local model support:**
-    ```shell
-    # This includes llama-cpp-python
+    # For NVIDIA GPUs (CUDA)
+    pip install dir-assistant[cuBLAS]
+    # For Apple Silicon (Metal)
+    pip install dir-assistant[metal]
+    # For other platforms or CPU-only
     pip install dir-assistant[recommended]
     ```
-    _For Ubuntu 24.04, use `pipx install 'dir-assistant[recommended]'`._
-2.  **Optional: Select a Hardware Platform for Acceleration:**
-    (Recommended for performance)
+2.  **Download a default model:**
     ```shell
-    # For NVIDIA GPUs
-    dir-assistant platform cuda
-    # For AMD GPUs
-    # dir-assistant platform rocm
-    # For Apple Silicon
-    # dir-assistant platform metal
-    ```
-    _For Ubuntu 24.04, add `--pipx`, e.g., `dir-assistant platform cuda --pipx`._
-3.  **Download a default model:**
-    This downloads both an embedding model and a general-purpose instruction-tuned LLM.
-    ```shell
-    dir-assistant models download-embed
     dir-assistant models download-llm
     ```
-    This will automatically set `ACTIVE_MODEL_IS_LOCAL = true` and `ACTIVE_EMBED_IS_LOCAL = true` in your config.
-4.  **Start chatting:**
+3.  **Run:**
     ```shell
     dir-assistant
     ```
-## Optimized Settings for Coding Assistance
-For the best coding experience, we recommend using a combination of high-quality API models. This setup uses Voyage's specialized code embedding model, Claude 3.7 Sonnet for the final response, and the fast Gemini 1.5 Flash for the CGRAG guidance step.
-1.  **Get API Keys** for [Anthropic](https://www.anthropic.com/claude), [Google](https://aistudio.google.com/), and [Voyage AI](https://voyageai.com/).
-2.  **Set API Keys:**
-    ```shell
-    dir-assistant setkey ANTHROPIC_API_KEY your_anthropic_key
-    dir-assistant setkey GEMINI_API_KEY your_google_key
-    dir-assistant setkey VOYAGE_API_KEY your_voyage_key
-    ```
-3.  **Update Configuration (`dir-assistant config open`):**
-    ```toml
-    [DIR_ASSISTANT]
-    # General Settings
-    SYSTEM_INSTRUCTIONS = "You are an expert AI software engineer."
-    ACTIVE_MODEL_IS_LOCAL = false
-    ACTIVE_EMBED_IS_LOCAL = false # Use API-based embedding
-    USE_CGRAG = true
-    PRINT_CGRAG = false # Set to true to see the guidance step
-    COMMIT_TO_GIT = true # If you want the assistant to commit changes
-    LITELLM_MODEL_USES_SYSTEM_MESSAGE = true # Important for Claude
-    # Context sizes
-    LITELLM_CONTEXT_SIZE = 200000 # Main model context size (e.g., Claude 3.7 Sonnet)
-    LITELLM_EMBED_CONTEXT_SIZE = 4000 # Embedding model context size
-    LITELLM_CGRAG_CONTEXT_SIZE = 200000 # CGRAG model context size
-    MODELS_PATH = "~/.local/share/dir-assistant/models/"
-    LLM_MODEL = "" # Local model, overridden by API settings below
-    EMBED_MODEL = "" # Local embedding model, overridden by API settings below
-    [DIR_ASSISTANT.LITELLM_API_KEYS]
-    ANTHROPIC_API_KEY = "your_anthropic_key_here"
-    GEMINI_API_KEY = "your_google_key_here"
-    VOYAGE_API_KEY = "your_voyage_key_here"
-    # Main model for generating the final, high-quality response
-    [DIR_ASSISTANT.LITELLM_COMPLETION_OPTIONS]
-    model = "anthropic/claude-3-7-sonnet-20240729"
-    timeout = 600
-    # Optional: A faster, cheaper model for the initial CGRAG guidance step
-    [DIR_ASSISTANT.LITELLM_CGRAG_COMPLETION_OPTIONS]
-    model = "gemini/gemini-1.5-flash-latest"
-    timeout = 300
-    # High-quality embedding model specialized for code
-    [DIR_ASSISTANT.LITELLM_EMBED_COMPLETION_OPTIONS]
-    model = "voyage/voyage-code-3"
-    timeout = 600
-    [DIR_ASSISTANT.LLAMA_CPP_COMPLETION_OPTIONS]
-    frequency_penalty = 1.1
-    presence_penalty = 1.0
-    [DIR_ASSISTANT.LLAMA_CPP_OPTIONS]
-    n_ctx = 10000
-    verbose = false
-    n_gpu_layers = -1
-    rope_scaling_type = 2
-    rope_freq_scale = 0.75
-    [DIR_ASSISTANT.LLAMA_CPP_EMBED_OPTIONS]
-    n_ctx = 4000
-    n_batch = 512
-    verbose = false
-    rope_scaling_type = 2
-    rope_freq_scale = 0.75
-    n_gpu_layers = -1
-    ```
-## Install
-Install with pip:
+
+## Installation
+
 ```shell
+# Basic installation
 pip install dir-assistant
-```
-You can also install `llama-cpp-python` as an optional dependency to enable dir-assistant to
-directly run local LLMs:
-```shell
+
+# To include llama-cpp-python with recommended settings
 pip install dir-assistant[recommended]
+
+# For NVIDIA GPU acceleration (cuBLAS)
+pip install dir-assistant[cuBLAS]
+
+# For Apple Silicon GPU acceleration (Metal)
+pip install dir-assistant[metal]
 ```
-_Note: `llama-cpp-python` is not updated often so may not run the latest models or have the latest
-features of Llama.cpp. You may have better results with a separate local LLM server and
-connect it to dir-assistant using the [custom API server](#connecting-to-a-custom-api-server)
-feature._
-The default configuration for `dir-assistant` is API-mode. If you download an LLM model with `download-llm`, 
-local-mode will automatically be set. To change from API-mode to local-mode, set the `ACTIVE_MODEL_IS_LOCAL` setting.
-#### For Ubuntu 24.04
-`pip3` has been replaced with `pipx` starting in Ubuntu 24.04.
-```shell
-pipx install dir-assistant
-```
-## Embedding Model Configuration
-You must use an embedding model regardless of whether you are running an LLM via local or API mode, but you can also
-choose whether the embedding model is local or API using the `ACTIVE_EMBED_IS_LOCAL` setting. Generally local embedding 
-will be faster, but API will be higher quality. If you wish to use local embedding, you can download a 
-good default embedding model with:
-```shell
-pip install dir-assistant[recommended]
-dir-assistant models download-embed
-```
-If you would like to use another local embedding model, download a gguf file and place it in the
-models directory. The models directory can be opened in a file browser using:
-```shell
-dir-assistant models
-```
-Note: The embedding model will be hardware accelerated after using the `platform` subcommand. To disable
-hardware acceleration, change `n_gpu_layers = -1` to `n_gpu_layers = 0` in the config.
-## Optional: Select A Hardware Platform
-By default `dir-assistant` is installed with CPU-only compute support. It will work properly without this step,
-but if you would like to hardware accelerate `dir-assistant`, use the command below to compile 
-`llama-cpp-python` with your hardware's support.
-```shell
-dir-assistant platform cuda
-```
-Available options: `cpu`, `cuda`, `rocm`, `metal`, `vulkan`, `sycl`
-Note: The embedding model and the local llm model will be run with acceleration after selecting a platform. To disable 
-hardware acceleration change `n_gpu_layers = -1` to `n_gpu_layers = 0` in the config.
-#### For Ubuntu 24.04
-`pip3` has been replaced with `pipx` starting in Ubuntu 24.04.
-```shell
-dir-assistant platform cuda --pipx
-```
-### For Platform Install Issues
-System dependencies may be required for the `platform` command and are outside the scope of these instructions.
-If you have any issues building `llama-cpp-python`, the project's install instructions may offer more 
-info: https://github.com/abetlen/llama-cpp-python
-## API Configuration
-If you wish to use an API LLM, you will need to configure `dir-assistant` accordingly.
-### General API Settings
-To use any API-based LLM, ensure the following general settings in your configuration file (open with `dir-assistant config open`):
-```toml
-[DIR_ASSISTANT]
-ACTIVE_MODEL_IS_LOCAL = false  # Crucial for using API models
-# LITELLM_CONTEXT_SIZE = 200000 # Adjust based on the model (e.g., Gemini 1.5 Pro: 1M, Claude 3.7: 200K, GPT-4o: 128K)
-# LITELLM_MODEL_USES_SYSTEM_MESSAGE = true # Often true for modern APIs like Claude, OpenAI, and some Gemini models
-```
-You will also need to provide an API key for the service you intend to use. There is a convenience subcommand for modifying and adding API keys:
-```shell
-dir-assistant setkey YOUR_API_KEY_NAME xxxxxYOURAPIKEYVALUExxxxx
-# Example: dir-assistant setkey GEMINI_API_KEY your_actual_gemini_key
-```
-Alternatively, you can add keys directly to the `[DIR_ASSISTANT.LITELLM_API_KEYS]` section in your config file.
-LiteLLM supports all major LLM APIs. View the available options and model identifiers in the [LiteLLM providers list](https://docs.litellm.ai/docs/providers).
-### Configuring for Specific API Providers
-Below are example configurations for some popular API providers. Remember to replace placeholder API keys and model names with your actual credentials and desired models.
-#### Google Gemini
-Google's Gemini models, like Gemini 1.5 Flash or Gemini 1.5 Pro, are excellent choices. Gemini 1.5 Flash is often available with a generous free tier.
-1.  **Get API Key:** From [Google AI Studio](https://aistudio.google.com/).
-2.  **Set Key:** `dir-assistant setkey GEMINI_API_KEY your_gemini_key`
-3.  **Configure `dir-assistant config open`:**
-    ```toml
-    [DIR_ASSISTANT]
-    ACTIVE_MODEL_IS_LOCAL = false
-    LITELLM_CONTEXT_SIZE = 200000 # Gemini 1.5 Flash default, Pro is 1M (can be 2M)
-    # LITELLM_MODEL_USES_SYSTEM_MESSAGE = false # Default, but some Gemini models might benefit if set to true
-    [DIR_ASSISTANT.LITELLM_API_KEYS]
-    GEMINI_API_KEY = "your_gemini_key" # Or set via setkey command
-    [DIR_ASSISTANT.LITELLM_COMPLETION_OPTIONS]
-    model = "gemini/gemini-1.5-flash-latest" # Default is gemini-1.5-flash-latest
-    # model = "gemini/gemini-1.5-pro-latest" # For higher capability
-    timeout = 600
-    ```
-    Refer to the [Quickstart for Gemini](#quickstart-chat-with-api-model-google-gemini) for a streamlined setup. The [Optimized Settings](#optimized-settings-for-coding-assistance) section also features a Gemini configuration.
-#### Anthropic Claude (e.g., Claude 3.7 Sonnet)
-Anthropic's Claude models are known for their strong reasoning and large context windows.
-1.  **Get API Key:** From [Anthropic](https://www.anthropic.com/claude).
+
+After installation, it is recommended to run `dir-assistant platform` to configure hardware acceleration for local models.
+
+## Configuration
+
+`dir-assistant` is highly configurable via a TOML file located at `~/.config/dir-assistant/config.toml`.
+
+-   **Open config file for editing:** `dir-assistant config open`
+-   **List current configuration:** `dir-assistant config`
+-   **Set a specific value:** `dir-assistant config --set KEY=VALUE` (e.g., `dir-assistant config --set VERBOSE=true`)
+
+### API Configuration
+
+You can connect to any LLM provider supported by [LiteLLM](https://docs.litellm.ai/docs/providers).
+
+#### Anthropic (e.g., Claude 3.7 Sonnet)
+Claude models are highly capable and offer a great balance of speed and intelligence.
+1.  **Get API Key:** From [Anthropic Console](https://console.anthropic.com/dashboard).
 2.  **Set Key:** `dir-assistant setkey ANTHROPIC_API_KEY your_claude_key`
 3.  **Configure `dir-assistant config open`:**
     ```toml
