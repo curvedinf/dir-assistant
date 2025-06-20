@@ -25,7 +25,6 @@ class BaseAssistant:
         embed,
         index,
         chunks,
-        artifact_metadata,
         context_file_ratio,
         artifact_excludable_factor,
         api_context_cache_ttl,
@@ -42,7 +41,6 @@ class BaseAssistant:
         self.embed = embed
         self.index = index
         self.chunks = chunks
-        self.artifact_metadata = artifact_metadata
         self.context_file_ratio = context_file_ratio
         self.artifact_excludable_factor = artifact_excludable_factor
         self.api_context_cache_ttl = api_context_cache_ttl
@@ -65,6 +63,7 @@ class BaseAssistant:
             prompt_history_path=prompt_history_path,
             api_context_cache_ttl=self.api_context_cache_ttl,
         )
+        self.artifact_metadata = self.cache_manager.compute_artifact_metadata_from_history()
         self.rag_optimizer = RagOptimizer(
             weights=self.rag_optimizer_weights,
             artifact_excludable_factor=self.artifact_excludable_factor,

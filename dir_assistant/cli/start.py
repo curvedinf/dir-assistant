@@ -60,7 +60,7 @@ def initialize_llm(args, config_dict, chat_mode=True):
     system_instructions = f"""{config["SYSTEM_INSTRUCTIONS"]}
 The user is currently working in the following directory (CWD): {os.getcwd()}"""
     # Llama.cpp settings
-    llm_model_file = get_file_path(config["MODELS_PATH"], config["LLM_MODEL"])
+    model_path = get_file_path(config["MODELS_PATH"], config["LLM_MODEL"])
     embed_model_file = get_file_path(config["MODELS_PATH"], config["EMBED_MODEL"])
     llama_cpp_options = config["LLAMA_CPP_OPTIONS"]
     llama_cpp_embed_options = config["LLAMA_CPP_EMBED_OPTIONS"]
@@ -89,6 +89,12 @@ The user is currently working in the following directory (CWD): {os.getcwd()}"""
     hide_thinking = config["HIDE_THINKING"]
     thinking_start_pattern = config["THINKING_START_PATTERN"]
     thinking_end_pattern = config["THINKING_END_PATTERN"]
+
+    # RAG Optimizer settings
+    artifact_excludable_factor = config["ARTIFACT_EXCLUDABLE_FACTOR"]
+    api_context_cache_ttl = config["API_CONTEXT_CACHE_TTL"]
+    rag_optimizer_weights = config["RAG_OPTIMIZER_WEIGHTS"]
+
     # Check for basic missing model configs
     if active_model_is_local:
         if config["LLM_MODEL"] == "":
@@ -154,14 +160,14 @@ see readme for more information. Exiting..."""
         if not no_color:
             sys.stdout.write(f"{Style.RESET_ALL}")
         sys.stdout.flush()
-    index, chunks, artifact_metadata = create_file_index(
+    index, chunks = create_file_index(
         embed, ignore_paths, embed_chunk_size, extra_dirs, verbose
     )
     # Set up the system instructions
-    system_instructions_full = f""{system_instructions}\
-\nThe user will ask questions relating \
-    to files they will provide. Do your best to answer questions related to the these files. When \
-    the user refers to files, always assume they want to know about the files they provided."
+    system_instructions_full = f"""{system_instructions}
+The user will ask questions relating \
+to files they will provide. Do your best to answer questions related to the these files. When \
+the user refers to files, always assume they want to know about the files they provided."""
     # Initialize the LLM model
     if active_model_is_local:
         if verbose and chat_mode:
@@ -172,14 +178,16 @@ see readme for more information. Exiting..."""
                 sys.stdout.write(f"{Style.RESET_ALL}")
             sys.stdout.flush()
         llm = LlamaCppAssistant(
-            llm_model_file,
+            model_path,
             llama_cpp_options,
-            system_instructions_full,
+            system_instructions,
             embed,
             index,
             chunks,
-            artifact_metadata,
             context_file_ratio,
+            artifact_excludable_factor,
+            api_context_cache_ttl,
+            rag_optimizer_weights,
             output_acceptance_retries,
             use_cgrag,
             print_cgrag,
@@ -212,8 +220,10 @@ see readme for more information. Exiting..."""
             embed,
             index,
             chunks,
-            artifact_metadata,
             context_file_ratio,
+            artifact_excludable_factor,
+            api_context_cache_ttl,
+            rag_optimizer_weights,
             output_acceptance_retries,
             use_cgrag,
             print_cgrag,

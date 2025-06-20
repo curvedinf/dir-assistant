@@ -38,6 +38,9 @@ class RagOptimizer:
         Implements the RAG optimization algorithm based on distance, cache hits, and
         historical usage.
         """
+        k_nearest_neighbors_with_distances = [
+            item for item in k_nearest_neighbors_with_distances if len(item) == 2
+        ]
         k = len(k_nearest_neighbors_with_distances)
         if k == 0:
             return [], ""
