@@ -1,25 +1,21 @@
 import os
 import sys
-
 import numpy as np
 from faiss import IndexFlatL2
 from sqlitedict import SqliteDict
-
 from dir_assistant.cli.config import (
     HISTORY_FILENAME,
     INDEX_CACHE_FILENAME,
     INDEX_CACHE_PATH,
     STORAGE_PATH,
+    CACHE_PATH,
+    PREFIX_CACHE_FILENAME,
+    PROMPT_HISTORY_FILENAME,
     get_file_path,
 )
-
 TEXT_CHARS = bytearray({7, 8, 9, 10, 12, 13, 27} | set(range(0x20, 0x100)) - {0x7F})
-
-
 def is_text_file(filepath):
     return not bool(open(filepath, "rb").read(1024).translate(None, TEXT_CHARS))
-
-
 def get_text_files(directory=".", ignore_paths=[]):
     text_files = []
     for root, dirs, files in os.walk(directory):
@@ -33,8 +29,6 @@ def get_text_files(directory=".", ignore_paths=[]):
             ):
                 text_files.append(filepath)
     return text_files
-
-
 def get_files_with_contents(directory, ignore_paths, cache_db, verbose):
     text_files = get_text_files(directory, ignore_paths)
     files_with_contents = []
@@ -62,16 +56,12 @@ def get_files_with_contents(directory, ignore_paths, cache_db, verbose):
                 cache[filepath] = file_info
                 files_with_contents.append(file_info)
     return files_with_contents
-
-
 def create_file_index(
     embed, ignore_paths, embed_chunk_size, extra_dirs=[], verbose=False
 ):
     cache_db = get_file_path(INDEX_CACHE_PATH, INDEX_CACHE_FILENAME)
-
     # Start with current directory
     files_with_contents = get_files_with_contents(".", ignore_paths, cache_db, verbose)
-
     # Add files from additional folders
     for folder in extra_dirs:
         if os.path.exists(folder):
@@ -85,7 +75,6 @@ def create_file_index(
                     f"Warning: Additional folder {folder} does not exist\n"
                 )
                 sys.stdout.flush()
-
     if not files_with_contents:
         if verbose:
             sys.stdout.write(
@@ -100,7 +89,6 @@ def create_file_index(
         files_with_contents = get_files_with_contents(
             ".", ignore_paths, cache_db, verbose
         )
-
     chunks = []
     embeddings_list = []
     with SqliteDict(cache_db, autocommit=True) as cache:
@@ -114,7 +102,6 @@ def create_file_index(
                 chunks.extend(cached_chunks["chunks"])
                 embeddings_list.extend(cached_chunks["embeddings"])
                 continue
-
             contents = file_info["contents"]
             file_chunks, file_embeddings = process_file(
                 embed, filepath, contents, embed_chunk_size, verbose
@@ -126,7 +113,6 @@ def create_file_index(
                 "embeddings": file_embeddings,
                 "mtime": file_info["mtime"],
             }
-
     if verbose:
         sys.stdout.write("Creating index from embeddings...\n")
         sys.stdout.flush()
@@ -134,8 +120,6 @@ def create_file_index(
     index = IndexFlatL2(embeddings.shape[1])
     index.add(embeddings)
     return index, chunks
-
-
 def process_file(embed, filepath, contents, embed_chunk_size, verbose=False):
     lines = contents.split("\n")
     current_chunk = ""
@@ -197,8 +181,6 @@ def process_file(embed, filepath, contents, embed_chunk_size, verbose=False):
         embedding = embed.create_embedding(chunk_header + current_chunk)
         embeddings_list.append(embedding)
     return chunks, embeddings_list
-
-
 def find_split_point(embed, line_content, max_size, header):
     low = 0
     high = len(line_content)
@@ -209,8 +191,6 @@ def find_split_point(embed, line_content, max_size, header):
         else:
             high = mid
     return low - 1
-
-
 def search_index(embed, index, query, all_chunks):
     query_embedding = embed.create_embedding(query)
     try:
@@ -225,12 +205,12 @@ def search_index(embed, index, query, all_chunks):
         raise e
     relevant_chunks = [all_chunks[i] for i in indices[0] if i != -1]
     return relevant_chunks
-
-
 def clear(args, config_dict):
     files = [
         get_file_path(INDEX_CACHE_PATH, INDEX_CACHE_FILENAME),
         get_file_path(STORAGE_PATH, HISTORY_FILENAME),
+        get_file_path(CACHE_PATH, PREFIX_CACHE_FILENAME),
+        get_file_path(CACHE_PATH, PROMPT_HISTORY_FILENAME),
     ]
     for file in files:
         if os.path.exists(file):
@@ -238,3 +218,4 @@ def clear(args, config_dict):
             sys.stdout.write(f"Deleted {file}\n")
         else:
             sys.stdout.write(f"{file} does not exist.\n")
+
