@@ -5,6 +5,8 @@ from litellm import completion
 from litellm import exceptions as litellm_exceptions
 from litellm import token_counter
 from dir_assistant.assistant.git_assistant import GitAssistant
+
+
 class LiteLLMAssistant(GitAssistant):
     def __init__(
         self,
@@ -19,6 +21,7 @@ class LiteLLMAssistant(GitAssistant):
         embed,
         index,
         chunks,
+        artifact_metadata,
         context_file_ratio,
         output_acceptance_retries,
         use_cgrag,
@@ -36,6 +39,7 @@ class LiteLLMAssistant(GitAssistant):
             embed,
             index,
             chunks,
+            artifact_metadata,
             context_file_ratio,
             output_acceptance_retries,
             use_cgrag,
@@ -60,7 +64,9 @@ class LiteLLMAssistant(GitAssistant):
             if self.no_color:
                 print(f"LiteLLM completion options: {self.completion_options}")
                 print(f"LiteLLM context size: {self.context_size}")
-                print(f"LiteLLM CGRAG completion options: {self.cgrag_completion_options}")
+                print(
+                    f"LiteLLM CGRAG completion options: {self.cgrag_completion_options}"
+                )
                 print(f"LiteLLM CGRAG context size: {self.cgrag_context_size}")
             else:
                 print(
@@ -75,11 +81,13 @@ class LiteLLMAssistant(GitAssistant):
                 print(
                     f"{Fore.LIGHTBLACK_EX}LiteLLM CGRAG context size: {self.cgrag_context_size}{Style.RESET_ALL}"
                 )
+
     def initialize_history(self):
         super().initialize_history()
         if not self.lite_llm_model_uses_system_message:
             if self.chat_history and self.chat_history[0]["role"] == "system":
                 self.chat_history[0]["role"] = "user"
+
     def call_completion(self, chat_history, is_cgrag_call=False):
         # Clean "tokens" from chat history. It causes an error for mistral.
         chat_history_cleaned = deepcopy(chat_history)
@@ -90,11 +98,17 @@ class LiteLLMAssistant(GitAssistant):
         max_retries = 3
         retry_delay_seconds = 1
         current_retry = 0
-
-        options = self.cgrag_completion_options if is_cgrag_call else self.completion_options
+        options = (
+            self.cgrag_completion_options
+            if is_cgrag_call
+            else self.completion_options
+        )
         context_size = self.cgrag_context_size if is_cgrag_call else self.context_size
-        pass_through_context = self.cgrag_pass_through_context_size if is_cgrag_call else self.pass_through_context_size
-
+        pass_through_context = (
+            self.cgrag_pass_through_context_size
+            if is_cgrag_call
+            else self.pass_through_context_size
+        )
         while current_retry <= max_retries:
             try:
                 if pass_through_context:
@@ -130,6 +144,7 @@ class LiteLLMAssistant(GitAssistant):
             f"[dir-assistant] LiteLLMAssistant Error: Completion failed "
             "after exhausting retries or due to an unhandled state."
         )
+
     def count_tokens(self, text, role="user"):
         valid_roles = ["system", "user", "assistant"]
         role_to_pass = role

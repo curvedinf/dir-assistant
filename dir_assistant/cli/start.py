@@ -13,8 +13,11 @@ from dir_assistant.assistant.lite_llm_embed import LiteLlmEmbed
 from dir_assistant.assistant.llama_cpp_assistant import LlamaCppAssistant
 from dir_assistant.assistant.llama_cpp_embed import LlamaCppEmbed
 from dir_assistant.cli.config import HISTORY_FILENAME, STORAGE_PATH, get_file_path
+
 litellm.suppress_debug_info = True
 MODELS_PATH = os.path.expanduser("~/.local/share/dir-assistant/models")
+
+
 def display_startup_art(commit_to_git, no_color=False):
     sys.stdout.write(
         f"""{Style.RESET_ALL if no_color else Style.BRIGHT}{Style.RESET_ALL if no_color else Fore.GREEN}
@@ -22,26 +25,29 @@ def display_startup_art(commit_to_git, no_color=False):
  |  __ \\_   _|  __ \\
  | |  | || | | |__) |
  | |  | || | |  _  /
- | |__| || |_| | \\ \\
- |_____/_____|_|_ \\_\\__ _____  _____ _______       _   _ _______ 
+ | |__| || |_| | \\ \\\n |_____/_____|_|_ \\_\\__ _____  _____ _______       _   _ _______ 
      /\\    / ____/ ____|_   _|/ ____|__   __|/\\   | \\ | |__   __|
     /  \\  | (___| (___   | | | (___    | |  /  \\  |  \\| |  | |   
    / /\\ \\  \\___ \\\\___ \\  | |  \\___ \\   | | / /\\ \\ | . ` |  | |   
   / ____ \\ ____) |___) |_| |_ ____) |  | |/ ____ \\| |\\  |  | |   
  /_/    \\_\\_____/_____/|_____|_____/   |_/_/    \\_\\_| \\_|  |_|   
-{Style.RESET_ALL}\n\n"""
+{Style.RESET_ALL}\\n\\n"""
     )
     color_prefix = Style.RESET_ALL if no_color else f"{Style.BRIGHT}{Fore.BLUE}"
     print(f"{color_prefix}Type 'exit' to quit the conversation.")
     if commit_to_git:
         print(f"{color_prefix}Type 'undo' to roll back the last commit.")
     print("")
+
+
 def run_single_prompt(args, config_dict):
     llm = initialize_llm(args, config_dict, chat_mode=False)
     llm.initialize_history()
     response = llm.run_stream_processes(args.single_prompt, True)
     # Only print the final response
     sys.stdout.write(response)
+
+
 def initialize_llm(args, config_dict, chat_mode=True):
     # Check if we're working with the full config dict or just DIR_ASSISTANT section
     config = (
@@ -69,7 +75,9 @@ The user is currently working in the following directory (CWD): {os.getcwd()}"""
     lite_llm_embed_request_delay = float(config["LITELLM_EMBED_REQUEST_DELAY"])
     # CGRAG LiteLLM settings
     cgrag_lite_llm_context_size = config["LITELLM_CGRAG_CONTEXT_SIZE"]
-    cgrag_lite_llm_pass_through_context_size = config["LITELLM_CGRAG_PASS_THROUGH_CONTEXT_SIZE"]
+    cgrag_lite_llm_pass_through_context_size = (
+        config["LITELLM_CGRAG_PASS_THROUGH_CONTEXT_SIZE"]
+    )
     cgrag_lite_llm_completion_options = config["LITELLM_CGRAG_COMPLETION_OPTIONS"]
     # Assistant settings
     use_cgrag = config["USE_CGRAG"]
@@ -146,11 +154,12 @@ see readme for more information. Exiting..."""
         if not no_color:
             sys.stdout.write(f"{Style.RESET_ALL}")
         sys.stdout.flush()
-    index, chunks = create_file_index(
+    index, chunks, artifact_metadata = create_file_index(
         embed, ignore_paths, embed_chunk_size, extra_dirs, verbose
     )
     # Set up the system instructions
-    system_instructions_full = f"{system_instructions}\n\nThe user will ask questions relating \
+    system_instructions_full = f""{system_instructions}\
+\nThe user will ask questions relating \
     to files they will provide. Do your best to answer questions related to the these files. When \
     the user refers to files, always assume they want to know about the files they provided."
     # Initialize the LLM model
@@ -169,6 +178,7 @@ see readme for more information. Exiting..."""
             embed,
             index,
             chunks,
+            artifact_metadata,
             context_file_ratio,
             output_acceptance_retries,
             use_cgrag,
@@ -202,6 +212,7 @@ see readme for more information. Exiting..."""
             embed,
             index,
             chunks,
+            artifact_metadata,
             context_file_ratio,
             output_acceptance_retries,
             use_cgrag,
@@ -215,6 +226,8 @@ see readme for more information. Exiting..."""
             thinking_end_pattern,
         )
     return llm
+
+
 def start(args, config_dict):
     single_prompt = args.single_prompt
     if single_prompt:
@@ -263,10 +276,12 @@ def start(args, config_dict):
         )
         # Configure key bindings for Option-Enter on macOS
         bindings = KeyBindings()
+
         @bindings.add(Keys.Escape, Keys.Enter)
         @bindings.add("escape", "enter")  # For Option-Enter on macOS
         def _(event):
             event.current_buffer.validate_and_handle()
+
         user_input = prompt("", multiline=True, history=history, key_bindings=bindings)
         if user_input.strip().lower() == "exit":
             break
@@ -279,3 +294,4 @@ def start(args, config_dict):
             continue
         else:
             llm.stream_chat(user_input)
+

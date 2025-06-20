@@ -1,6 +1,5 @@
 import os
 import sys
-
 from colorama import Fore, Style
 
 try:
@@ -46,6 +45,7 @@ class LlamaCppAssistant(GitAssistant):
         embed,
         index,
         chunks,
+        artifact_metadata,
         context_file_ratio,
         output_acceptance_retries,
         use_cgrag,
@@ -64,6 +64,7 @@ class LlamaCppAssistant(GitAssistant):
             embed,
             index,
             chunks,
+            artifact_metadata,
             context_file_ratio,
             output_acceptance_retries,
             use_cgrag,
@@ -103,7 +104,7 @@ class LlamaCppAssistant(GitAssistant):
                 sys.stdout.write(Fore.RESET)
             sys.stdout.flush()
 
-    def call_completion(self, chat_history):
+    def call_completion(self, chat_history, is_cgrag_call=False):
         if self.verbose:
             return self.llm.create_chat_completion(
                 messages=chat_history, stream=True, **self.completion_options
@@ -120,3 +121,4 @@ class LlamaCppAssistant(GitAssistant):
         # Llama.cpp's tokenizer usually doesn't need a role for raw text tokenization.
         # The role is primarily for chat message structuring, which happens before this.
         return len(self.llm.tokenize(bytes(text, "utf-8")))
+
