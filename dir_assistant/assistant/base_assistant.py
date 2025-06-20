@@ -307,14 +307,16 @@ class BaseAssistant:
         self, completion_output, output_message, write_to_stdout
     ):
         thinking_context = self.create_thinking_context(write_to_stdout)
+        has_printed = False
         for chunk in completion_output:
             delta = chunk["choices"][0]["delta"]
-            if "content" in delta and delta["content"] != None:
+            if "content" in delta and delta["content"] is not None:
                 output_message["content"] += delta["content"]
                 if (
                     self.is_done_thinking(thinking_context, output_message["content"])
                     and write_to_stdout
                 ):
+                    has_printed = True
                     if not self.no_color and self.chat_mode:
                         sys.stdout.write(
                             self.get_color_prefix(Style.BRIGHT, Fore.WHITE)
@@ -329,6 +331,15 @@ class BaseAssistant:
                     if not self.no_color and self.chat_mode:
                         sys.stdout.write(self.get_color_suffix())
                     sys.stdout.flush()
+        if not has_printed and write_to_stdout and output_message["content"]:
+            sys.stdout.write(f"\r{' ' * 36}\r")
+            if not self.no_color and self.chat_mode:
+                sys.stdout.write(self.get_color_prefix(Style.BRIGHT, Fore.WHITE))
+            content_to_print = self.remove_thinking_message(output_message["content"])
+            sys.stdout.write(content_to_print)
+            if not self.no_color and self.chat_mode:
+                sys.stdout.write(self.get_color_suffix())
+            sys.stdout.flush()
         return output_message
     def run_one_off_completion(self, prompt):
         one_off_history = self.create_one_off_prompt_history(prompt)
