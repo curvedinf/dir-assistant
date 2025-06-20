@@ -10,6 +10,7 @@ CONFIG_FILENAME = "config.toml"
 CONFIG_PATH = join(expanduser("~"), ".config", "dir-assistant")
 STORAGE_PATH = join(expanduser("~"), ".local", "share", "dir-assistant")
 CACHE_PATH = join(expanduser("~"), ".cache", "dir-assistant")
+APP_DB_FILENAME = "app.sqlite"
 INDEX_CACHE_FILENAME = "index_cache.sqlite"
 PREFIX_CACHE_FILENAME = "prefix_cache.sqlite"
 PROMPT_HISTORY_FILENAME = "prompt_history.sqlite"
@@ -167,7 +168,7 @@ def load_config(skip_environment_vars=False):
 def config(args, config_dict):
     # List the current configuration
     config_file_path = get_file_path(CONFIG_PATH, CONFIG_FILENAME)
-    print(f"Configuration file: {config_file_path}\n")
+    print(f"Configuration file: {config_file_path}\\n")
     print(toml.dumps(config_dict))
 
 
