@@ -1,7 +1,16 @@
 import sys
 import numpy as np
 from colorama import Fore, Style
+
+from dir_assistant.assistant.cache_manager import CacheManager
 from dir_assistant.assistant.index import search_index
+from dir_assistant.assistant.rag_optimizer import RagOptimizer
+from dir_assistant.cli.config import (
+    CACHE_PATH,
+    PREFIX_CACHE_FILENAME,
+    PROMPT_HISTORY_FILENAME,
+    get_file_path,
+)
 
 
 class BaseAssistant:
@@ -20,6 +29,7 @@ class BaseAssistant:
         context_file_ratio,
         artifact_excludable_factor,
         api_context_cache_ttl,
+        rag_optimizer_weights,
         output_acceptance_retries,
         verbose,
         no_color,
@@ -36,6 +46,7 @@ class BaseAssistant:
         self.context_file_ratio = context_file_ratio
         self.artifact_excludable_factor = artifact_excludable_factor
         self.api_context_cache_ttl = api_context_cache_ttl
+        self.rag_optimizer_weights = rag_optimizer_weights
         self.context_size = 8192
         self.output_acceptance_retries = output_acceptance_retries
         self.no_color = no_color
@@ -44,10 +55,26 @@ class BaseAssistant:
         self.hide_thinking = hide_thinking
         self.thinking_start_pattern = thinking_start_pattern
         self.thinking_end_pattern = thinking_end_pattern
+        self.last_optimized_artifacts = []
+        self.last_matched_prefix = ""
+
+        prefix_cache_path = get_file_path(CACHE_PATH, PREFIX_CACHE_FILENAME)
+        prompt_history_path = get_file_path(CACHE_PATH, PROMPT_HISTORY_FILENAME)
+        self.cache_manager = CacheManager(
+            prefix_cache_path=prefix_cache_path,
+            prompt_history_path=prompt_history_path,
+            api_context_cache_ttl=self.api_context_cache_ttl,
+        )
+        self.rag_optimizer = RagOptimizer(
+            weights=self.rag_optimizer_weights,
+            excludable_factor=self.artifact_excludable_factor,
+        )
+
+    def close(self):
+        """Cleanly close any open resources."""
+        self.cache_manager.close()
 
     def initialize_history(self):
-        # This inititialization occurs separately from the constructor because child classes need to initialize
-        # before count_tokens can be called.
         system_instructions_tokens = self.count_tokens(
             self.system_instructions, role="system"
         )
@@ -60,32 +87,84 @@ class BaseAssistant:
         ]
 
     def call_completion(self, chat_history, is_cgrag_call=False):
-        # unimplemented on base class
         raise NotImplementedError
 
     def run_completion_generator(
         self, completion_output, output_message, write_to_stdout
     ):
-        # unimplemented on base class
         raise NotImplementedError
 
     def count_tokens(self, text, role="user"):
-        # unimplemented on base class
         raise NotImplementedError
 
     def build_relevant_full_text(self, user_input):
-        relevant_chunks = search_index(self.embed, self.index, user_input, self.chunks)
+        k_nearest_neighbors = search_index(
+            self.embed, self.index, user_input, self.chunks
+        )
+
+        prompt_history = self.cache_manager.get_prompt_history()
+        prefix_cache_metadata = self.cache_manager.get_non_expired_prefixes()
+        historical_artifact_metadata = (
+            self.cache_manager.compute_artifact_metadata_from_history()
+        )
+
+        combined_artifact_metadata = {}
+        all_artifact_ids = {chunk["text"] for chunk in self.chunks} | set(
+            historical_artifact_metadata.keys()
+        )
+
+        for artifact_id in all_artifact_ids:
+            filepath = next(
+                (
+                    chunk["filepath"]
+                    for chunk in self.chunks
+                    if chunk["text"] == artifact_id
+                ),
+                None,
+            )
+            last_modified = (
+                self.artifact_metadata.get(filepath, {}).get("last_modified", 0)
+                if filepath
+                else 0
+            )
+            hist_meta = historical_artifact_metadata.get(
+                artifact_id, {"frequency": 0, "positions": []}
+            )
+            combined_artifact_metadata[artifact_id] = {
+                "frequency": hist_meta["frequency"],
+                "positions": hist_meta["positions"],
+                "last_modified_timestamp": last_modified,
+            }
+
+        optimized_artifact_ids, matched_prefix = self.rag_optimizer.optimize(
+            k_nearest_neighbors_with_distances=k_nearest_neighbors,
+            prompt_history=prompt_history,
+            artifact_metadata=combined_artifact_metadata,
+            prefix_cache_metadata=prefix_cache_metadata,
+        )
+
+        self.last_optimized_artifacts = optimized_artifact_ids
+        self.last_matched_prefix = matched_prefix
+
         relevant_full_text = ""
         chunk_total_tokens = 0
-        for i, (relevant_chunk, dist) in enumerate(relevant_chunks, start=1):
-            # Note: relevant_chunk["tokens"] is created with the embedding model, not the LLM, so it will
-            # not be accurate for the purposes of maximizing the context of the LLM.
-            chunk_total_tokens += self.count_tokens(
-                relevant_chunk["text"] + "\n\n", role="user"
-            )  # Assuming RAG text is like user content for token counting
-            if chunk_total_tokens >= self.context_size * self.context_file_ratio:
+        optimized_chunks = [
+            next((c for c in self.chunks if c["text"] == aid), None)
+            for aid in optimized_artifact_ids
+        ]
+
+        for chunk in filter(None, optimized_chunks):
+            chunk_text = chunk["text"] + "\n\n"
+            chunk_tokens = self.count_tokens(chunk_text, role="user")
+            if (
+                chunk_total_tokens + chunk_tokens
+                > self.context_size * self.context_file_ratio
+            ):
+                self.last_optimized_artifacts = self.last_optimized_artifacts[:len(relevant_full_text.split("\n\n"))-1]
                 break
-            relevant_full_text += relevant_chunk["text"] + "\n\n"
+            relevant_full_text += chunk_text
+            chunk_total_tokens += chunk_tokens
+
         return relevant_full_text
 
     def get_color_prefix(self, brightness, color):
@@ -128,7 +207,6 @@ class BaseAssistant:
     def cull_history_list(self, history_list):
         total_tokens = sum(h["tokens"] for h in history_list)
         while total_tokens > self.context_size:
-            # Don't remove the system prompt
             if len(history_list) > 1:
                 removed = history_list.pop(1)
                 total_tokens -= removed["tokens"]
@@ -137,8 +215,7 @@ class BaseAssistant:
         return history_list
 
     def create_prompt(self, user_input):
-        return f"""{user_input}
-"""
+        return f"{user_input}\n"
 
     def remove_thinking_message(self, content):
         start_pattern = self.thinking_start_pattern
@@ -149,9 +226,10 @@ class BaseAssistant:
         while start_index != -1:
             end_index = content.find(end_pattern, start_index)
             if end_index != -1:
-                content = content[:start_index] + content[end_index + len(end_pattern) :]
+                content = (
+                    content[:start_index] + content[end_index + len(end_pattern) :]
+                )
             else:
-                # Malformed, just remove the start pattern
                 content = content[:start_index]
             start_index = content.find(start_pattern)
         return content
@@ -171,9 +249,15 @@ class BaseAssistant:
         output_history["content"] = self.remove_thinking_message(
             output_history["content"]
         )
-        # Commit to git if enabled
-        if hasattr(self, 'commit_to_git') and self.commit_to_git and not one_off:
+
+        if not one_off:
+            if self.last_matched_prefix:
+                self.cache_manager.update_prefix_hit(self.last_matched_prefix)
+            self.cache_manager.add_prompt_to_history(prompt, self.last_optimized_artifacts)
+
+        if hasattr(self, "commit_to_git") and self.commit_to_git and not one_off:
             self.run_git_commit(prompt, output_history["content"])
+
         self.chat_history.append(output_history)
         final_response = output_history["content"].strip()
         sys.stdout.write("\n\n")
@@ -195,7 +279,6 @@ class BaseAssistant:
             sys.stdout.flush()
 
     def stream_chat(self, user_input):
-        if not self.chat_history:
+        if not hasattr(self, "chat_history") or not self.chat_history:
             self.initialize_history()
         self.run_stream_processes(user_input)
-
