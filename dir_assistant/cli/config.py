@@ -4,13 +4,17 @@ from platform import system
 from subprocess import run
 import toml
 from dynaconf import Dynaconf
+
 VERSION = "1.6.0"
 CONFIG_FILENAME = "config.toml"
 CONFIG_PATH = join(expanduser("~"), ".config", "dir-assistant")
 STORAGE_PATH = join(expanduser("~"), ".local", "share", "dir-assistant")
+CACHE_PATH = join(expanduser("~"), ".cache", "dir-assistant")
 INDEX_CACHE_FILENAME = "index_cache.sqlite"
-INDEX_CACHE_PATH = join(expanduser("~"), ".cache", "dir-assistant")
+PREFIX_CACHE_FILENAME = "prefix_cache.sqlite"
+PROMPT_HISTORY_FILENAME = "prompt_history.sqlite"
 HISTORY_FILENAME = "history.pth"  # pth = prompt toolkit history
+
 CONFIG_DEFAULTS = {
     "SYSTEM_INSTRUCTIONS": "You are a helpful AI assistant.",
     "GLOBAL_IGNORES": [
@@ -23,6 +27,15 @@ CONFIG_DEFAULTS = {
         "__pycache__",
     ],
     "CONTEXT_FILE_RATIO": 0.9,
+    "ARTIFACT_EXCLUDABLE_FACTOR": 0.3,
+    "API_CONTEXT_CACHE_TTL": 3600,  # 1 hour
+    "RAG_OPTIMIZER_WEIGHTS": {
+        "frequency": 1.0,
+        "position": 1.0,
+        "stability": 1.0,
+        "historical_hits": 1.0,
+        "cache_hits": 1.0,
+    },
     "ACTIVE_MODEL_IS_LOCAL": False,
     "ACTIVE_EMBED_IS_LOCAL": False,
     "OUTPUT_ACCEPTANCE_RETRIES": 1,
@@ -51,7 +64,7 @@ CONFIG_DEFAULTS = {
     "LLAMA_CPP_COMPLETION_OPTIONS": {
         "frequency_penalty": 1.1,
     },
-    "LITELLM_CONTEXT_SIZE": 50_000,
+    "LITELLM_CONTEXT_SIZE": 200_000,
     "LITELLM_EMBED_CONTEXT_SIZE": 2_048,
     "LITELLM_MODEL_USES_SYSTEM_MESSAGE": False,
     "LITELLM_PASS_THROUGH_CONTEXT_SIZE": False,
@@ -66,27 +79,38 @@ CONFIG_DEFAULTS = {
         "model": "gemini/gemini-2.0-flash",
         "timeout": 600,
     },
-    "LITELLM_CGRAG_CONTEXT_SIZE": 150_000,
+    "LITELLM_CGRAG_CONTEXT_SIZE": 200_000,
     "LITELLM_CGRAG_PASS_THROUGH_CONTEXT_SIZE": False,
     "LITELLM_CGRAG_COMPLETION_OPTIONS": {
-        "model": "gemini/gemini-2.0-flash-lite",
+        "model": "gemini/gemini-2.0-flash",
         "timeout": 600,
     },
 }
+
+
 def get_file_path(path, filename):
     expanded_path = expanduser(path)
     makedirs(expanded_path, exist_ok=True)
     return join(expanded_path, filename)
+
+
 def save_config(config_dict):
     with open(get_file_path(CONFIG_PATH, CONFIG_FILENAME), "w") as config_file:
         toml.dump(config_dict, config_file)
+
+
 def check_defaults(config_dict, defaults_dict):
     for key, value in defaults_dict.items():
-        if key not in config_dict.keys():
+        if key not in config_dict:
             config_dict[key] = value
+        elif isinstance(value, dict) and isinstance(config_dict.get(key), dict):
+            check_defaults(config_dict[key], value)
     return config_dict
+
+
 def set_environment_overrides(config_dict):
     """Replace config values with environment variable overrides"""
+
     def _override_config(config_branch, prefix=""):
         for key, value in config_branch.items():
             env_key = f"{prefix}__{key}" if prefix else key
@@ -95,7 +119,10 @@ def set_environment_overrides(config_dict):
             elif env_key in environ:
                 config_branch[key] = coerce_setting_string_value(environ[env_key])
         return config_branch
+
     return _override_config(config_dict)
+
+
 def coerce_setting_string_value(value_str):
     """Convert string values to appropriate Python types"""
     # Handle boolean values
@@ -105,10 +132,12 @@ def coerce_setting_string_value(value_str):
     elif value_str.isdigit():
         return int(value_str)
     # Handle float values
-    elif value_str.replace(".", "").isdigit():
+    elif value_str.replace(".", "", 1).isdigit():
         return float(value_str)
     # Keep as string if no other type matches
     return value_str
+
+
 def load_config(skip_environment_vars=False):
     config_object = Dynaconf(
         settings_files=[get_file_path(CONFIG_PATH, CONFIG_FILENAME)]
@@ -117,23 +146,31 @@ def load_config(skip_environment_vars=False):
     # If the config file is malformed, insert the DIR_ASSISTANT key
     if "DIR_ASSISTANT" not in config_dict.keys():
         config_dict["DIR_ASSISTANT"] = {}
+
     # Check for missing config options (maybe after a version upgrade)
-    for key, value in CONFIG_DEFAULTS.items():
-        if key not in config_dict["DIR_ASSISTANT"].keys():
-            config_dict["DIR_ASSISTANT"][key] = value
+    config_dict["DIR_ASSISTANT"] = check_defaults(
+        config_dict["DIR_ASSISTANT"], CONFIG_DEFAULTS
+    )
+
     save_config(config_dict)
+
     # Set any env-overridden config values
     config_dict = set_environment_overrides(config_dict)
+
     # Set LiteLLM API keys only if not already set in environment
     for key, value in config_dict["DIR_ASSISTANT"]["LITELLM_API_KEYS"].items():
         if key.endswith("_API_KEY") and value and key not in environ:
             environ[key] = value
     return config_dict
+
+
 def config(args, config_dict):
     # List the current configuration
     config_file_path = get_file_path(CONFIG_PATH, CONFIG_FILENAME)
     print(f"Configuration file: {config_file_path}\n")
     print(toml.dumps(config_dict))
+
+
 def config_open(args):
     config_file_path = get_file_path(CONFIG_PATH, CONFIG_FILENAME)
     editor = (
@@ -142,4 +179,3 @@ def config_open(args):
         or ("notepad" if system() == "Windows" else "nano")
     )  # Default to nano if EDITOR not set
     run([editor, config_file_path])
-
