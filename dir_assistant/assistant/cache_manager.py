@@ -4,6 +4,8 @@ import json
 from sqlitedict import SqliteDict
 from collections import defaultdict
 
+from dir_assistant.assistant.models import create_prompt_history_table
+
 class CacheManager:
     """
     Manages caching for RAG optimization, including a prefix cache for API query reuse
@@ -29,16 +31,7 @@ class CacheManager:
     def _initialize_prompt_history_db(self):
         """Creates the prompt_history table if it doesn't exist."""
         with sqlite3.connect(self.prompt_history_path) as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS prompt_history (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    prompt TEXT NOT NULL,
-                    artifacts_json TEXT NOT NULL,
-                    timestamp REAL NOT NULL
-                )
-            """)
-            conn.commit()
+            create_prompt_history_table(conn)
 
     def get_non_expired_prefixes(self):
         """
@@ -86,7 +79,6 @@ class CacheManager:
                 "INSERT INTO prompt_history (prompt, artifacts_json, timestamp) VALUES (?, ?, ?)",
                 (prompt_string, artifacts_json, time.time())
             )
-            conn.commit()
 
     def get_prompt_history(self):
         """
