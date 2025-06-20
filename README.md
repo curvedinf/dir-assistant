@@ -1,11 +1,7 @@
 # Dir-Assistant
-
 Dir-Assistant is a command-line tool that allows you to chat with an LLM about the files in your current directory. It automatically includes the most relevant files in the context of your conversation, making it a powerful companion for coding, analysis, and other file-based tasks.
-
 ![Dir-Assistant Demo](./docs/images/demo.gif)
-
 ## Features
-
 -   **Automatic Context:** Recursively scans your directory and finds the most relevant files for your prompt.
 -   **Local & API Models:** Supports both local GGUF models via `llama-cpp-python` and API-based models via `LiteLLM`.
 -   **Chat & Single-Prompt Modes:** Use it as an interactive chat assistant or for one-off questions.
@@ -14,9 +10,7 @@ Dir-Assistant is a command-line tool that allows you to chat with an LLM about t
 -   **RAG Caching:** Optimizes context and reduces API costs by caching and reordering file artifacts.
 -   **Git Integration:** Can automatically commit file changes made during a chat session.
 -   **Configurable:** Extensive configuration options, including environment variable overrides.
-
 ## Quickstart (Chat with API Model - OpenAI)
-
 1.  **Install:**
     ```shell
     pip install dir-assistant
@@ -32,9 +26,7 @@ Dir-Assistant is a command-line tool that allows you to chat with an LLM about t
     ```shell
     dir-assistant
     ```
-
 ## Quickstart (Chat with API Model - Anthropic Claude)
-
 1.  **Install:**
     ```shell
     pip install dir-assistant
@@ -51,9 +43,7 @@ Dir-Assistant is a command-line tool that allows you to chat with an LLM about t
     ```shell
     dir-assistant
     ```
-
 ## Quickstart (Chat with Local Model)
-
 1.  **Install with hardware acceleration:**
     ```shell
     # For NVIDIA GPUs (CUDA)
@@ -71,37 +61,25 @@ Dir-Assistant is a command-line tool that allows you to chat with an LLM about t
     ```shell
     dir-assistant
     ```
-
 ## Installation
-
 ```shell
 # Basic installation
 pip install dir-assistant
-
 # To include llama-cpp-python with recommended settings
 pip install dir-assistant[recommended]
-
 # For NVIDIA GPU acceleration (cuBLAS)
 pip install dir-assistant[cuBLAS]
-
 # For Apple Silicon GPU acceleration (Metal)
 pip install dir-assistant[metal]
 ```
-
 After installation, it is recommended to run `dir-assistant platform` to configure hardware acceleration for local models.
-
 ## Configuration
-
 `dir-assistant` is highly configurable via a TOML file located at `~/.config/dir-assistant/config.toml`.
-
 -   **Open config file for editing:** `dir-assistant config open`
 -   **List current configuration:** `dir-assistant config`
 -   **Set a specific value:** `dir-assistant config --set KEY=VALUE` (e.g., `dir-assistant config --set VERBOSE=true`)
-
 ### API Configuration
-
 You can connect to any LLM provider supported by [LiteLLM](https://docs.litellm.ai/docs/providers).
-
 #### Anthropic (e.g., Claude 3.7 Sonnet)
 Claude models are highly capable and offer a great balance of speed and intelligence.
 1.  **Get API Key:** From [Anthropic Console](https://console.anthropic.com/dashboard).
@@ -162,13 +140,10 @@ timeout = 300
 If the `LITELLM_CGRAG_COMPLETION_OPTIONS` section or its `model` key is not specified, `dir-assistant` will default to using the model defined in `LITELLM_COMPLETION_OPTIONS` for both calls. You can also set `LITELLM_CGRAG_CONTEXT_SIZE` to specify a different context size for the CGRAG model.
 ### RAG Caching and Context Optimization
 `dir-assistant` includes an advanced system to optimize the context sent to the LLM, aiming to reduce latency and API costs, especially for users who frequently interact with similar sets of files. This system works by caching successful orderings of file "artifacts" (chunks of file content) and reordering them based on your historical usage patterns.
-
 This feature is always on and works in the background. You can fine-tune its behavior using the following settings in your configuration file (`dir-assistant config open`):
-
 ```toml
 [DIR_ASSISTANT]
 # ... other settings
-
 # The percentage of the least relevant files (based on RAG distance) that can
 # be replaced by more historically relevant files from the cache.
 # A higher value allows more aggressive replacement of less relevant files
@@ -176,13 +151,11 @@ This feature is always on and works in the background. You can fine-tune its beh
 # Range: 0.0 to 1.0. A value of 0.3 means 30% of the initial RAG results
 # are considered for replacement.
 ARTIFACT_EXCLUDABLE_FACTOR = 0.3
-
 # The time-to-live (in seconds) for a cached context prefix. If a prefix isn't
 # used within this time, it's considered expired and won't be used for optimization.
 # This prevents outdated context orderings from being used.
 # Default is 3600 (1 hour).
 API_CONTEXT_CACHE_TTL = 3600
-
 # Weights used by the optimizer to score and reorder file artifacts.
 # Adjusting these can change how aggressively the optimizer prioritizes
 # different factors when deciding the final order of files in the prompt.
