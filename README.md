@@ -23,6 +23,7 @@ primarily for use as a coding aid and automation tool.
 prompt to an LLM called CGRAG (Contextually Guided Retrieval-Augmented Generation). You can read 
 [this blog post](https://medium.com/@djangoist/how-to-create-accurate-llm-responses-on-large-code-repositories-presenting-cgrag-a-new-feature-of-e77c0ffe432d) for more information about how it works.
 - Optionally configure a separate, faster LLM for the CGRAG guidance step to reduce cost and latency.
+- Intelligent RAG caching and context optimization system to reduce latency and API costs by reordering and reusing file context based on your usage patterns.
 ## Table of Contents
 1. [New Features](#new-features)
 2. [Quickstart](#quickstart)
@@ -44,7 +45,8 @@ prompt to an LLM called CGRAG (Contextually Guided Retrieval-Augmented Generatio
       2. [Anthropic Claude (e.g., Claude 3.7 Sonnet)](#anthropic-claude-eg-claude-37-sonnet)
       3. [OpenAI (e.g., GPT-4o)](#openai-eg-gpt-4o)
    3. [CGRAG-Specific Model Configuration](#cgrag-specific-model-configuration)
-   4. [Connecting to a Custom API Server](#connecting-to-a-custom-api-server)
+   4. [RAG Caching and Context Optimization](#rag-caching-and-context-optimization)
+   5. [Connecting to a Custom API Server](#connecting-to-a-custom-api-server)
 9. [Local LLM Model Download](#local-llm-model-download)
    1. [Configuring A Custom Local Model](#configuring-a-custom-local-model)
    2. [Llama.cpp Options](#llamacpp-options)
@@ -64,6 +66,7 @@ prompt to an LLM called CGRAG (Contextually Guided Retrieval-Augmented Generatio
 * Added support for configuring a separate, faster LLM for the CGRAG guidance step.
 * Added support for models that include a `<thinking></thinking>` block in their response.
 * Added an [example script](#examples) for analyzing stock sentiment on reddit.
+* Added an intelligent RAG caching and context optimization system to reduce latency and API costs by reordering and reusing file context based on your usage patterns.
 ## Quickstart
 In this section are recipes to run `dir-assistant` in basic capacity to get you started quickly.
 ### Quickstart Chat with Local Default Model
@@ -261,7 +264,6 @@ Dir-assistant is a powerful tool with many configuration options. This section p
 general tips for using `dir-assistant` to achieve the best results.
 ### Optimized Settings for Coding Assistance
 There are quite literally thousands of models that can be used with `dir-assistant`. For complex coding tasks on large codebases, we recommend a high-quality embedding model combined with a powerful primary LLM and a fast, inexpensive secondary LLM for CGRAG guidance. As of writing, a strong combination is `voyage-code-3` (embeddings), `claude-3-7-sonnet` (primary), and `gemini-1.5-flash` (CGRAG).
-
 To use these models, open the config file with `dir-assistant config open` and use the following configuration as a template.
 _Note: Don't forget to add your API keys! Get them from [Anthropic](https://www.anthropic.com/claude), [Google AI Studio](https://aistudio.google.com/), and [Voyage AI](https://voyage.ai/)._
 ```toml
@@ -286,38 +288,31 @@ LITELLM_CGRAG_CONTEXT_SIZE = 200000 # CGRAG model context size
 MODELS_PATH = "~/.local/share/dir-assistant/models/"
 LLM_MODEL = "" # Local model, overridden by API settings below
 EMBED_MODEL = "" # Local embedding model, overridden by API settings below
-
 [DIR_ASSISTANT.LITELLM_API_KEYS]
 ANTHROPIC_API_KEY = "your_anthropic_key_here"
 GEMINI_API_KEY = "your_google_key_here"
 VOYAGE_API_KEY = "your_voyage_key_here"
-
 # Main model for generating the final, high-quality response
 [DIR_ASSISTANT.LITELLM_COMPLETION_OPTIONS]
 model = "anthropic/claude-3-7-sonnet-20240729"
 timeout = 600
-
 # Optional: A faster, cheaper model for the initial CGRAG guidance step
 [DIR_ASSISTANT.LITELLM_CGRAG_COMPLETION_OPTIONS]
 model = "gemini/gemini-1.5-flash-latest"
 timeout = 300
-
 # High-quality embedding model specialized for code
 [DIR_ASSISTANT.LITELLM_EMBED_COMPLETION_OPTIONS]
 model = "voyage/voyage-code-3"
 timeout = 600
-
 [DIR_ASSISTANT.LLAMA_CPP_COMPLETION_OPTIONS]
 frequency_penalty = 1.1
 presence_penalty = 1.0
-
 [DIR_ASSISTANT.LLAMA_CPP_OPTIONS]
 n_ctx = 10000
 verbose = false
 n_gpu_layers = -1
 rope_scaling_type = 2
 rope_freq_scale = 0.75
-
 [DIR_ASSISTANT.LLAMA_CPP_EMBED_OPTIONS]
 n_ctx = 4000
 n_batch = 512
@@ -461,26 +456,57 @@ OpenAI models like GPT-4o offer a balance of performance and cutting-edge featur
 When using CGRAG (`USE_CGRAG = true`), `dir-assistant` performs two calls to the LLM:
 1.  **Guidance Call**: A first call to generate a list of relevant concepts to improve file retrieval.
 2.  **Response Call**: A second call with the improved context to generate the final answer.
-
 You can optionally specify a different, often faster and cheaper, model for the initial guidance call. This can significantly reduce API costs and improve response times without sacrificing the quality of the final answer, which is still handled by your primary model.
-
 To configure a separate model for CGRAG, add the `LITELLM_CGRAG_COMPLETION_OPTIONS` section to your config file (`dir-assistant config open`):
 ```toml
 [DIR_ASSISTANT]
 # ... other settings
 USE_CGRAG = true
-
 # Main model for generating the final, high-quality response
 [DIR_ASSISTANT.LITELLM_COMPLETION_OPTIONS]
 model = "anthropic/claude-3-7-sonnet-20240729"
 timeout = 600
-
 # Optional: A faster, cheaper model for the initial CGRAG guidance step
 [DIR_ASSISTANT.LITELLM_CGRAG_COMPLETION_OPTIONS]
 model = "gemini/gemini-1.5-flash-latest"
 timeout = 300
 ```
 If the `LITELLM_CGRAG_COMPLETION_OPTIONS` section or its `model` key is not specified, `dir-assistant` will default to using the model defined in `LITELLM_COMPLETION_OPTIONS` for both calls. You can also set `LITELLM_CGRAG_CONTEXT_SIZE` to specify a different context size for the CGRAG model.
+### RAG Caching and Context Optimization
+`dir-assistant` includes an advanced system to optimize the context sent to the LLM, aiming to reduce latency and API costs, especially for users who frequently interact with similar sets of files. This system works by caching successful orderings of file "artifacts" (chunks of file content) and reordering them based on your historical usage patterns.
+
+This feature is always on and works in the background. You can fine-tune its behavior using the following settings in your configuration file (`dir-assistant config open`):
+
+```toml
+[DIR_ASSISTANT]
+# ... other settings
+
+# The percentage of the least relevant files (based on RAG distance) that can
+# be replaced by more historically relevant files from the cache.
+# Range: 0.0 to 1.0. A value of 0.3 means 30% of the initial RAG results
+# are considered for replacement.
+ARTIFACT_EXCLUDABLE_FACTOR = 0.3
+
+# The time-to-live (in seconds) for a cached context prefix. If a prefix isn't
+# used within this time, it's considered expired and won't be used for optimization.
+# Default is 3600 (1 hour).
+API_CONTEXT_CACHE_TTL = 3600
+
+# Weights used by the optimizer to score and reorder file artifacts.
+# Adjusting these can change how aggressively the optimizer prioritizes
+# different factors.
+[DIR_ASSISTANT.RAG_OPTIMIZER_WEIGHTS]
+# How much to value artifacts that appear frequently in past prompts.
+frequency = 1.0
+# How much to penalize artifacts for appearing later in past prompts.
+position = 1.0
+# How much to value files that have not been modified recently (more stable).
+stability = 1.0
+# How much to value prefix orderings that have appeared frequently in history.
+historical_hits = 1.0
+# How much to value prefix orderings that are currently in the active cache.
+cache_hits = 1.0
+```
 ### Connecting to a Custom API Server
 If you would like to connect to a custom API server, such as your own ollama, llama.cpp, LMStudio, 
 vLLM, or other OpenAPI-compatible API server, dir-assistant supports this. To configure for this,
@@ -660,6 +686,7 @@ please see [CONTRIBUTORS.md](CONTRIBUTORS.md).
 - ~~Support for custom APIs~~
 - ~~Support for thinking models~~
 - ~~CGRAG-specific LLM configuration~~
+- ~~RAG Caching and Context Optimization~~
 - Web search
 - Daemon mode for API-based use
 ## Additional Credits
