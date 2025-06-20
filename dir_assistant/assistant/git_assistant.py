@@ -1,11 +1,8 @@
 import os
 import sys
-
 from colorama import Fore, Style
 from prompt_toolkit import prompt
-
 from dir_assistant.assistant.cgrag_assistant import CGRAGAssistant
-
 
 class GitAssistant(CGRAGAssistant):
     def __init__(
@@ -14,10 +11,10 @@ class GitAssistant(CGRAGAssistant):
         embed,
         index,
         chunks,
-        artifact_metadata,
         context_file_ratio,
         artifact_excludable_factor,
         api_context_cache_ttl,
+        rag_optimizer_weights,
         output_acceptance_retries,
         use_cgrag,
         print_cgrag,
@@ -34,10 +31,10 @@ class GitAssistant(CGRAGAssistant):
             embed,
             index,
             chunks,
-            artifact_metadata,
             context_file_ratio,
             artifact_excludable_factor,
             api_context_cache_ttl,
+            rag_optimizer_weights,
             output_acceptance_retries,
             use_cgrag,
             print_cgrag,
@@ -77,9 +74,7 @@ the changes the user prompt requested. Do not provide an introduction, summary, 
 with the file's contents. Do not respond with surrounding markdown. Add the filename of the file as the
 first line of the response. It is okay to create a new file. Always respond with the entire contents of the 
 new version of the file. Ensure white space and new lines are consistent with the original.
-
 Example response:
-
 /home/user/hello_project/hello_world.py
 if __name__ == "__main__":
     print("Hello, World!")
@@ -87,74 +82,67 @@ if __name__ == "__main__":
             else:
                 return user_input
 
-    def run_post_stream_processes(self, user_input, stream_output):
+    def run_git_commit(self, user_input, stream_output):
         if (
             not self.commit_to_git or not self.should_diff
         ) and not self.git_apply_error:
-            return super().run_post_stream_processes(user_input, stream_output)
+            return
+        
+        if self.chat_mode:
+            sys.stdout.write(
+                f"{self.get_color_prefix(Style.BRIGHT, Fore.BLUE)}Apply these changes? (Y/N): {self.get_color_suffix()}"
+            )
+            apply_changes = prompt("", multiline=False).strip().lower()
         else:
-            if self.chat_mode:
-                sys.stdout.write(
-                    f"{self.get_color_prefix(Style.BRIGHT, Fore.BLUE)}Apply these changes? (Y/N): {self.get_color_suffix()}"
-                )
-                apply_changes = prompt("", multiline=False).strip().lower()
-            else:
-                apply_changes = "n"
-            if self.chat_mode:
-                sys.stdout.write("\n")
-            if "y" in apply_changes:
-                # Commit any user-generated changes
-                os.system("git add .")
-                os.system(
-                    f'git commit -m "Automatic commit of user changes (dir-assistant)"'
-                )
-                output_lines = stream_output.split("\n")
-                changed_filepath = output_lines[0].strip()
-
-                file_content_lines = []
-                if len(output_lines) > 1:
-                    file_content_lines = output_lines[1:]
-
-                # Remove leading blank lines
-                while file_content_lines and not file_content_lines[0].strip():
-                    file_content_lines.pop(0)
-
-                # Remove leading ``` or ```language
-                if file_content_lines and file_content_lines[0].strip().startswith(
-                    "```"
-                ):
-                    file_content_lines.pop(0)
-
-                # Remove trailing blank lines
-                while file_content_lines and not file_content_lines[-1].strip():
-                    file_content_lines.pop()
-
-                # Remove trailing ```
-                if file_content_lines and file_content_lines[-1].strip().endswith(
-                    "```"
-                ):
-                    file_content_lines.pop()
-
-                cleaned_output = "\n".join(file_content_lines)
-                try:
-                    os.makedirs(os.path.dirname(changed_filepath), exist_ok=True)
-                    with open(changed_filepath, "w") as changed_file:
-                        changed_file.write(cleaned_output)
-                except Exception as e:
-                    if self.chat_mode:
-                        sys.stdout.write(
-                            f"\n{self.get_color_prefix(Style.BRIGHT)}Error while committing changes, skipping commit: {e}{self.get_color_suffix()}\n\n"
-                        )
-                        sys.stdout.flush()
-                    return True
-                os.system("git add .")
-                os.system(f'git commit -m "{user_input.strip()}"')
+            apply_changes = "n"
+        if self.chat_mode:
+            sys.stdout.write("\n")
+        if "y" in apply_changes:
+            # Commit any user-generated changes
+            os.system("git add .")
+            os.system(
+                f'git commit -m "Automatic commit of user changes (dir-assistant)"'
+            )
+            output_lines = stream_output.split("\n")
+            changed_filepath = output_lines[0].strip()
+            file_content_lines = []
+            if len(output_lines) > 1:
+                file_content_lines = output_lines[1:]
+            # Remove leading blank lines
+            while file_content_lines and not file_content_lines[0].strip():
+                file_content_lines.pop(0)
+            # Remove leading ``` or ```language
+            if file_content_lines and file_content_lines[0].strip().startswith(
+                "```"
+            ):
+                file_content_lines.pop(0)
+            # Remove trailing blank lines
+            while file_content_lines and not file_content_lines[-1].strip():
+                file_content_lines.pop()
+            # Remove trailing ```
+            if file_content_lines and file_content_lines[-1].strip().endswith(
+                "```"
+            ):
+                file_content_lines.pop()
+            cleaned_output = "\n".join(file_content_lines)
+            try:
+                os.makedirs(os.path.dirname(changed_filepath), exist_ok=True)
+                with open(changed_filepath, "w") as changed_file:
+                    changed_file.write(cleaned_output)
+            except Exception as e:
                 if self.chat_mode:
                     sys.stdout.write(
-                        f"\n{self.get_color_prefix(Style.BRIGHT)}Changes committed.{self.get_color_suffix()}\n\n"
+                        f"\n{self.get_color_prefix(Style.BRIGHT)}Error while committing changes, skipping commit: {e}{self.get_color_suffix()}\n\n"
                     )
                     sys.stdout.flush()
-            return True
+                return
+            os.system("git add .")
+            os.system(f'git commit -m "{user_input.strip()}"')
+            if self.chat_mode:
+                sys.stdout.write(
+                    f"\n{self.get_color_prefix(Style.BRIGHT)}Changes committed.{self.get_color_suffix()}\n\n"
+                )
+                sys.stdout.flush()
 
     def stream_chat(self, user_input):
         self.git_apply_error = None
