@@ -6,9 +6,8 @@ from sqlitedict import SqliteDict
 from dir_assistant.cli.config import (
     HISTORY_FILENAME,
     INDEX_CACHE_FILENAME,
-    INDEX_CACHE_PATH,
-    STORAGE_PATH,
     CACHE_PATH,
+    STORAGE_PATH,
     PREFIX_CACHE_FILENAME,
     PROMPT_HISTORY_FILENAME,
     get_file_path,
@@ -59,7 +58,7 @@ def get_files_with_contents(directory, ignore_paths, cache_db, verbose):
 def create_file_index(
     embed, ignore_paths, embed_chunk_size, extra_dirs=[], verbose=False
 ):
-    cache_db = get_file_path(INDEX_CACHE_PATH, INDEX_CACHE_FILENAME)
+    cache_db = get_file_path(CACHE_PATH, INDEX_CACHE_FILENAME)
     # Start with current directory
     files_with_contents = get_files_with_contents(".", ignore_paths, cache_db, verbose)
     # Add files from additional folders
@@ -207,7 +206,7 @@ def search_index(embed, index, query, all_chunks):
     return relevant_chunks
 def clear(args, config_dict):
     files = [
-        get_file_path(INDEX_CACHE_PATH, INDEX_CACHE_FILENAME),
+        get_file_path(CACHE_PATH, INDEX_CACHE_FILENAME),
         get_file_path(STORAGE_PATH, HISTORY_FILENAME),
         get_file_path(CACHE_PATH, PREFIX_CACHE_FILENAME),
         get_file_path(CACHE_PATH, PROMPT_HISTORY_FILENAME),
@@ -218,4 +217,3 @@ def clear(args, config_dict):
             sys.stdout.write(f"Deleted {file}\n")
         else:
             sys.stdout.write(f"{file} does not exist.\n")
-
