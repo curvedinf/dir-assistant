@@ -3,7 +3,6 @@ import sys
 from colorama import Fore, Style
 from prompt_toolkit import prompt
 from dir_assistant.assistant.cgrag_assistant import CGRAGAssistant
-
 class GitAssistant(CGRAGAssistant):
     def __init__(
         self,
@@ -46,7 +45,6 @@ class GitAssistant(CGRAGAssistant):
             thinking_end_pattern,
         )
         self.commit_to_git = commit_to_git
-
     def create_prompt(self, user_input):
         if not self.commit_to_git:
             return user_input
@@ -81,13 +79,11 @@ if __name__ == "__main__":
 """
             else:
                 return user_input
-
-    def run_git_commit(self, user_input, stream_output):
+    def run_post_stream_processes(self, user_input, stream_output):
         if (
             not self.commit_to_git or not self.should_diff
         ) and not self.git_apply_error:
-            return
-        
+            return super().run_post_stream_processes(user_input, stream_output)
         if self.chat_mode:
             sys.stdout.write(
                 f"{self.get_color_prefix(Style.BRIGHT, Fore.BLUE)}Apply these changes? (Y/N): {self.get_color_suffix()}"
@@ -135,7 +131,7 @@ if __name__ == "__main__":
                         f"\n{self.get_color_prefix(Style.BRIGHT)}Error while committing changes, skipping commit: {e}{self.get_color_suffix()}\n\n"
                     )
                     sys.stdout.flush()
-                return
+                return True
             os.system("git add .")
             os.system(f'git commit -m "{user_input.strip()}"')
             if self.chat_mode:
@@ -143,7 +139,7 @@ if __name__ == "__main__":
                     f"\n{self.get_color_prefix(Style.BRIGHT)}Changes committed.{self.get_color_suffix()}\n\n"
                 )
                 sys.stdout.flush()
-
+        return True
     def stream_chat(self, user_input):
         self.git_apply_error = None
         super().stream_chat(user_input)
