@@ -205,7 +205,7 @@ class BaseAssistant:
     def remove_thinking_message(self, content):
         start_pattern = self.thinking_start_pattern
         end_pattern = self.thinking_end_pattern
-        if self.hide_thinking:
+        if not self.hide_thinking:
             return content
         start_index = content.find(start_pattern)
         while start_index != -1:
@@ -262,7 +262,7 @@ class BaseAssistant:
             sys.stdout.write(f"\r{' ' * 36}\r")
             sys.stdout.flush()
         output_history = self.run_completion_generator(
-            completion_generator, output_history, not self.hide_thinking
+            completion_generator, output_history, self.chat_mode
         )
         output_history["content"] = self.remove_thinking_message(
             output_history["content"]
@@ -275,8 +275,9 @@ class BaseAssistant:
             )
         self.chat_history.append(output_history)
         final_response = output_history["content"].strip()
-        sys.stdout.write("\n\n")
-        sys.stdout.flush()
+        if self.chat_mode:
+            sys.stdout.write("\n\n")
+            sys.stdout.flush()
         return final_response
     def update_index_and_chunks(self, file_path, new_chunks, new_embeddings):
         # Find indices of all chunks from the old file
@@ -312,7 +313,6 @@ class BaseAssistant:
         thinking_context = self.create_thinking_context(write_to_stdout)
         has_printed = False
         for chunk in completion_output:
-            print("run_completion_generator", write_to_stdout, chunk)
             delta = chunk["choices"][0]["delta"]
             if "content" in delta and delta["content"] is not None:
                 output_message["content"] += delta["content"]
@@ -320,7 +320,9 @@ class BaseAssistant:
                     self.is_done_thinking(thinking_context, output_message["content"])
                     and write_to_stdout
                 ):
-                    has_printed = True
+                    if not has_printed:
+                        sys.stdout.write(f"\r{' ' * 36}\r")
+                        has_printed = True
                     if not self.no_color and self.chat_mode:
                         sys.stdout.write(
                             self.get_color_prefix(Style.BRIGHT, Fore.WHITE)
@@ -335,6 +337,7 @@ class BaseAssistant:
                         sys.stdout.write(self.get_color_suffix())
                     sys.stdout.flush()
         if not has_printed and write_to_stdout and output_message["content"]:
+            sys.stdout.write(f"\r{' ' * 36}\r")
             if not self.no_color and self.chat_mode:
                 sys.stdout.write(self.get_color_prefix(Style.BRIGHT, Fore.WHITE))
             content_to_print = self.remove_thinking_message(output_message["content"])
