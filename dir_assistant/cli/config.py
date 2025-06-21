@@ -6,7 +6,7 @@ from subprocess import run
 import toml
 from dynaconf import Dynaconf
 
-VERSION = "1.6.0"
+VERSION = "1.7.0"
 CONFIG_FILENAME = "config.toml"
 CONFIG_PATH = join(expanduser("~"), ".config", "dir-assistant")
 STORAGE_PATH = join(expanduser("~"), ".local", "share", "dir-assistant")
@@ -28,15 +28,15 @@ CONFIG_DEFAULTS = {
         ".idea/",
         "__pycache__",
     ],
-    "CONTEXT_FILE_RATIO": 0.9,
-    "ARTIFACT_EXCLUDABLE_FACTOR": 0.3,
+    "CONTEXT_FILE_RATIO": 0.9, # 90% of the prompt will be file text, 10% will be prompt history
+    "ARTIFACT_EXCLUDABLE_FACTOR": 0.1,  # 10% of the most distant artifacts can be replaced
     "API_CONTEXT_CACHE_TTL": 3600,  # 1 hour
     "RAG_OPTIMIZER_WEIGHTS": {
-        "frequency": 1.0,
-        "position": 1.0,
-        "stability": 1.0,
-        "historical_hits": 1.0,
-        "cache_hits": 1.0,
+        "frequency": 1.0, # how much to value artifacts that appear frequently in past prompts
+        "position": 1.0, # how much to penalize artifacts for appearing later in past prompts
+        "stability": 1.0, # how much to value artifacts that are stable
+        "historical_hits": 1.0, # how much to value prefix orderings that have appeared frequently in history
+        "cache_hits": 1.0, # how much to value prefix orderings that are currently in the active cache
     },
     "ACTIVE_MODEL_IS_LOCAL": False,
     "ACTIVE_EMBED_IS_LOCAL": False,
@@ -66,8 +66,8 @@ CONFIG_DEFAULTS = {
     "LLAMA_CPP_COMPLETION_OPTIONS": {
         "frequency_penalty": 1.1,
     },
-    "LITELLM_CONTEXT_SIZE": 200_000,
-    "LITELLM_EMBED_CONTEXT_SIZE": 2_048,
+    "LITELLM_CONTEXT_SIZE": 100_000,
+    "LITELLM_EMBED_CONTEXT_SIZE": 4_000,
     "LITELLM_MODEL_USES_SYSTEM_MESSAGE": False,
     "LITELLM_PASS_THROUGH_CONTEXT_SIZE": False,
     "LITELLM_EMBED_REQUEST_DELAY": 0,
@@ -78,13 +78,13 @@ CONFIG_DEFAULTS = {
     },
     # https://docs.litellm.ai/docs/completion/input#input-params-1
     "LITELLM_COMPLETION_OPTIONS": {
-        "model": "gemini/gemini-2.0-flash",
+        "model": "gemini/gemini-2.5-flash",
         "timeout": 600,
     },
     "LITELLM_CGRAG_CONTEXT_SIZE": 200_000,
     "LITELLM_CGRAG_PASS_THROUGH_CONTEXT_SIZE": False,
     "LITELLM_CGRAG_COMPLETION_OPTIONS": {
-        "model": "gemini/gemini-2.0-flash",
+        "model": "gemini/gemini-2.5-flash",
         "timeout": 600,
     },
 }
