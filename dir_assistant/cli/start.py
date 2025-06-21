@@ -13,11 +13,8 @@ from dir_assistant.assistant.lite_llm_embed import LiteLlmEmbed
 from dir_assistant.assistant.llama_cpp_assistant import LlamaCppAssistant
 from dir_assistant.assistant.llama_cpp_embed import LlamaCppEmbed
 from dir_assistant.cli.config import HISTORY_FILENAME, STORAGE_PATH, get_file_path
-
 litellm.suppress_debug_info = True
 MODELS_PATH = os.path.expanduser("~/.local/share/dir-assistant/models")
-
-
 def display_startup_art(commit_to_git, no_color=False):
     sys.stdout.write(
         f"""{Style.RESET_ALL if no_color else Style.BRIGHT}{Style.RESET_ALL if no_color else Fore.GREEN}
@@ -32,7 +29,6 @@ def display_startup_art(commit_to_git, no_color=False):
   / ____ \\ ____) |___) |_| |_ ____) |  | |/ ____ \\| |\\  |  | |   
  /_/    \\_\\_____/_____/|_____|_____/   |_/_/    \\_\\_| \\_|  |_|   
 {Style.RESET_ALL}
-
 """
     )
     color_prefix = Style.RESET_ALL if no_color else f"{Style.BRIGHT}{Fore.BLUE}"
@@ -40,16 +36,12 @@ def display_startup_art(commit_to_git, no_color=False):
     if commit_to_git:
         print(f"{color_prefix}Type 'undo' to roll back the last commit.")
     print("")
-
-
 def run_single_prompt(args, config_dict):
     llm = initialize_llm(args, config_dict, chat_mode=False)
     llm.initialize_history()
     response = llm.run_stream_processes(args.single_prompt, True)
     # Only print the final response
     sys.stdout.write(response)
-
-
 def initialize_llm(args, config_dict, chat_mode=True):
     # Check if we're working with the full config dict or just DIR_ASSISTANT section
     config = (
@@ -72,7 +64,6 @@ The user is currently working in the following directory (CWD): {os.getcwd()}"""
     lite_llm_embed_context_size = config["LITELLM_EMBED_CONTEXT_SIZE"]
     lite_llm_completion_options = config["LITELLM_COMPLETION_OPTIONS"]
     lite_llm_embed_completion_options = config["LITELLM_EMBED_COMPLETION_OPTIONS"]
-    lite_llm_model_uses_system_message = config["LITELLM_MODEL_USES_SYSTEM_MESSAGE"]
     lite_llm_pass_through_context_size = config["LITELLM_PASS_THROUGH_CONTEXT_SIZE"]
     lite_llm_embed_request_delay = float(config["LITELLM_EMBED_REQUEST_DELAY"])
     # CGRAG LiteLLM settings
@@ -91,12 +82,10 @@ The user is currently working in the following directory (CWD): {os.getcwd()}"""
     hide_thinking = config["HIDE_THINKING"]
     thinking_start_pattern = config["THINKING_START_PATTERN"]
     thinking_end_pattern = config["THINKING_END_PATTERN"]
-
     # RAG Optimizer settings
     artifact_excludable_factor = config["ARTIFACT_EXCLUDABLE_FACTOR"]
     api_context_cache_ttl = config["API_CONTEXT_CACHE_TTL"]
     rag_optimizer_weights = config["RAG_OPTIMIZER_WEIGHTS"]
-
     # Check for basic missing model configs
     if active_model_is_local:
         if config["LLM_MODEL"] == "":
@@ -213,7 +202,6 @@ the user refers to files, always assume they want to know about the files they p
         llm = LiteLLMAssistant(
             lite_llm_completion_options,
             lite_llm_context_size,
-            lite_llm_model_uses_system_message,
             lite_llm_pass_through_context_size,
             cgrag_lite_llm_completion_options,
             cgrag_lite_llm_context_size,
@@ -238,8 +226,6 @@ the user refers to files, always assume they want to know about the files they p
             thinking_end_pattern,
         )
     return llm
-
-
 def start(args, config_dict):
     single_prompt = args.single_prompt
     if single_prompt:
@@ -288,12 +274,10 @@ def start(args, config_dict):
         )
         # Configure key bindings for Option-Enter on macOS
         bindings = KeyBindings()
-
         @bindings.add(Keys.Escape, Keys.Enter)
         @bindings.add("escape", "enter")  # For Option-Enter on macOS
         def _(event):
             event.current_buffer.validate_and_handle()
-
         user_input = prompt("", multiline=True, history=history, key_bindings=bindings)
         if user_input.strip().lower() == "exit":
             break
@@ -306,4 +290,3 @@ def start(args, config_dict):
             continue
         else:
             llm.stream_chat(user_input)
-

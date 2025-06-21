@@ -2,8 +2,6 @@ import copy
 import sys
 from colorama import Fore, Style
 from dir_assistant.assistant.base_assistant import BaseAssistant
-
-
 class CGRAGAssistant(BaseAssistant):
     def __init__(
         self,
@@ -44,7 +42,6 @@ class CGRAGAssistant(BaseAssistant):
         )
         self.use_cgrag = use_cgrag
         self.print_cgrag = print_cgrag
-
     def write_assistant_thinking_message(self):
         # Display the assistant thinking message
         if self.chat_mode:
@@ -68,7 +65,6 @@ class CGRAGAssistant(BaseAssistant):
             if self.print_cgrag:
                 sys.stdout.write("\r")
             sys.stdout.flush()
-
     def print_cgrag_output(self, cgrag_output):
         if self.chat_mode:
             if self.print_cgrag:
@@ -77,14 +73,15 @@ class CGRAGAssistant(BaseAssistant):
                     + "\n\nAssistant: \n\n"
                     + self.get_color_suffix()
                 )
-            else:
                 sys.stdout.write(
-                    self.get_color_prefix(Style.BRIGHT, Fore.WHITE) + "\r" + (" " * 36)
+                    f"{self.get_color_prefix(Style.BRIGHT, Fore.WHITE)}\r(thinking...){self.get_color_suffix()}"
                 )
-            sys.stdout.write(
-                f"{self.get_color_prefix(Style.BRIGHT, Fore.WHITE)}\r(thinking...){self.get_color_suffix()}"
-            )
-
+            else:
+                sys.stdout.write(f"\r{' ' * 36}\r")
+                sys.stdout.write(
+                    f"{self.get_color_prefix(Style.BRIGHT, Fore.WHITE)}(thinking...){self.get_color_suffix()}"
+                )
+            sys.stdout.flush()
     def create_cgrag_prompt(self, base_prompt):
         return f"""What information related to the included files is important to answering the following 
 user prompt?
@@ -97,15 +94,13 @@ so your response must include the most important concepts and information requir
 prompt. Keep the list length to around 20 items. If the prompt is referencing code, list specific class, 
 function, and variable names as applicable to answering the user prompt.
 """
-
     def run_stream_processes(self, user_input, one_off=False):
         if self.use_cgrag:
-            relevant_full_text = self.build_relevant_full_text(user_input)
+            cgrag_relevant_full_text = self.build_relevant_full_text(user_input)
             cgrag_prompt = self.create_cgrag_prompt(user_input)
-            cgrag_content = relevant_full_text + cgrag_prompt
             cgrag_history = copy.deepcopy(self.chat_history)
             cgrag_prompt_history = self.create_user_history(
-                cgrag_content, cgrag_content
+                cgrag_prompt, cgrag_relevant_full_text
             )
             cgrag_history.append(cgrag_prompt_history)
             self.cull_history_list(cgrag_history)
@@ -125,4 +120,3 @@ function, and variable names as applicable to answering the user prompt.
             relevant_full_text = self.build_relevant_full_text(user_input)
         prompt = self.create_prompt(user_input)
         return self.run_basic_chat_stream(prompt, relevant_full_text, one_off)
-

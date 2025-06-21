@@ -1,5 +1,14 @@
-# Dir Assistant
-`dir-assistant` is a command-line tool that brings the power of Large Language Models (LLMs) to your local development environment. It scans your project directory, builds a context from your files, and allows you to chat with an AI assistant that has knowledge of your codebase.
+# dir-assistant
+[![PyPI](https://img.shields.io/pypi/v/dir-assistant)](https://pypi.org/project/dir-assistant/)
+[![GitHub license](https://img.shields.io/github/license/curvedinf/dir-assistant)](LICENSE)
+[![GitHub last commit](https://img.shields.io/github/last-commit/curvedinf/dir-assistant)](https://github.com/curvedinf/dir-assistant/commits/main)
+[![PyPI - Downloads](https://img.shields.io/pypi/dm/dir-assistant)](https://pypi.org/project/dir-assistant/)
+[![GitHub stars](https://img.shields.io/github/stars/curvedinf/dir-assistant)](https://github.com/curvedinf/dir-assistant/stargazers)
+[![Ko-fi Link](kofi.webp)](https://ko-fi.com/A0A31B6VB6)
+
+Chat with your current directory's files using a local or API LLM.
+
+![(Demo GIF of dir-assistant being run)](demo.gif)
 ## Features
 - **Local & API Model Support:** Works with local GGUF models via `llama-cpp-python` and API-based models (OpenAI, Anthropic, Gemini, etc.) via `LiteLLM`.
 - **RAG-Powered Context:** Uses Retrieval-Augmented Generation (RAG) to find and include the most relevant file snippets in the prompt.
@@ -105,24 +114,6 @@ If you encounter issues after upgrading, especially with embedding models, clear
 ```shell
 dir-assistant clear
 ```
-## Todos
-- ~~API LLMs~~
-- ~~RAG~~
-- ~~File caching (improve startup time)~~
-- ~~CGRAG (Contextually-Guided Retrieval-Augmented Generation)~~
-- ~~Multi-line input~~
-- ~~File watching (automatically reindex changed files)~~
-- ~~Single-step pip install~~
-- ~~Model download~~
-- ~~Commit to git~~
-- ~~API Embedding models~~
-- ~~Immediate mode for better compatibility with custom script automations~~
-- ~~Support for custom APIs~~
-- ~~Support for thinking models~~
-- ~~CGRAG-specific LLM configuration~~
-- ~~RAG Caching and Context Optimization~~
-- Web search
-- Daemon mode for API-based use
 ## Acknowledgements
 - Local LLMs are run via the fantastic [llama-cpp-python](https://github.com/abetlen/llama-cpp-python) package.
 - API LLMS are run using the also fantastic [LiteLLM](https://github.com/BerriAI/litellm) package.

@@ -10,7 +10,6 @@ class LiteLLMAssistant(GitAssistant):
         self,
         lite_llm_completion_options,
         lite_llm_context_size,
-        lite_llm_model_uses_system_message,
         lite_llm_pass_through_context_size,
         cgrag_lite_llm_completion_options,
         cgrag_lite_llm_context_size,
@@ -57,7 +56,6 @@ class LiteLLMAssistant(GitAssistant):
         self.completion_options = lite_llm_completion_options
         self.context_size = lite_llm_context_size
         self.pass_through_context_size = lite_llm_pass_through_context_size
-        self.lite_llm_model_uses_system_message = lite_llm_model_uses_system_message
         self.cgrag_completion_options = cgrag_lite_llm_completion_options
         self.cgrag_context_size = cgrag_lite_llm_context_size
         self.cgrag_pass_through_context_size = cgrag_lite_llm_pass_through_context_size
@@ -83,11 +81,6 @@ class LiteLLMAssistant(GitAssistant):
                 print(
                     f"{Fore.LIGHTBLACK_EX}LiteLLM CGRAG context size: {self.cgrag_context_size}{Style.RESET_ALL}"
                 )
-    def initialize_history(self):
-        super().initialize_history()
-        if not self.lite_llm_model_uses_system_message:
-            if self.chat_history and self.chat_history[0]["role"] == "system":
-                self.chat_history[0]["role"] = "user"
     def call_completion(self, chat_history, is_cgrag_call=False):
         # Clean "tokens" from chat history. It causes an error for mistral.
         chat_history_cleaned = deepcopy(chat_history)
