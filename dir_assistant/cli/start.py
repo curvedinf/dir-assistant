@@ -1,13 +1,11 @@
 import os
 import sys
-
 import litellm
 from colorama import Fore, Style
 from prompt_toolkit import prompt
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.keys import Keys
-
 from dir_assistant.assistant.file_watcher import start_file_watcher
 from dir_assistant.assistant.index import create_file_index
 from dir_assistant.assistant.lite_llm_assistant import LiteLLMAssistant
@@ -15,11 +13,8 @@ from dir_assistant.assistant.lite_llm_embed import LiteLlmEmbed
 from dir_assistant.assistant.llama_cpp_assistant import LlamaCppAssistant
 from dir_assistant.assistant.llama_cpp_embed import LlamaCppEmbed
 from dir_assistant.cli.config import HISTORY_FILENAME, STORAGE_PATH, get_file_path
-
 litellm.suppress_debug_info = True
 MODELS_PATH = os.path.expanduser("~/.local/share/dir-assistant/models")
-
-
 def display_startup_art(commit_to_git, no_color=False):
     sys.stdout.write(
         f"""{Style.RESET_ALL if no_color else Style.BRIGHT}{Style.RESET_ALL if no_color else Fore.GREEN}
@@ -41,16 +36,6 @@ def display_startup_art(commit_to_git, no_color=False):
     if commit_to_git:
         print(f"{color_prefix}Type 'undo' to roll back the last commit.")
     print("")
-
-
-def run_single_prompt(args, config_dict):
-    llm = initialize_llm(args, config_dict, chat_mode=False)
-    llm.initialize_history()
-    response = llm.run_stream_processes(args.single_prompt, True)
-    # Only print the final response
-    sys.stdout.write(response)
-
-
 def initialize_llm(args, config_dict, chat_mode=True):
     # Check if we're working with the full config dict or just DIR_ASSISTANT section
     config = (
@@ -235,8 +220,6 @@ the user refers to files, always assume they want to know about the files they p
             thinking_end_pattern,
         )
     return llm
-
-
 def start(args, config_dict):
     single_prompt = args.single_prompt
     if single_prompt:
@@ -249,7 +232,8 @@ def start(args, config_dict):
     llm.initialize_history()
     # If in single prompt mode, run the prompt and exit
     if single_prompt:
-        llm.stream_chat(single_prompt)
+        response = llm.run_stream_processes(single_prompt, one_off=True)
+        sys.stdout.write(response)
         sys.stdout.write("\n")
         sys.stdout.flush()
         exit(0)
@@ -285,12 +269,10 @@ def start(args, config_dict):
         )
         # Configure key bindings for Option-Enter on macOS
         bindings = KeyBindings()
-
         @bindings.add(Keys.Escape, Keys.Enter)
         @bindings.add("escape", "enter")  # For Option-Enter on macOS
         def _(event):
             event.current_buffer.validate_and_handle()
-
         user_input = prompt("", multiline=True, history=history, key_bindings=bindings)
         if user_input.strip().lower() == "exit":
             break
