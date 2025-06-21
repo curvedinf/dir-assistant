@@ -258,6 +258,9 @@ class BaseAssistant:
         self.cull_history_list(self.chat_history)
         completion_generator = self.call_completion(self.chat_history)
         output_history = self.create_empty_history()
+        if self.chat_mode:
+            sys.stdout.write(f"\r{' ' * 36}\r")
+            sys.stdout.flush()
         output_history = self.run_completion_generator(
             completion_generator, output_history, not self.hide_thinking
         )
@@ -309,6 +312,7 @@ class BaseAssistant:
         thinking_context = self.create_thinking_context(write_to_stdout)
         has_printed = False
         for chunk in completion_output:
+            print("run_completion_generator", write_to_stdout, chunk)
             delta = chunk["choices"][0]["delta"]
             if "content" in delta and delta["content"] is not None:
                 output_message["content"] += delta["content"]
@@ -325,14 +329,12 @@ class BaseAssistant:
                         thinking_context, write_to_stdout
                     )
                     if extra_delta_after_thinking is not None:
-                        sys.stdout.write(f"\r{' ' * 36}\r")
                         sys.stdout.write(extra_delta_after_thinking)
                     sys.stdout.write(delta["content"])
                     if not self.no_color and self.chat_mode:
                         sys.stdout.write(self.get_color_suffix())
                     sys.stdout.flush()
         if not has_printed and write_to_stdout and output_message["content"]:
-            sys.stdout.write(f"\r{' ' * 36}\r")
             if not self.no_color and self.chat_mode:
                 sys.stdout.write(self.get_color_prefix(Style.BRIGHT, Fore.WHITE))
             content_to_print = self.remove_thinking_message(output_message["content"])
