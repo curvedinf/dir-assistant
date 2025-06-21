@@ -297,7 +297,7 @@ class BaseAssistant:
         self.chunks.extend(new_chunks)
         if new_embeddings:
             self.index.add(np.array(new_embeddings, dtype=np.float32))
-        if self.chat_mode:
+        if self.chat_mode and self.verbose:
             sys.stdout.write(
                 f"\n{self.get_color_prefix(Style.BRIGHT, Fore.YELLOW)}"
                 f"File changes detected. Index has been updated."
