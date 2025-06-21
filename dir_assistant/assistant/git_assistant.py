@@ -122,13 +122,15 @@ if __name__ == "__main__":
                 file_content_lines.pop()
             cleaned_output = "\n".join(file_content_lines)
             try:
-                os.makedirs(os.path.dirname(changed_filepath), exist_ok=True)
+                dir_path = os.path.dirname(changed_filepath)
+                if dir_path:
+                    os.makedirs(dir_path, exist_ok=True)
                 with open(changed_filepath, "w") as changed_file:
                     changed_file.write(cleaned_output)
             except Exception as e:
                 if self.chat_mode:
                     sys.stdout.write(
-                        f"\n{self.get_color_prefix(Style.BRIGHT)}Error while committing changes, skipping commit: {e}{self.get_color_suffix()}\n\n"
+                        f"\n{self.get_color_prefix(Style.BRIGHT, Fore.RED)}Error while committing changes, skipping commit: {e}{self.get_color_suffix()}\n\n"
                     )
                     sys.stdout.flush()
                 return True
@@ -136,7 +138,7 @@ if __name__ == "__main__":
             os.system(f'git commit -m "{user_input.strip()}"')
             if self.chat_mode:
                 sys.stdout.write(
-                    f"\n{self.get_color_prefix(Style.BRIGHT)}Changes committed.{self.get_color_suffix()}\n\n"
+                    f"\n{self.get_color_prefix(Style.BRIGHT, Fore.GREEN)}Changes committed.{self.get_color_suffix()}\n\n"
                 )
                 sys.stdout.flush()
         return True
