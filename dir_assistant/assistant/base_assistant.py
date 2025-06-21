@@ -1,6 +1,8 @@
 import sys
+
 import numpy as np
 from colorama import Fore, Style
+
 from dir_assistant.assistant.cache_manager import CacheManager
 from dir_assistant.assistant.index import search_index
 from dir_assistant.assistant.rag_optimizer import RagOptimizer
@@ -10,11 +12,14 @@ from dir_assistant.cli.config import (
     PROMPT_HISTORY_FILENAME,
     get_file_path,
 )
+
+
 class BaseAssistant:
     """
     A base class for LLM assistants that enables inclusion of local files in the LLM context. Files
     are collected recursively from the current directory.
     """
+
     def __init__(
         self,
         system_instructions,
@@ -65,9 +70,11 @@ class BaseAssistant:
             weights=self.rag_optimizer_weights,
             artifact_excludable_factor=self.artifact_excludable_factor,
         )
+
     def close(self):
         """Cleanly close any open resources."""
         self.cache_manager.close()
+
     def initialize_history(self):
         system_instructions_tokens = self.count_tokens(
             self.system_instructions, role="system"
@@ -79,10 +86,13 @@ class BaseAssistant:
                 "tokens": system_instructions_tokens,
             }
         ]
+
     def call_completion(self, chat_history, is_cgrag_call=False):
         raise NotImplementedError
+
     def count_tokens(self, text, role="user"):
         raise NotImplementedError
+
     def build_relevant_full_text(self, user_input):
         k_nearest_neighbors = search_index(
             self.embed, self.index, user_input, self.chunks
@@ -123,11 +133,13 @@ class BaseAssistant:
             print(f"K nearest neighbors: {len(k_nearest_neighbors)}")
             print(f"Prompt history: {len(prompt_history)}")
             print(f"Prefix cache metadata: {len(prefix_cache_metadata)}")
-        optimized_artifact_ids, matched_prefix = self.rag_optimizer.optimize_rag_for_caching(
-            k_nearest_neighbors_with_distances=k_nearest_neighbors,
-            prompt_history=prompt_history,
-            artifact_metadata=combined_artifact_metadata,
-            prefix_cache_metadata=prefix_cache_metadata,
+        optimized_artifact_ids, matched_prefix = (
+            self.rag_optimizer.optimize_rag_for_caching(
+                k_nearest_neighbors_with_distances=k_nearest_neighbors,
+                prompt_history=prompt_history,
+                artifact_metadata=combined_artifact_metadata,
+                prefix_cache_metadata=prefix_cache_metadata,
+            )
         )
         if self.verbose and self.chat_mode:
             print(f"Optimized artifacts: {len(optimized_artifact_ids)}")
@@ -154,14 +166,17 @@ class BaseAssistant:
             relevant_full_text += chunk_text
             chunk_total_tokens += chunk_tokens
         return relevant_full_text
+
     def get_color_prefix(self, brightness, color):
         if self.no_color:
             return ""
         return f"{brightness}{color}"
+
     def get_color_suffix(self):
         if self.no_color:
             return ""
         return Style.RESET_ALL
+
     def write_assistant_thinking_message(self):
         if self.chat_mode:
             color_prefix = self.get_color_prefix(Style.BRIGHT, Fore.GREEN)
@@ -171,26 +186,31 @@ class BaseAssistant:
                 f"{self.get_color_prefix(Style.BRIGHT, Fore.WHITE)}\r(thinking...){color_suffix}"
             )
             sys.stdout.flush()
+
     def write_error_message(self, message):
         sys.stderr.write(
             f"{self.get_color_prefix(Style.BRIGHT, Fore.RED)}{message}{self.get_color_suffix()}\n"
         )
         sys.stderr.flush()
+
     def write_debug_message(self, message):
         if self.verbose:
             sys.stdout.write(
                 f"{self.get_color_prefix(Style.BRIGHT, Fore.YELLOW)}{message}{self.get_color_suffix()}\n"
             )
             sys.stdout.flush()
+
     def create_user_history(self, prompt, context, tokens=0):
         if tokens == 0:
             tokens = self.count_tokens(prompt, role="user") + self.count_tokens(
                 context, role="user"
             )
         return {"role": "user", "content": f"{context}{prompt}", "tokens": tokens}
+
     def create_assistant_history(self, response_text):
         tokens = self.count_tokens(response_text, role="assistant")
         return {"role": "assistant", "content": response_text, "tokens": tokens}
+
     def cull_history_list(self, history_list):
         total_tokens = sum(h["tokens"] for h in history_list)
         while total_tokens > self.context_size:
@@ -200,8 +220,10 @@ class BaseAssistant:
             else:
                 break
         return history_list
+
     def create_prompt(self, user_input):
         return f"{user_input}\n"
+
     def remove_thinking_message(self, content):
         start_pattern = self.thinking_start_pattern
         end_pattern = self.thinking_end_pattern
@@ -218,21 +240,27 @@ class BaseAssistant:
                 content = content[:start_index]
             start_index = content.find(start_pattern)
         return content
+
     def run_pre_stream_processes(self, user_input):
         self.write_assistant_thinking_message()
+
     def run_stream_processes(self, user_input, one_off=False):
         prompt = self.create_prompt(user_input)
         relevant_full_text = self.build_relevant_full_text(prompt)
         return self.run_basic_chat_stream(prompt, relevant_full_text, one_off)
+
     def run_post_stream_processes(self, user_input, stream_output):
         return True
+
     def run_accepted_output_processes(self, user_input, stream_output):
         if self.chat_mode and self.verbose:
             sys.stdout.write(f"Response accepted, continuing...\n\n")
+
     def run_bad_output_processes(self, user_input, stream_output):
         if self.chat_mode:
             sys.stdout.write(f"Response rejected, ignoring...\n\n")
             sys.stdout.flush()
+
     def stream_chat(self, user_input):
         if not hasattr(self, "chat_history") or not self.chat_history:
             self.initialize_history()
@@ -250,6 +278,7 @@ class BaseAssistant:
             self.run_accepted_output_processes(user_input, stream_output)
         else:
             self.run_bad_output_processes(user_input, stream_output)
+
     def run_basic_chat_stream(self, prompt, relevant_full_text, one_off=False):
         prompt_history = self.create_user_history(
             prompt, relevant_full_text, self.count_tokens(relevant_full_text)
@@ -279,6 +308,7 @@ class BaseAssistant:
             sys.stdout.write("\n\n")
             sys.stdout.flush()
         return final_response
+
     def update_index_and_chunks(self, file_path, new_chunks, new_embeddings):
         # Find indices of all chunks from the old file
         indices_to_remove = {
@@ -307,6 +337,7 @@ class BaseAssistant:
                 f"{self.get_color_prefix(Style.BRIGHT, Fore.RED)}You (Press ALT-Enter, OPT-Enter, or CTRL-O to submit): \n\n{self.get_color_suffix()}"
             )
             sys.stdout.flush()
+
     def run_completion_generator(
         self, completion_output, output_message, write_to_stdout
     ):
@@ -346,6 +377,7 @@ class BaseAssistant:
                 sys.stdout.write(self.get_color_suffix())
             sys.stdout.flush()
         return output_message
+
     def run_one_off_completion(self, prompt):
         one_off_history = self.create_one_off_prompt_history(prompt)
         completion_generator = self.call_completion(one_off_history)
@@ -355,8 +387,10 @@ class BaseAssistant:
             False,
         )["content"]
         return self.remove_thinking_message(output)
+
     def create_empty_history(self, role="user"):
         return {"role": role, "content": "", "tokens": 0}
+
     def create_one_off_prompt_history(self, prompt):
         return [
             {
@@ -365,6 +399,7 @@ class BaseAssistant:
                 "tokens": self.count_tokens(prompt, role="user"),
             }
         ]
+
     def create_thinking_context(self, write_to_stdout):
         if write_to_stdout and self.hide_thinking and self.chat_mode:
             if not self.no_color:
@@ -378,6 +413,7 @@ class BaseAssistant:
             "thinking_end_finished": not self.hide_thinking,
             "delta_after_thinking_finished": None,
         }
+
     def is_done_thinking(self, context, content):
         if not context["thinking_start_finished"]:
             if len(content) > len(self.thinking_start_pattern) + 20:
@@ -397,6 +433,7 @@ class BaseAssistant:
                 )
             return False
         return True
+
     def get_extra_delta_after_thinking(self, context, write_to_stdout):
         if context["delta_after_thinking_finished"] is not None:
             output = context["delta_after_thinking_finished"]

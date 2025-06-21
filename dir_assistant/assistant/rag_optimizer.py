@@ -2,10 +2,13 @@ import math
 import time
 from collections import defaultdict
 from itertools import permutations
+
+
 class RagOptimizer:
     """
     Optimizes the order and content of RAG artifacts to improve caching and relevance.
     """
+
     def __init__(self, weights, artifact_excludable_factor):
         """
         Initializes the RagOptimizer.
@@ -17,10 +20,12 @@ class RagOptimizer:
         self.weights = weights
         self.artifact_excludable_factor = artifact_excludable_factor
         self.TOP_N_PERMUTATIONS = 4  # Number of top artifacts to test permutations on
+
     def _calculate_average(self, lst):
         if not lst:
             return 0
         return sum(lst) / len(lst)
+
     def optimize_rag_for_caching(
         self,
         k_nearest_neighbors_with_distances,
@@ -60,9 +65,7 @@ class RagOptimizer:
         sorted_neighbors = sorted(
             k_nearest_neighbors_with_distances, key=lambda item: item[1], reverse=True
         )
-        core_artifacts = {
-            art_id for art_id, dist in sorted_neighbors[num_to_replace:]
-        }
+        core_artifacts = {art_id for art_id, dist in sorted_neighbors[num_to_replace:]}
         all_rag_artifacts = {art_id for art_id, dist in sorted_neighbors}
         # 2. Find Strong Cache Candidates for Replacement
         cache_replacement_candidates = defaultdict(int)

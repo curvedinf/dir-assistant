@@ -1,10 +1,12 @@
+import json
 import sqlite3
 import time
-import json
-from sqlitedict import SqliteDict
 from collections import defaultdict
 
+from sqlitedict import SqliteDict
+
 from dir_assistant.assistant.models import create_prompt_history_table
+
 
 class CacheManager:
     """
@@ -24,7 +26,7 @@ class CacheManager:
         self.prefix_cache_path = prefix_cache_path
         self.prompt_history_path = prompt_history_path
         self.api_context_cache_ttl = api_context_cache_ttl
-        
+
         self.prefix_cache = SqliteDict(self.prefix_cache_path, autocommit=True)
         self._initialize_prompt_history_db()
 
@@ -42,17 +44,21 @@ class CacheManager:
         """
         non_expired = {}
         now = time.time()
-        
+
         keys = list(self.prefix_cache.keys())
 
         for prefix in keys:
             metadata = self.prefix_cache.get(prefix)
-            if isinstance(metadata, dict) and now - metadata.get('last_hit_timestamp', 0) < self.api_context_cache_ttl:
+            if (
+                isinstance(metadata, dict)
+                and now - metadata.get("last_hit_timestamp", 0)
+                < self.api_context_cache_ttl
+            ):
                 non_expired[prefix] = metadata
             else:
                 if prefix in self.prefix_cache:
                     del self.prefix_cache[prefix]
-        
+
         return non_expired
 
     def update_prefix_hit(self, prefix_string):
@@ -62,7 +68,7 @@ class CacheManager:
         Args:
             prefix_string (str): The prefix that had a cache hit.
         """
-        self.prefix_cache[prefix_string] = {'last_hit_timestamp': time.time()}
+        self.prefix_cache[prefix_string] = {"last_hit_timestamp": time.time()}
 
     def add_prompt_to_history(self, prompt_string, ordered_artifacts):
         """
@@ -77,7 +83,7 @@ class CacheManager:
             cursor = conn.cursor()
             cursor.execute(
                 "INSERT INTO prompt_history (prompt, artifacts_json, timestamp) VALUES (?, ?, ?)",
-                (prompt_string, artifacts_json, time.time())
+                (prompt_string, artifacts_json, time.time()),
             )
 
     def get_prompt_history(self):
@@ -99,7 +105,7 @@ class CacheManager:
         Returns:
             dict: A dictionary of {artifact_id: {'frequency': int, 'positions': list}}.
         """
-        artifact_stats = defaultdict(lambda: {'frequency': 0, 'positions': []})
+        artifact_stats = defaultdict(lambda: {"frequency": 0, "positions": []})
         with sqlite3.connect(self.prompt_history_path) as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT artifacts_json FROM prompt_history")
@@ -107,13 +113,12 @@ class CacheManager:
                 try:
                     artifacts = json.loads(row[0])
                     for i, artifact_id in enumerate(artifacts):
-                        artifact_stats[artifact_id]['frequency'] += 1
-                        artifact_stats[artifact_id]['positions'].append(i)
+                        artifact_stats[artifact_id]["frequency"] += 1
+                        artifact_stats[artifact_id]["positions"].append(i)
                 except json.JSONDecodeError:
                     continue
         return dict(artifact_stats)
-    
+
     def close(self):
         """Closes the connection to the prefix cache."""
         self.prefix_cache.close()
-

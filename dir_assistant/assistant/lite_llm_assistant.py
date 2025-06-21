@@ -1,10 +1,14 @@
 from copy import deepcopy
 from time import sleep
+
 from colorama import Fore, Style
 from litellm import completion
 from litellm import exceptions as litellm_exceptions
 from litellm import token_counter
+
 from dir_assistant.assistant.git_assistant import GitAssistant
+
+
 class LiteLLMAssistant(GitAssistant):
     def __init__(
         self,
@@ -81,6 +85,7 @@ class LiteLLMAssistant(GitAssistant):
                 print(
                     f"{Fore.LIGHTBLACK_EX}LiteLLM CGRAG context size: {self.cgrag_context_size}{Style.RESET_ALL}"
                 )
+
     def call_completion(self, chat_history, is_cgrag_call=False):
         # Clean "tokens" from chat history. It causes an error for mistral.
         chat_history_cleaned = deepcopy(chat_history)
@@ -92,9 +97,7 @@ class LiteLLMAssistant(GitAssistant):
         retry_delay_seconds = 1
         current_retry = 0
         options = (
-            self.cgrag_completion_options
-            if is_cgrag_call
-            else self.completion_options
+            self.cgrag_completion_options if is_cgrag_call else self.completion_options
         )
         context_size = self.cgrag_context_size if is_cgrag_call else self.context_size
         pass_through_context = (
@@ -137,6 +140,7 @@ class LiteLLMAssistant(GitAssistant):
             f"[dir-assistant] LiteLLMAssistant Error: Completion failed "
             "after exhausting retries or due to an unhandled state."
         )
+
     def count_tokens(self, text, role="user"):
         valid_roles = ["system", "user", "assistant"]
         role_to_pass = role

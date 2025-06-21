@@ -1,8 +1,12 @@
 import os
 import sys
+
 from colorama import Fore, Style
 from prompt_toolkit import prompt
+
 from dir_assistant.assistant.cgrag_assistant import CGRAGAssistant
+
+
 class GitAssistant(CGRAGAssistant):
     def __init__(
         self,
@@ -45,6 +49,7 @@ class GitAssistant(CGRAGAssistant):
             thinking_end_pattern,
         )
         self.commit_to_git = commit_to_git
+
     def create_prompt(self, user_input):
         if not self.commit_to_git:
             return user_input
@@ -79,6 +84,7 @@ if __name__ == "__main__":
 """
             else:
                 return user_input
+
     def run_post_stream_processes(self, user_input, stream_output):
         if (
             not self.commit_to_git or not self.should_diff
@@ -108,17 +114,13 @@ if __name__ == "__main__":
             while file_content_lines and not file_content_lines[0].strip():
                 file_content_lines.pop(0)
             # Remove leading ``` or ```language
-            if file_content_lines and file_content_lines[0].strip().startswith(
-                "```"
-            ):
+            if file_content_lines and file_content_lines[0].strip().startswith("```"):
                 file_content_lines.pop(0)
             # Remove trailing blank lines
             while file_content_lines and not file_content_lines[-1].strip():
                 file_content_lines.pop()
             # Remove trailing ```
-            if file_content_lines and file_content_lines[-1].strip().endswith(
-                "```"
-            ):
+            if file_content_lines and file_content_lines[-1].strip().endswith("```"):
                 file_content_lines.pop()
             cleaned_output = "\n".join(file_content_lines)
             try:
@@ -142,6 +144,7 @@ if __name__ == "__main__":
                 )
                 sys.stdout.flush()
         return True
+
     def stream_chat(self, user_input):
         self.git_apply_error = None
         super().stream_chat(user_input)
