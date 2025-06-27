@@ -46,6 +46,7 @@ class BaseAssistant:
         self.artifact_excludable_factor = artifact_excludable_factor
         self.api_context_cache_ttl = api_context_cache_ttl
         self.rag_optimizer_weights = rag_optimizer_weights
+        self.context_size = 8192
         self.output_acceptance_retries = output_acceptance_retries
         self.no_color = no_color
         self.verbose = verbose
@@ -53,13 +54,8 @@ class BaseAssistant:
         self.hide_thinking = hide_thinking
         self.thinking_start_pattern = thinking_start_pattern
         self.thinking_end_pattern = thinking_end_pattern
+        self.last_optimized_artifacts = []
         self.last_matched_prefix = ""
-        self.last_optimized_artifacts = ""
-        self.last_optimized_artifact_list = []
-
-        self.context_size = 8192
-        if self.chat_mode:
-            print(f"Context size: {self.context_size}")
         prefix_cache_path = get_file_path(CACHE_PATH, PREFIX_CACHE_FILENAME)
         prompt_history_path = get_file_path(CACHE_PATH, PROMPT_HISTORY_FILENAME)
         self.cache_manager = CacheManager(
@@ -103,7 +99,6 @@ class BaseAssistant:
         limits, optimizes the pool for caching, and builds the final context string.
         """
         # 1. Get an initial list of nearest neighbors from the search index.
-        print("searching index...")
         k_nearest_neighbors = search_index(
             self.embed, self.index, user_input, self.chunks
         )
@@ -194,11 +189,12 @@ class BaseAssistant:
         self.last_matched_prefix = matched_prefix
         self.last_optimized_artifacts = optimized_artifacts
 
-        if matched_prefix:
-            print(f"DEBUG: Matched prefix (first 100 chars): '{matched_prefix[:100]}...'")
-
+        # 5. Build the final text, performing a strict culling on the *optimized* list.
+        # This final loop ensures the hard context limit is never exceeded.
         relevant_full_text = ""
+        final_artifacts_in_context = []
         chunk_total_tokens = 0
+
         # An efficient lookup map is better than iterating with next() repeatedly.
         chunk_map = {c["text"]: c for c in self.chunks}
 
@@ -218,10 +214,9 @@ class BaseAssistant:
 
             relevant_full_text += chunk_text
             chunk_total_tokens += chunk_tokens
+            final_artifacts_in_context.append(artifact)
 
-        print(f"DEBUG: Built context (first 100 chars): '{relevant_full_text[:100]}...'")
-        self.last_optimized_artifacts = relevant_full_text
-        self.last_optimized_artifact_list = optimized_artifacts
+        self.last_optimized_artifacts = final_artifacts_in_context
         return relevant_full_text
 
     def get_color_prefix(self, brightness, color):
@@ -284,7 +279,7 @@ above should be considered supplementary to this request to help answer it.
 
 User request:
 <---------------------------->
-f"{user_input}"
+{user_input}
 <---------------------------->
 
 Perform the user request above.
@@ -312,7 +307,7 @@ Perform the user request above.
 
     def run_stream_processes(self, user_input, one_off=False):
         prompt = self.create_prompt(user_input)
-        relevant_full_text = self.build_relevant_full_text(prompt)
+        relevant_full_text = self.build_relevant_full_text(user_input)
         return self.run_basic_chat_stream(prompt, relevant_full_text, one_off)
 
     def run_post_stream_processes(self, user_input, stream_output):
@@ -351,62 +346,26 @@ Perform the user request above.
         )
         self.chat_history.append(prompt_history)
         self.cull_history_list(self.chat_history)
-        final_prompt_content = self.chat_history[-1]['content']
-        print(f"DEBUG: Final prompt to LLM (first 1000 chars): '{final_prompt_content[:1000]}...'")
-        print("DEBUG: Full request to LLM:")
-        import pprint
-        pprint.pprint(self.chat_history)
         completion_generator = self.call_completion(self.chat_history)
         output_history = self.create_empty_history()
         if self.chat_mode:
             sys.stdout.write(f"\r{' ' * 36}\r")
             sys.stdout.flush()
-        full_response_chunks = []
-        thinking_buffer = ""
-        in_thinking_block = False
-        for chunk in completion_generator:
-            full_response_chunks.append(chunk)
-            if chunk and chunk.choices:
-                delta = chunk.choices[0].delta
-                if delta.content:
-                    content = delta.content
-                    if not self.hide_thinking and not one_off:
-                        thinking_buffer += content
-                        if self.thinking_start_pattern in thinking_buffer and not in_thinking_block:
-                            prefix = thinking_buffer.split(self.thinking_start_pattern)[0]
-                            self.write_output(prefix)
-                            thinking_buffer = thinking_buffer[len(prefix):]
-
-                        if self.thinking_end_pattern in thinking_buffer and in_thinking_block:
-                            thinking_content = thinking_buffer.split(self.thinking_end_pattern)[0]
-                            self.write_thinking_message(thinking_content.replace(self.thinking_start_pattern, ""))
-                            self.write_thinking_message_end()
-                            suffix = thinking_buffer.split(self.thinking_end_pattern, 1)[1]
-                            self.write_output(suffix)
-                            thinking_buffer = ""
-                            in_thinking_block = False
-                        elif not in_thinking_block:
-                            self.write_output(content)
-                            thinking_buffer = ""
-
-                    else:
-                        output_history["content"] += content
-            if delta.tool_calls:
-                pass
-        if not self.hide_thinking and not one_off:
-            self.write_output(thinking_buffer)
-        output_history["content"] = self.remove_thinking_message(output_history["content"])
+        output_history = self.run_completion_generator(
+            completion_generator, output_history, self.chat_mode
+        )
+        output_history["content"] = self.remove_thinking_message(
+            output_history["content"]
+        )
         if not one_off:
             if self.last_matched_prefix:
                 self.cache_manager.update_prefix_hit(self.last_matched_prefix)
-            if self.last_optimized_artifact_list:
-                for i in range(1, len(self.last_optimized_artifact_list) + 1):
-                    prefix_to_cache = self.rag_optimizer.ARTIFACT_SEPARATOR.join(self.last_optimized_artifact_list[:i])
-                    self.cache_manager.update_prefix_hit(prefix_to_cache)
-
-                self.cache_manager.add_prompt_to_history(
-                    prompt, self.last_optimized_artifact_list
-                )
+            # Add the full sequence of artifacts as a new potential prefix
+            if self.last_optimized_artifacts:
+                self.cache_manager.update_prefix_hit(self.last_optimized_artifacts)
+            self.cache_manager.add_prompt_to_history(
+                prompt, self.last_optimized_artifacts
+            )
         self.chat_history.append(output_history)
         final_response = output_history["content"].strip()
         if self.chat_mode:

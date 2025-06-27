@@ -2,6 +2,7 @@ import copy
 import sys
 from colorama import Fore, Style
 from dir_assistant.assistant.base_assistant import BaseAssistant
+
 class CGRAGAssistant(BaseAssistant):
     def __init__(
         self,
@@ -42,6 +43,7 @@ class CGRAGAssistant(BaseAssistant):
         )
         self.use_cgrag = use_cgrag
         self.print_cgrag = print_cgrag
+
     def write_assistant_thinking_message(self):
         # Display the assistant thinking message
         if self.chat_mode:
@@ -65,6 +67,7 @@ class CGRAGAssistant(BaseAssistant):
             if self.print_cgrag:
                 sys.stdout.write("\r")
             sys.stdout.flush()
+
     def print_cgrag_output(self, cgrag_output):
         if self.chat_mode:
             if self.print_cgrag:
@@ -82,6 +85,7 @@ class CGRAGAssistant(BaseAssistant):
                     f"{self.get_color_prefix(Style.BRIGHT, Fore.WHITE)}(thinking...){self.get_color_suffix()}"
                 )
             sys.stdout.flush()
+
     def create_cgrag_prompt(self, base_prompt):
         return f"""If this is the final part of this prompt, this is the actual request to respond to. All information
 above should be considered supplementary to this request to help answer it:
@@ -102,6 +106,7 @@ so your response must include the most important concepts and information requir
 prompt. Keep the list length to around 20 items. If the prompt is referencing code, list specific class, 
 function, and variable names as applicable to answering the user prompt.
 """
+
     def run_stream_processes(self, user_input, one_off=False):
         if self.use_cgrag:
             cgrag_relevant_full_text = self.build_relevant_full_text(user_input)
@@ -120,12 +125,10 @@ function, and variable names as applicable to answering the user prompt.
             output_history["content"] = self.remove_thinking_message(
                 output_history["content"]
             )
-            relevant_full_text = self.build_relevant_full_text(
-                output_history["content"]
-            )
+            combined_query = f"Original prompt:\n{user_input}\nNeeded information:\n{output_history['content']}"
+            relevant_full_text = self.build_relevant_full_text(combined_query)
             self.print_cgrag_output(output_history["content"])
         else:
             relevant_full_text = self.build_relevant_full_text(user_input)
         prompt = self.create_prompt(user_input)
         return self.run_basic_chat_stream(prompt, relevant_full_text, one_off)
-

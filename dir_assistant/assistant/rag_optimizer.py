@@ -54,8 +54,6 @@ class RagOptimizer:
             artifact_metadata,
             prefix_cache_metadata,
     ):
-        #print("artifact_metadata", [repr(v)[:100] for k, v in artifact_metadata.items()])
-        print(f"RAG Optimizer: Received {len(prefix_cache_metadata)} cached prefixes.")
         """
         Optimizes RAG artifacts by finding the longest possible cached prefix.
 
@@ -106,7 +104,6 @@ class RagOptimizer:
 
         # IGNORE artifact_excludable_factor -> keep **all** artifacts
         final_candidate_artifacts = set(artifact_distances.keys())
-        print(f"RAG Optimizer: Final candidate artifacts (count: {len(final_candidate_artifacts)})")
 
         if not final_candidate_artifacts:
             return [], ""
@@ -129,7 +126,6 @@ class RagOptimizer:
         candidate_prefixes = [
             p for p in prefix_cache_metadata if set(p.split(self.ARTIFACT_SEPARATOR)).issubset(final_candidate_artifacts)
         ]
-        print(f"RAG Optimizer: Found {len(candidate_prefixes)} candidate prefixes.")
 
         best_prefix = ""
         if candidate_prefixes:
@@ -158,7 +154,6 @@ class RagOptimizer:
 
         if best_prefix:
             prefix_artifacts = best_prefix.split(self.ARTIFACT_SEPARATOR)
-            print(f"RAG Optimizer: Best prefix found: '{best_prefix[:100]}' with length {len(prefix_artifacts)}")
             remaining_artifacts = final_candidate_artifacts - set(prefix_artifacts)
             sorted_remaining = sorted(list(remaining_artifacts), key=sort_key)
             return prefix_artifacts + sorted_remaining, best_prefix
@@ -166,6 +161,5 @@ class RagOptimizer:
         # ------------------------------------------------------------------
         # 2. No cached prefix intersects all artifacts -> just sort everything.
         # ------------------------------------------------------------------
-        print("RAG Optimizer: No suitable cached prefix found. Sorting all artifacts.")
         fallback_sorted_artifacts = sorted(list(final_candidate_artifacts), key=sort_key)
         return fallback_sorted_artifacts, ""
