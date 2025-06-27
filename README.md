@@ -388,58 +388,45 @@ If you have any issues building `llama-cpp-python`, the project's install instru
 info: https://github.com/abetlen/llama-cpp-python
 ## General Configuration (Local and API Mode)
 ### RAG Caching and Context Optimization
-`dir-assistant` includes an advanced system to optimize the context sent to the LLM,
-aiming to increase utiliziation of context caching in modern LLM systems. Context 
-caching is a method used by LLM systems to reduce the amount of processing required
-to generate responses by reusing identical vector states from previous prompts.
+`dir-assistant` includes an advanced system to optimize the context sent to the LLM, aiming to maximize the utilization of context caching in modern LLM systems. Context caching reduces latency and cost by reusing computation from previous prompts. For this to work, the beginning of a new prompt must exactly match the beginning of a previous one.
 
-To utilize this feature, the beginning of a prompt must be identical to the 
-beginning of a previous prompt. In the context of `dir-assistant`, this 
-means attempting to order RAG artifacts in a way that maximizes the number 
-of times an identical order of artifacts is sent to the LLM. This is 
-harder than it sounds!
+In `dir-assistant`, the "context" is primarily composed of chunks of your files, known as RAG artifacts. The challenge is to order these artifacts consistently to create stable "prefixes" (the initial sequence of artifacts) that the LLM system can cache.
 
-The context opimizer in `dir-assistant` accomplishes this by reordering 
-RAG artifacts. Additionally, it may exclude up to `ARTIFACT_EXCLUDABLE_FACTOR`
-of the least relevant artifacts if there are suitable previous prompts 
-that have been sent with the remainder of the artifacts for your current
-prompt.
+#### The Optimization Strategy
+The optimizer follows a three-tiered strategy to construct the best possible artifact list for caching:
 
-It will be common that no previous prompts, or any permutations of their
-beginnings, are suitable for your current prompt. In that case 
-`dir-assistant` will intelligently order the new artifacts it will send
-based on a variety of factors to attempt to maximize future cache hits
-including:
+1.  **Core vs. Excludable Artifacts**: First, it divides the initial RAG results (based on semantic relevance) into two groups:
+    *   **Core Artifacts**: The most relevant artifacts that *must* be included in the context.
+    *   **Excludable Artifacts**: The least relevant artifacts, which can be swapped out to improve cache hits.
+    The `ARTIFACT_EXCLUDABLE_FACTOR` setting controls this division. For example, a value of `0.2` means the top 80% of artifacts are "core," and the bottom 20% are "excludable."
 
-- How frequently the artifacts appear in past prompts 
-- What position the artifacts have been in past prompts
-- How often the artifacts are changed on disk
+2.  **Prefix Matching with Swapping**: The optimizer then searches through previously cached prefixes. It looks for the longest prefix that meets two conditions:
+    *   It must contain all **core artifacts**.
+    *   The number of new artifacts it introduces (those not in the initial RAG results) must be less than or equal to the number of available **excludable artifacts**.
+    This allows `dir-assistant` to "swap" less relevant files from the current query for files from a cached prefix, thereby reconstructing the cached context and achieving a cache hit. If multiple prefixes are viable, the one with the most historical hits is chosen.
 
-There are a variety of configuration options available to tune the behavior:
+3.  **Fallback Sorting**: If no suitable cached prefix can be constructed, the optimizer falls back to a stable sorting algorithm. It orders all the initial artifacts based on a score calculated from their usage history (frequency, position, stability) and uses the original semantic relevance score as a final tie-breaker. This ensures a consistent and logical order even without a cache hit.
+
+You can tune the optimizer's behavior through the following settings in your configuration file (`dir-assistant config open`):
 ```toml
 [DIR_ASSISTANT]
-# The percentage of the least relevant files (based on RAG distance) that can
-# be replaced by more historically relevant files from the cache.
-# A higher value allows more aggressive replacement.
-# Range: 0.0 to 1.0. Default: 0.3 (30%)
-ARTIFACT_EXCLUDABLE_FACTOR = 0.3
+# The percentile of the most distant RAG results that can be replaced
+# by artifacts from a cached prefix. A value of 0.2 means the bottom
+# 20% of semantically relevant files can be swapped out.
+ARTIFACT_EXCLUDABLE_FACTOR = 0.2
+
 # The time-to-live (in seconds) for a cached context prefix.
 # Default is 3600 (1 hour).
 API_CONTEXT_CACHE_TTL = 3600
-# Weights used by the optimizer to score and reorder file artifacts.
-# Adjusting these can change how aggressively the optimizer prioritizes
-# different factors when deciding the final order of files in the prompt.
+
+# Weights used by the optimizer to score and reorder file artifacts in the
+# fallback sorting scenario. Adjusting these can change how aggressively
+# the optimizer prioritizes different factors.
 [DIR_ASSISTANT.RAG_OPTIMIZER_WEIGHTS]
-# How much to value artifacts that appear frequently in past prompts.
 frequency = 1.0
-# How much to penalize artifacts for appearing later in past prompts.
 position = 1.0
-# How much to value files that have not been modified recently.
 stability = 1.0
-# How much to value prefix orderings that have appeared frequently in history.
-historical_hits = 1.0
-# How much to value prefix orderings that are currently in the active cache.
-cache_hits = 1.0
+historical_hits = 1.0 # Used to tie-break between equally long prefixes
 ```
 ## API Configuration
 If you wish to use an API LLM, you will need to configure `dir-assistant` accordingly.
