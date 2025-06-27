@@ -102,11 +102,24 @@ class RagOptimizer:
             art_id: dist for art_id, dist in k_nearest_neighbors_with_distances
         }
 
-        # IGNORE artifact_excludable_factor -> keep **all** artifacts
-        final_candidate_artifacts = set(artifact_distances.keys())
+        all_initial_artifacts = set(artifact_distances.keys())
+        num_artifacts = len(all_initial_artifacts)
 
-        if not final_candidate_artifacts:
+        if not all_initial_artifacts:
             return [], ""
+
+        # Determine the set of "core" artifacts that must be included. These are the
+        # most relevant artifacts (lowest distance) that cannot be excluded.
+        num_core_artifacts = math.ceil(
+            num_artifacts * (1.0 - self.artifact_excludable_factor)
+        )
+        core_artifacts = {
+            art_id
+            for art_id, dist in k_nearest_neighbors_with_distances[
+                : int(num_core_artifacts)
+            ]
+        }
+        excludable_artifacts = all_initial_artifacts - core_artifacts
 
         current_time = time.time()
 
@@ -117,21 +130,35 @@ class RagOptimizer:
             return -score, distance
 
         # ------------------------------------------------------------------
-        # 1. Find the LONGEST cached prefix that is fully contained
-        #    within the current set of artifacts.
-        #    If several prefixes share the same length, prefer the one with
-        #    the highest historical hit count. This guarantees that the most
-        #    frequently used of the longest prefixes is selected.
+        # 1. Find the best cached prefix by allowing artifact swaps.
+        #
+        # A prefix is a candidate if it meets two conditions:
+        #   a) It must contain all "core" artifacts.
+        #   b) The number of new artifacts it introduces (those not in the
+        #      initial RAG results) must not exceed the number of available
+        #      "excludable" artifacts. This allows for a trade-off.
         # ------------------------------------------------------------------
-        candidate_prefixes = [
-            p for p in prefix_cache_metadata if set(p.split(self.ARTIFACT_SEPARATOR)).issubset(final_candidate_artifacts)
-        ]
+        candidate_prefixes = []
+        for p_str in prefix_cache_metadata:
+            p_artifacts_set = set(p_str.split(self.ARTIFACT_SEPARATOR))
+
+            if not core_artifacts.issubset(p_artifacts_set):
+                continue
+
+            new_artifacts_in_prefix = p_artifacts_set - all_initial_artifacts
+            if len(new_artifacts_in_prefix) <= len(excludable_artifacts):
+                candidate_prefixes.append(p_str)
 
         best_prefix = ""
         if candidate_prefixes:
-            # Find maximum length first
-            max_len = max(len(p.split(self.ARTIFACT_SEPARATOR)) for p in candidate_prefixes)
-            longest_candidates = [p for p in candidate_prefixes if len(p.split(self.ARTIFACT_SEPARATOR)) == max_len]
+            max_len = max(
+                len(p.split(self.ARTIFACT_SEPARATOR)) for p in candidate_prefixes
+            )
+            longest_candidates = [
+                p
+                for p in candidate_prefixes
+                if len(p.split(self.ARTIFACT_SEPARATOR)) == max_len
+            ]
 
             if len(longest_candidates) == 1:
                 best_prefix = longest_candidates[0]
@@ -143,7 +170,10 @@ class RagOptimizer:
                     count = 0
                     for hist_entry in prompt_history:
                         hist_artifacts = hist_entry.get("artifacts", [])
-                        if len(hist_artifacts) >= len_p and hist_artifacts[:len_p] == p_artifacts:
+                        if (
+                            len(hist_artifacts) >= len_p
+                            and hist_artifacts[:len_p] == p_artifacts
+                        ):
                             count += 1
                     return count
 
@@ -154,12 +184,22 @@ class RagOptimizer:
 
         if best_prefix:
             prefix_artifacts = best_prefix.split(self.ARTIFACT_SEPARATOR)
-            remaining_artifacts = final_candidate_artifacts - set(prefix_artifacts)
-            sorted_remaining = sorted(list(remaining_artifacts), key=sort_key)
-            return prefix_artifacts + sorted_remaining, best_prefix
+
+            # Construct the final list: prefix + best of the rest, up to num_artifacts
+            final_artifacts = list(prefix_artifacts)
+            remaining_slots = num_artifacts - len(final_artifacts)
+
+            if remaining_slots > 0:
+                candidates_for_remainder = all_initial_artifacts - set(prefix_artifacts)
+                sorted_candidates = sorted(
+                    list(candidates_for_remainder), key=sort_key
+                )
+                final_artifacts.extend(sorted_candidates[:remaining_slots])
+
+            return final_artifacts[:num_artifacts], best_prefix
 
         # ------------------------------------------------------------------
-        # 2. No cached prefix intersects all artifacts -> just sort everything.
+        # 2. No suitable prefix found -> sort all initial artifacts and return.
         # ------------------------------------------------------------------
-        fallback_sorted_artifacts = sorted(list(final_candidate_artifacts), key=sort_key)
+        fallback_sorted_artifacts = sorted(list(all_initial_artifacts), key=sort_key)
         return fallback_sorted_artifacts, ""
