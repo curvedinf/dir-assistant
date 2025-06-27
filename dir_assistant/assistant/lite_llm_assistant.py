@@ -1,4 +1,5 @@
 from copy import deepcopy
+from json import dumps
 from time import sleep
 
 from colorama import Fore, Style
@@ -107,6 +108,8 @@ class LiteLLMAssistant(GitAssistant):
         )
         while current_retry <= max_retries:
             try:
+                if self.verbose:
+                    print(f"Calling completion with chat history ({len(chat_history_cleaned)} messages, {len(dumps(chat_history_cleaned, indent=4))} characters):")
                 if pass_through_context:
                     return completion(
                         **options,

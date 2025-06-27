@@ -1,5 +1,6 @@
 import time
 from collections import defaultdict
+import json
 
 from sqlitedict import SqliteDict
 
@@ -41,13 +42,15 @@ class CacheManager:
 
         return dict(self.prefix_cache.items())
 
-    def update_prefix_hit(self, prefix_string: str):
+    def update_prefix_hit(self, prefix_artifacts: list):
         """
-        Updates the last hit timestamp for a given prefix string.
+        Updates the last hit timestamp for a given prefix.
 
         Args:
-            prefix_string (str): The prefix that had a cache hit.
+            prefix_artifacts (list): The prefix artifacts that had a cache hit.
         """
+        # Convert list to a canonical string representation for use as a key
+        prefix_string = json.dumps(sorted(prefix_artifacts))
         self.prefix_cache[prefix_string] = {"last_hit_timestamp": time.time()}
 
     def add_prompt_to_history(self, prompt_string: str, ordered_artifacts: list):
