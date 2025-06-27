@@ -11,7 +11,6 @@ CONFIG_FILENAME = "config.toml"
 CONFIG_PATH = join(expanduser("~"), ".config", "dir-assistant")
 STORAGE_PATH = join(expanduser("~"), ".local", "share", "dir-assistant")
 CACHE_PATH = join(expanduser("~"), ".cache", "dir-assistant")
-APP_DB_FILENAME = "app.sqlite"
 INDEX_CACHE_FILENAME = "index_cache.sqlite"
 PREFIX_CACHE_FILENAME = "prefix_cache.sqlite"
 PROMPT_HISTORY_FILENAME = "prompt_history.sqlite"

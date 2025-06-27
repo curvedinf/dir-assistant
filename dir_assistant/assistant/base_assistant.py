@@ -94,25 +94,56 @@ class BaseAssistant:
         raise NotImplementedError
 
     def build_relevant_full_text(self, user_input):
+        """
+        Identifies relevant text chunks, pre-culs a candidate pool based on token
+        limits, optimizes the pool for caching, and builds the final context string.
+        """
+        # 1. Get an initial list of nearest neighbors from the search index.
+        print("searching index...")
         k_nearest_neighbors = search_index(
             self.embed, self.index, user_input, self.chunks
         )
-        # The rest of the new implementation is fine
+
+        # 2. Pre-cull candidates to create a token-aware pool for the optimizer.
+        # This is the primary change: culling before optimizing.
+        candidate_pool = []
+        total_candidate_tokens = 0
+        # Create a candidate pool larger than the final context to give the
+        # optimizer room to swap artifacts. A ratio of 2.0 is a good starting point.
+        optimizer_candidate_pool_ratio = 2.0
+        optimizer_pool_limit = (
+                self.context_size * self.context_file_ratio * optimizer_candidate_pool_ratio
+        )
+
+        for neighbor in k_nearest_neighbors:
+            chunk_text = neighbor[0].get("text", "") + "\n\n"
+            chunk_tokens = self.count_tokens(chunk_text, role="user")
+
+            # Stop adding candidates when the pool reaches the desired token limit.
+            if total_candidate_tokens + chunk_tokens > optimizer_pool_limit and candidate_pool:
+                break
+
+            # The optimizer will need the distance, so we keep the full neighbor object.
+            candidate_pool.append(neighbor[0])
+            total_candidate_tokens += chunk_tokens
+
+        # 3. Gather historical and cache metadata for the optimizer.
+        # This logic is preserved from the original implementation.
         prompt_history = self.cache_manager.get_prompt_history()
         prefix_cache_metadata = self.cache_manager.get_non_expired_prefixes()
         historical_artifact_metadata = (
             self.cache_manager.compute_artifact_metadata_from_history()
         )
         combined_artifact_metadata = {}
-        all_artifact_ids = {chunk["text"] for chunk in self.chunks} | set(
+        all_artifacts = {chunk["text"] for chunk in self.chunks} | set(
             historical_artifact_metadata.keys()
         )
-        for artifact_id in all_artifact_ids:
+        for artifact in all_artifacts:
             filepath = next(
                 (
                     chunk["filepath"]
                     for chunk in self.chunks
-                    if chunk["text"] == artifact_id
+                    if chunk["text"] == artifact
                 ),
                 None,
             )
@@ -122,49 +153,70 @@ class BaseAssistant:
                 else 0
             )
             hist_meta = historical_artifact_metadata.get(
-                artifact_id, {"frequency": 0, "positions": []}
+                artifact, {"frequency": 0, "positions": []}
             )
-            combined_artifact_metadata[artifact_id] = {
+            combined_artifact_metadata[artifact] = {
                 "frequency": hist_meta["frequency"],
                 "positions": hist_meta["positions"],
                 "last_modified_timestamp": last_modified,
             }
+
         if self.verbose and self.chat_mode:
             print(f"K nearest neighbors: {len(k_nearest_neighbors)}")
+            print(f"Pre-culled candidates for optimizer: {len(candidate_pool)}")
             print(f"Prompt history: {len(prompt_history)}")
             print(f"Prefix cache metadata: {len(prefix_cache_metadata)}")
-        optimized_artifact_ids, matched_prefix = (
+
+        # 4. Run the optimizer on the pre-culled candidate pool.
+        # The optimizer input is now the smaller, more relevant candidate list.
+        optimizer_input = [
+            (chunk.get("text", ""), chunk.get("distance", i))
+            for i, chunk in enumerate(candidate_pool)
+        ]
+        #print("optimizer input first", optimizer_input[0])
+        optimized_artifacts, matched_prefix = (
             self.rag_optimizer.optimize_rag_for_caching(
-                k_nearest_neighbors_with_distances=k_nearest_neighbors,
+                k_nearest_neighbors_with_distances=optimizer_input,
                 prompt_history=prompt_history,
                 artifact_metadata=combined_artifact_metadata,
                 prefix_cache_metadata=prefix_cache_metadata,
             )
         )
+
         if self.verbose and self.chat_mode:
-            print(f"Optimized artifacts: {len(optimized_artifact_ids)}")
-            print(f"Matched prefix size: {len(matched_prefix)}")
-        self.last_optimized_artifacts = optimized_artifact_ids
+            print(f"Optimized artifacts before final cull: {len(optimized_artifacts)}")
+            print(f"Matched prefix size: {len(matched_prefix.split())}")
+
         self.last_matched_prefix = matched_prefix
+
+        # 5. Build the final text, performing a strict culling on the *optimized* list.
+        # This final loop ensures the hard context limit is never exceeded.
         relevant_full_text = ""
+        final_artifacts_in_context = []
         chunk_total_tokens = 0
-        optimized_chunks = [
-            next((c for c in self.chunks if c["text"] == aid), None)
-            for aid in optimized_artifact_ids
-        ]
-        for chunk in filter(None, optimized_chunks):
+
+        # An efficient lookup map is better than iterating with next() repeatedly.
+        chunk_map = {c["text"]: c for c in self.chunks}
+
+        for artifact in optimized_artifacts:
+            chunk = chunk_map.get(artifact)
+            if not chunk:
+                continue
+
             chunk_text = chunk["text"] + "\n\n"
             chunk_tokens = self.count_tokens(chunk_text, role="user")
+
             if (
-                chunk_total_tokens + chunk_tokens
-                > self.context_size * self.context_file_ratio
+                    chunk_total_tokens + chunk_tokens
+                    > self.context_size * self.context_file_ratio
             ):
-                self.last_optimized_artifacts = self.last_optimized_artifacts[
-                    : len(relevant_full_text.split("\n\n")) - 1
-                ]
-                break
+                break  # The context is full.
+
             relevant_full_text += chunk_text
             chunk_total_tokens += chunk_tokens
+            final_artifacts_in_context.append(artifact)
+
+        self.last_optimized_artifacts = relevant_full_text
         return relevant_full_text
 
     def get_color_prefix(self, brightness, color):
@@ -222,7 +274,16 @@ class BaseAssistant:
         return history_list
 
     def create_prompt(self, user_input):
-        return f"{user_input}\n"
+        return f"""If this is the final part of this prompt, this is the actual request to respond to. All information
+above should be considered supplementary to this request to help answer it.
+
+User request:
+<---------------------------->
+f"{user_input}"
+<---------------------------->
+
+Perform the user request above.
+"""
 
     def remove_thinking_message(self, content):
         start_pattern = self.thinking_start_pattern
@@ -299,6 +360,9 @@ class BaseAssistant:
         if not one_off:
             if self.last_matched_prefix:
                 self.cache_manager.update_prefix_hit(self.last_matched_prefix)
+            # Add the full sequence of artifacts as a new potential prefix
+            if self.last_optimized_artifacts:
+                self.cache_manager.update_prefix_hit(self.last_optimized_artifacts)
             self.cache_manager.add_prompt_to_history(
                 prompt, self.last_optimized_artifacts
             )

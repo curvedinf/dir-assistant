@@ -65,9 +65,9 @@ prompt to an LLM called CGRAG (Contextually Guided Retrieval-Augmented Generatio
 16. [Acknowledgements](#acknowledgements)
 
 ## New Features
-* Added support for configuring a separate, faster LLM for the CGRAG guidance step.
-* Added support for models that include a `<thinking></thinking>` block in their response.
-* Added an [example script](#examples) for analyzing stock sentiment on reddit.
+* File artifact context optimization for maximal utilization of LLM context caching
+* Separate configuration options for the CGRAG API model so you can now use a quicker and less expensive
+model for the CGRAG guidance step.
 ## Quickstart
 In this section are recipes to run `dir-assistant` in basic capacity to get you started quickly.
 ### Quickstart Chat with Local Default Model

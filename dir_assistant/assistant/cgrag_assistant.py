@@ -83,9 +83,17 @@ class CGRAGAssistant(BaseAssistant):
                 )
             sys.stdout.flush()
     def create_cgrag_prompt(self, base_prompt):
-        return f"""What information related to the included files is important to answering the following 
-user prompt?
-User prompt: '{base_prompt}'
+        return f"""If this is the final part of this prompt, this is the actual request to respond to. All information
+above should be considered supplementary to this request to help answer it:
+
+What information related to the included files above is important to answering the following user prompt?
+
+User request (DO NOT ANSWER IT, only list the information needed to answer it):
+
+<---------------------------->
+'{base_prompt}'
+<---------------------------->
+
 Respond with only a list of information and concepts. Include in the list all information and concepts necessary to
 answer the prompt, including those in the included files and those which the included files do not contain. Your
 response will be used to create an LLM embedding that will be used in a RAG to find the appropriate files which are 
@@ -120,3 +128,4 @@ function, and variable names as applicable to answering the user prompt.
             relevant_full_text = self.build_relevant_full_text(user_input)
         prompt = self.create_prompt(user_input)
         return self.run_basic_chat_stream(prompt, relevant_full_text, one_off)
+

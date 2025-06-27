@@ -52,14 +52,18 @@ class GitAssistant(CGRAGAssistant):
 
     def create_prompt(self, user_input):
         if not self.commit_to_git:
-            return user_input
+            return super().create_prompt(user_input)
         else:
             # Ask the LLM if a diff commit is appropriate
             should_diff_output = self.run_one_off_completion(
                 f"""Does the prompt below request changes to files? 
+
 Respond only with one word: "YES" or "NO". Do not respond with additional words or characters, only "YES" or "NO".
+
 User prompt:
+<---------------------------->
 {user_input}
+<---------------------------->
 """
             )
             if "YES" in should_diff_output:
@@ -69,18 +73,27 @@ User prompt:
             else:
                 self.should_diff = None
             if self.should_diff:
-                return f"""User Prompt:
+                return f"""If this is the final part of this prompt, this is the actual request to respond to. All information
+above should be considered supplementary to this request to help answer it.
+
+User Prompt (RESPOND TO THIS PROMPT BY CREATING A FILE WITH THE SPECIFICATIONS BELOW):
+<---------------------------->
 {user_input}
-----------------------------------
-Given the user prompt above and included file snippets, respond with the contents of a single file that has
-the changes the user prompt requested. Do not provide an introduction, summary, or conclusion. Only respond 
-with the file's contents. Do not respond with surrounding markdown. Add the filename of the file as the
-first line of the response. It is okay to create a new file. Always respond with the entire contents of the 
-new version of the file. Ensure white space and new lines are consistent with the original.
+<---------------------------->
+
+Given the user prompt and included file snippets above, respond with the contents of a single file that has
+the changes the user prompt requested. Do not provide an introduction, summary, or conclusion. Do not write
+any additional text other than the file contents. Only respond with the file's contents. Markdown and other
+formatting is NOT ALLOWED. Add the filename of the file as the first line of the response. It is okay to 
+create a new file. Always respond with the entire contents of the new version of the file. File snippets are
+NOT ALLOWED. Ensure white space and new lines are consistent with the original.
+
 Example response:
+<---------------------------->
 /home/user/hello_project/hello_world.py
 if __name__ == "__main__":
     print("Hello, World!")
+<---------------------------->
 """
             else:
                 return user_input

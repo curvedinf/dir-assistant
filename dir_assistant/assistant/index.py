@@ -219,7 +219,9 @@ def search_index(embed, index, query, all_chunks):
             f"Run 'dir_assistant clear' and try again.'\n"
         )
         raise e
-    relevant_chunks = [all_chunks[i] for i in indices[0] if i != -1]
+    relevant_chunks = [
+        (all_chunks[index], distances[0][iter]) for iter, index in enumerate(indices[0]) if index != -1
+    ]
     return relevant_chunks
 
 
