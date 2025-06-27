@@ -65,7 +65,9 @@ prompt to an LLM called CGRAG (Contextually Guided Retrieval-Augmented Generatio
 16. [Acknowledgements](#acknowledgements)
 
 ## New Features
-* File artifact context optimization for maximal utilization of LLM context caching
+* File artifact context optimization for maximal utilization of LLM context caching. 
+This can drastically reduce API LLM expenses and processing time if context prefix
+caching is supported by your LLM provider.
 * Separate configuration options for the CGRAG API model so you can now use a quicker and less expensive
 model for the CGRAG guidance step.
 ## Quickstart
@@ -298,12 +300,12 @@ VOYAGE_API_KEY = "your_voyage_key_here"
 
 # Main model for generating the final, high-quality response
 [DIR_ASSISTANT.LITELLM_COMPLETION_OPTIONS]
-model = "anthropic/claude-3-7-sonnet-20240729"
+model = "anthropic/gemini-2.5-pro"
 timeout = 600
 
 # Optional: A faster, cheaper model for the initial CGRAG guidance step
 [DIR_ASSISTANT.LITELLM_CGRAG_COMPLETION_OPTIONS]
-model = "gemini/gemini-1.5-flash-latest"
+model = "gemini/gemini-2.5-flash"
 timeout = 300
 
 # High-quality embedding model specialized for code
@@ -540,6 +542,7 @@ ACTIVE_MODEL_IS_LOCAL = false # Ensure API mode
 # For generic OpenAI-compatible servers, often you just specify the model name.
 model = "custom/my-model-name" # Example, adjust as per your server's requirements
 api_base = "http://localhost:1234/v1" # URL to your server's OpenAI-compatible endpoint
+# If api_base doesn't work, try base_url instead. LiteLLM has used both for the same purpose.
 # api_key = "sk-xxxxxxxxxx" # If your custom server requires an API key, set it here or as an environment variable
 ```
 Ensure that `ACTIVE_MODEL_IS_LOCAL` is set to `false`. The `model` name should be what your custom server expects. Some servers might also require an `api_key` even if hosted locally.
