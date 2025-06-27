@@ -8,6 +8,8 @@ class RagOptimizer:
     Optimizes the order and content of RAG artifacts to improve caching and relevance.
     """
 
+    ARTIFACT_SEPARATOR = "<--|-->"
+
     def __init__(self, weights, artifact_excludable_factor):
         """
         Initializes the RagOptimizer.
@@ -52,8 +54,8 @@ class RagOptimizer:
             artifact_metadata,
             prefix_cache_metadata,
     ):
-        print("artifact_metadata", [v for k, v in artifact_metadata.items()])
-        print("prefix_cache_metadata", [v for k, v in prefix_cache_metadata.items()])
+        #print("artifact_metadata", [repr(v)[:100] for k, v in artifact_metadata.items()])
+        print(f"RAG Optimizer: Received {len(prefix_cache_metadata)} cached prefixes.")
         """
         Optimizes RAG artifacts by finding the longest possible cached prefix.
 
@@ -102,87 +104,68 @@ class RagOptimizer:
             art_id: dist for art_id, dist in k_nearest_neighbors_with_distances
         }
 
-        k = len(k_nearest_neighbors_with_distances)
-        current_time = time.time()
-
-        # 1. Create the artifact pool
-        num_to_replace = math.floor(k * self.artifact_excludable_factor)
-
-        sorted_neighbors_desc = sorted(
-            k_nearest_neighbors_with_distances, key=lambda item: item[1], reverse=True
-        )
-
-        excludable_artifacts = {
-            art_id for art_id, dist in sorted_neighbors_desc[:num_to_replace]
-        }
-        core_artifacts = set(artifact_distances.keys()) - excludable_artifacts
-
-        cache_replacement_candidates = defaultdict(int)
-        for prefix in prefix_cache_metadata:
-            for artifact in prefix.split():
-                if artifact not in artifact_distances:
-                    cache_replacement_candidates[artifact] += 1
-
-        sorted_cache_candidates = sorted(
-            cache_replacement_candidates.items(), key=lambda item: item[1], reverse=True
-        )
-        top_cache_candidates = {
-            art_id for art_id, score in sorted_cache_candidates[:num_to_replace]
-        }
-        final_candidate_artifacts = core_artifacts.union(top_cache_candidates)
+        # IGNORE artifact_excludable_factor -> keep **all** artifacts
+        final_candidate_artifacts = set(artifact_distances.keys())
+        print(f"RAG Optimizer: Final candidate artifacts (count: {len(final_candidate_artifacts)})")
 
         if not final_candidate_artifacts:
             return [], ""
 
+        current_time = time.time()
+
         def sort_key(artifact_id):
             """Defines the sorting logic: score (desc), then distance (asc)."""
             score = self._score_artifact(artifact_id, artifact_metadata, current_time)
-            distance = artifact_distances.get(artifact_id, float('inf'))
+            distance = artifact_distances.get(artifact_id, float("inf"))
             return -score, distance
 
-        # 2. Score and sort known prefixes
-        scored_prefixes = {}
-        for prefix in prefix_cache_metadata:
-            historical_hits = sum(
-                1 for prompt in prompt_history if prompt.startswith(prefix)
-            )
-            score = (historical_hits * self.weights.get("historical_hits", 1.0)) + (
-                    len(prefix.split()) * self.weights.get("prefix_length", 0.1)
-            )
-            scored_prefixes[prefix] = score
+        # ------------------------------------------------------------------
+        # 1. Find the LONGEST cached prefix that is fully contained
+        #    within the current set of artifacts.
+        #    If several prefixes share the same length, prefer the one with
+        #    the highest historical hit count. This guarantees that the most
+        #    frequently used of the longest prefixes is selected.
+        # ------------------------------------------------------------------
+        candidate_prefixes = [
+            p for p in prefix_cache_metadata if set(p.split(self.ARTIFACT_SEPARATOR)).issubset(final_candidate_artifacts)
+        ]
+        print(f"RAG Optimizer: Found {len(candidate_prefixes)} candidate prefixes.")
 
-        sorted_cached_prefixes = sorted(
-            scored_prefixes.keys(), key=lambda p: scored_prefixes[p], reverse=True
-        )
+        best_prefix = ""
+        if candidate_prefixes:
+            # Find maximum length first
+            max_len = max(len(p.split(self.ARTIFACT_SEPARATOR)) for p in candidate_prefixes)
+            longest_candidates = [p for p in candidate_prefixes if len(p.split(self.ARTIFACT_SEPARATOR)) == max_len]
 
-        # 3. Primary Goal: Find a full prefix match
-        for prefix in sorted_cached_prefixes:
-            prefix_artifacts = prefix.split()
-            if set(prefix_artifacts).issubset(final_candidate_artifacts):
-                remaining_artifacts = final_candidate_artifacts - set(prefix_artifacts)
-                sorted_remaining = sorted(list(remaining_artifacts), key=sort_key)
-                return prefix_artifacts + sorted_remaining, prefix
+            if len(longest_candidates) == 1:
+                best_prefix = longest_candidates[0]
+            else:
+                # Tie-break using historical hit count
+                def get_historical_hits(prefix_str):
+                    p_artifacts = prefix_str.split(self.ARTIFACT_SEPARATOR)
+                    len_p = len(p_artifacts)
+                    count = 0
+                    for hist_entry in prompt_history:
+                        hist_artifacts = hist_entry.get("artifacts", [])
+                        if len(hist_artifacts) >= len_p and hist_artifacts[:len_p] == p_artifacts:
+                            count += 1
+                    return count
 
-        # 4. Secondary Goal: Find the best partial prefix match
-        best_partial_prefix_list = []
-        for prefix in sorted_cached_prefixes:
-            prefix_artifacts = prefix.split()
-            current_partial_match = [
-                art for art in prefix_artifacts if art in final_candidate_artifacts
-            ]
-            # Only consider sequential matches from the start of the prefix
-            if len(current_partial_match) == len(prefix_artifacts) or (
-                    current_partial_match and prefix_artifacts[:len(current_partial_match)] == current_partial_match
-            ):
-                if len(current_partial_match) > len(best_partial_prefix_list):
-                    best_partial_prefix_list = current_partial_match
+                best_prefix = max(
+                    longest_candidates,
+                    key=get_historical_hits,
+                )
 
-        if best_partial_prefix_list:
-            best_prefix_string = " ".join(best_partial_prefix_list)
-            remaining_artifacts = final_candidate_artifacts - set(best_partial_prefix_list)
+        if best_prefix:
+            prefix_artifacts = best_prefix.split(self.ARTIFACT_SEPARATOR)
+            print(f"RAG Optimizer: Best prefix found: '{best_prefix[:100]}' with length {len(prefix_artifacts)}")
+            remaining_artifacts = final_candidate_artifacts - set(prefix_artifacts)
             sorted_remaining = sorted(list(remaining_artifacts), key=sort_key)
-            return best_partial_prefix_list + sorted_remaining, best_prefix_string
+            return prefix_artifacts + sorted_remaining, best_prefix
 
-        # 5. Fallback: No prefix overlap found
+        # ------------------------------------------------------------------
+        # 2. No cached prefix intersects all artifacts -> just sort everything.
+        # ------------------------------------------------------------------
+        print("RAG Optimizer: No suitable cached prefix found. Sorting all artifacts.")
         fallback_sorted_artifacts = sorted(list(final_candidate_artifacts), key=sort_key)
         return fallback_sorted_artifacts, ""

@@ -67,14 +67,14 @@ class CacheManager:
 
     def get_prompt_history(self) -> list:
         """
-        Retrieves all prompt strings from the history, sorted by timestamp.
+        Retrieves all prompt history entries from the history, sorted by timestamp.
 
         Returns:
-            list: A list of all prompt strings.
+            list: A list of all prompt history entries.
         """
         # Sorting by the key (timestamp) to maintain order
         return [
-            item["prompt"] for _, item in sorted(self.prompt_history.items(), key=lambda x: float(x[0]))
+            item for _, item in sorted(self.prompt_history.items(), key=lambda x: float(x[0]))
         ]
 
     def compute_artifact_metadata_from_history(self) -> dict:
