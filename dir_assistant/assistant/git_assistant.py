@@ -120,6 +120,25 @@ if __name__ == "__main__":
             )
             output_lines = stream_output.split("\n")
             changed_filepath = output_lines[0].strip()
+
+            # Security: Validate the filepath to prevent path traversal attacks
+            if ".." in changed_filepath or os.path.isabs(changed_filepath):
+                if self.chat_mode:
+                    self.write_error_message(
+                        f"Error: Invalid file path '{changed_filepath}'. "
+                        "Path must be relative and within the project directory."
+                    )
+                return True  # Abort the operation
+
+            abs_path = os.path.abspath(changed_filepath)
+            if not abs_path.startswith(os.getcwd()):
+                if self.chat_mode:
+                    self.write_error_message(
+                        f"Error: Invalid file path '{changed_filepath}'. "
+                        "Attempted to write outside the project directory."
+                    )
+                return True  # Abort the operation
+
             file_content_lines = []
             if len(output_lines) > 1:
                 file_content_lines = output_lines[1:]
