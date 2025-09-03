@@ -146,7 +146,7 @@ see readme for more information. Exiting..."""
             sys.stdout.write(f"{Style.RESET_ALL}")
         sys.stdout.flush()
     index, chunks = create_file_index(
-        embed, ignore_paths, embed_chunk_size, extra_dirs, verbose
+        embed, ignore_paths, embed_chunk_size, config, extra_dirs, verbose
     )
     # Set up the system instructions
     system_instructions_full = f"""{system_instructions}

@@ -43,6 +43,8 @@ CONFIG_DEFAULTS = {
     "USE_CGRAG": True,
     "PRINT_CGRAG": False,
     "COMMIT_TO_GIT": False,
+    "INDEX_WORKERS": 0,
+    "INDEX_MAX_REQUESTS_PER_MINUTE": 0,
     "VERBOSE": False,
     "NO_COLOR": False,
     "HIDE_THINKING": True,

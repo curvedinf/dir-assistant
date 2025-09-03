@@ -4,6 +4,7 @@ import sys
 import numpy as np
 from faiss import IndexFlatL2
 from sqlitedict import SqliteDict
+from wove import flatten, weave
 
 from dir_assistant.cli.config import (
     CACHE_PATH,
@@ -66,30 +67,53 @@ def get_files_with_contents(directory, ignore_paths, cache_db, verbose):
     return files_with_contents
 
 
+def _process_file_task(file_info, cache_db, embed, embed_chunk_size, verbose):
+    with SqliteDict(cache_db, autocommit=True) as cache:
+        filepath = file_info["filepath"]
+        cached_chunks = cache.get(f"{filepath}_chunks")
+
+        if cached_chunks and cached_chunks["mtime"] == file_info["mtime"]:
+            if verbose:
+                sys.stdout.write(f"Using cached embeddings for {filepath}\n")
+                sys.stdout.flush()
+            return cached_chunks["chunks"], cached_chunks["embeddings"]
+
+        contents = file_info["contents"]
+        file_chunks, file_embeddings = process_file(
+            embed, filepath, contents, embed_chunk_size, verbose
+        )
+        cache[f"{filepath}_chunks"] = {
+            "chunks": file_chunks,
+            "embeddings": file_embeddings,
+            "mtime": file_info["mtime"],
+        }
+        return file_chunks, file_embeddings
+
+
 def create_file_index(
-    embed, ignore_paths, embed_chunk_size, extra_dirs=[], verbose=False
+    embed,
+    ignore_paths,
+    embed_chunk_size,
+    config_dict,
+    extra_dirs=[],
+    verbose=False,
 ):
     cache_db = get_file_path(CACHE_PATH, INDEX_CACHE_FILENAME)
-    # Start with current directory
     files_with_contents = get_files_with_contents(".", ignore_paths, cache_db, verbose)
-    # Add files from additional folders
+
     for folder in extra_dirs:
         if os.path.exists(folder):
             folder_files = get_files_with_contents(
                 folder, ignore_paths, cache_db, verbose
             )
             files_with_contents.extend(folder_files)
-        else:
-            if verbose:
-                sys.stdout.write(
-                    f"Warning: Additional folder {folder} does not exist\n"
-                )
-                sys.stdout.flush()
+        elif verbose:
+            sys.stdout.write(f"Warning: Additional folder {folder} does not exist\n")
+            sys.stdout.flush()
+
     if not files_with_contents:
         if verbose:
-            sys.stdout.write(
-                f"Warning: No text files found, creating first-file.txt...\n"
-            )
+            sys.stdout.write("Warning: No text files found, creating first-file.txt...\n")
             sys.stdout.flush()
         with open("first-file.txt", "w") as file:
             file.write(
@@ -99,34 +123,38 @@ def create_file_index(
         files_with_contents = get_files_with_contents(
             ".", ignore_paths, cache_db, verbose
         )
-    chunks = []
-    embeddings_list = []
-    with SqliteDict(cache_db, autocommit=True) as cache:
-        for file_info in files_with_contents:
-            filepath = file_info["filepath"]
-            cached_chunks = cache.get(f"{filepath}_chunks")
-            if cached_chunks and cached_chunks["mtime"] == file_info["mtime"]:
-                if verbose:
-                    sys.stdout.write(f"Using cached embeddings for {filepath}\n")
-                    sys.stdout.flush()
-                chunks.extend(cached_chunks["chunks"])
-                embeddings_list.extend(cached_chunks["embeddings"])
-                continue
-            contents = file_info["contents"]
-            file_chunks, file_embeddings = process_file(
-                embed, filepath, contents, embed_chunk_size, verbose
+
+    workers = config_dict["INDEX_WORKERS"]
+    limit_per_minute = config_dict["INDEX_MAX_REQUESTS_PER_MINUTE"]
+
+    with weave() as w:
+
+        @w.do(
+            files_with_contents,
+            workers=workers if workers > 0 else None,
+            limit_per_minute=limit_per_minute if limit_per_minute > 0 else None,
+        )
+        def processed_files(item):
+            return _process_file_task(
+                item, cache_db, embed, embed_chunk_size, verbose
             )
-            chunks.extend(file_chunks)
-            embeddings_list.extend(file_embeddings)
-            cache[f"{filepath}_chunks"] = {
-                "chunks": file_chunks,
-                "embeddings": file_embeddings,
-                "mtime": file_info["mtime"],
-            }
+
+    results = w.result.processed_files
+    if not results:
+        return None, []
+
+    chunks, embeddings_list = zip(*results)
+    chunks = flatten(chunks)
+    embeddings_list = flatten(embeddings_list)
+
     if verbose:
         sys.stdout.write("Creating index from embeddings...\n")
         sys.stdout.flush()
+
     embeddings = np.array(embeddings_list)
+    if embeddings.size == 0:
+        return None, []
+
     index = IndexFlatL2(embeddings.shape[1])
     index.add(embeddings)
     return index, chunks
