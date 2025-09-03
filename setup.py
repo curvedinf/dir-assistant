@@ -31,6 +31,7 @@ setup(
         "boto3",
         "dynaconf",
         "toml",
+        "wove",
     ],
     extras_require={
         "recommended": [

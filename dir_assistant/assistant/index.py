@@ -4,6 +4,7 @@ import sys
 import numpy as np
 from faiss import IndexFlatL2
 from sqlitedict import SqliteDict
+from wove import weave, flatten
 
 from dir_assistant.cli.config import (
     CACHE_PATH,
@@ -67,7 +68,15 @@ def get_files_with_contents(directory, ignore_paths, cache_db, verbose):
 
 
 def create_file_index(
-    embed, ignore_paths, embed_chunk_size, extra_dirs=[], verbose=False
+    embed,
+    ignore_paths,
+    embed_chunk_size,
+    extra_dirs=[],
+    verbose=False,
+    index_concurrent_files=1,
+    index_max_files_per_minute=60,
+    index_chunk_workers=1,
+    index_max_chunk_requests_per_minute=60,
 ):
     cache_db = get_file_path(CACHE_PATH, INDEX_CACHE_FILENAME)
     # Start with current directory
@@ -99,61 +108,88 @@ def create_file_index(
         files_with_contents = get_files_with_contents(
             ".", ignore_paths, cache_db, verbose
         )
-    chunks = []
-    embeddings_list = []
-    with SqliteDict(cache_db, autocommit=True) as cache:
-        for file_info in files_with_contents:
-            filepath = file_info["filepath"]
-            cached_chunks = cache.get(f"{filepath}_chunks")
-            if cached_chunks and cached_chunks["mtime"] == file_info["mtime"]:
-                if verbose:
-                    sys.stdout.write(f"Using cached embeddings for {filepath}\n")
-                    sys.stdout.flush()
-                chunks.extend(cached_chunks["chunks"])
-                embeddings_list.extend(cached_chunks["embeddings"])
-                continue
-            contents = file_info["contents"]
-            file_chunks, file_embeddings = process_file(
-                embed, filepath, contents, embed_chunk_size, verbose
-            )
-            chunks.extend(file_chunks)
-            embeddings_list.extend(file_embeddings)
-            cache[f"{filepath}_chunks"] = {
-                "chunks": file_chunks,
-                "embeddings": file_embeddings,
-                "mtime": file_info["mtime"],
-            }
+    with weave() as w:
+        @w.do(
+            files_with_contents,
+            workers=index_concurrent_files,
+            limit_per_minute=index_max_files_per_minute,
+        )
+        def process_file_concurrently(item):
+            with SqliteDict(cache_db, autocommit=True) as cache:
+                filepath = item["filepath"]
+                cached_chunks = cache.get(f"{filepath}_chunks")
+
+                if cached_chunks and cached_chunks["mtime"] == item["mtime"]:
+                    if verbose:
+                        sys.stdout.write(f"Using cached embeddings for {filepath}\n")
+                        sys.stdout.flush()
+                    return cached_chunks["chunks"], cached_chunks["embeddings"]
+
+                contents = item["contents"]
+                file_chunks, file_embeddings = process_file(
+                    embed,
+                    filepath,
+                    contents,
+                    embed_chunk_size,
+                    verbose,
+                    index_chunk_workers,
+                    index_max_chunk_requests_per_minute,
+                )
+                cache[f"{filepath}_chunks"] = {
+                    "chunks": file_chunks,
+                    "embeddings": file_embeddings,
+                    "mtime": item["mtime"],
+                }
+                return file_chunks, file_embeddings
+
+    # w.result.process_file_concurrently is a list of (chunks, embeddings) tuples
+    processed_results = w.result.process_file_concurrently
+
+    # Separate the chunks and embeddings from the processed results
+    all_chunks = flatten([res[0] for res in processed_results if res])
+    all_embeddings = flatten([res[1] for res in processed_results if res])
+
     if verbose:
         sys.stdout.write("Creating index from embeddings...\n")
         sys.stdout.flush()
-    embeddings = np.array(embeddings_list)
+
+    if not all_embeddings:
+        # Handle case with no embeddings to avoid error on np.array
+        return None, []
+
+    embeddings = np.array(all_embeddings)
     index = IndexFlatL2(embeddings.shape[1])
     index.add(embeddings)
-    return index, chunks
+
+    return index, all_chunks
 
 
-def process_file(embed, filepath, contents, embed_chunk_size, verbose=False):
+def process_file(
+    embed,
+    filepath,
+    contents,
+    embed_chunk_size,
+    verbose=False,
+    index_chunk_workers=1,
+    index_max_chunk_requests_per_minute=60,
+):
     lines = contents.split("\n")
+    raw_chunks = []
     current_chunk = ""
     start_line_number = 1
-    chunks = []
-    embeddings_list = []
-    if verbose:
-        sys.stdout.write(f"Creating embeddings for {filepath}\n")
-        sys.stdout.flush()
+
     for line_number, line in enumerate(lines, start=1):
-        # Process each line individually if needed
         line_content = line
         while line_content:
             proposed_chunk = current_chunk + line_content + "\n"
             chunk_header = f"---------------\n\nUser file '{filepath}' lines {start_line_number}-{line_number}:\n\n"
             proposed_text = chunk_header + proposed_chunk
             chunk_tokens = embed.count_tokens(proposed_text)
+
             if chunk_tokens <= embed_chunk_size:
                 current_chunk = proposed_chunk
-                break  # The line fits in the current chunk, break out of the inner loop
+                break
             else:
-                # Split line if too large for a new chunk
                 if current_chunk == "":
                     split_point = find_split_point(
                         embed, line_content, embed_chunk_size, chunk_header
@@ -161,38 +197,49 @@ def process_file(embed, filepath, contents, embed_chunk_size, verbose=False):
                     current_chunk = line_content[:split_point] + "\n"
                     line_content = line_content[split_point:]
                 else:
-                    # Save the current chunk as it is, and start a new one
-                    chunks.append(
+                    raw_chunks.append(
                         {
-                            "tokens": embed.count_tokens(chunk_header + current_chunk),
                             "text": chunk_header + current_chunk,
                             "filepath": filepath,
                         }
                     )
-                    embedding = embed.create_embedding(chunk_header + current_chunk)
-                    embeddings_list.append(embedding)
                     current_chunk = ""
-                    start_line_number = line_number  # Next chunk starts from this line
-                    # Do not break; continue processing the line
-                    # Add this line to prevent infinite loops
-                    line_content = (
-                        line_content.strip()
-                    )  # Ensure there is actually some remaining string
+                    start_line_number = line_number
+                    line_content = line_content.strip()
                     if not line_content:
                         break
-    # Add the remaining content as the last chunk
+
     if current_chunk:
         chunk_header = f"---------------\n\nUser file '{filepath}' lines {start_line_number}-{len(lines)}:\n\n"
-        chunks.append(
+        raw_chunks.append(
             {
-                "tokens": embed.count_tokens(chunk_header + current_chunk),
                 "text": chunk_header + current_chunk,
                 "filepath": filepath,
             }
         )
-        embedding = embed.create_embedding(chunk_header + current_chunk)
+
+    if verbose:
+        sys.stdout.write(f"Creating embeddings for {filepath}\n")
+        sys.stdout.flush()
+
+    with weave() as w:
+        @w.do(
+            raw_chunks,
+            workers=index_chunk_workers,
+            limit_per_minute=index_max_chunk_requests_per_minute,
+        )
+        def create_embedding_concurrently(item):
+            embedding = embed.create_embedding(item["text"])
+            return item, embedding
+
+    processed_chunks = []
+    embeddings_list = []
+    for chunk_info, embedding in w.result.create_embedding_concurrently:
+        chunk_info["tokens"] = embed.count_tokens(chunk_info["text"])
+        processed_chunks.append(chunk_info)
         embeddings_list.append(embedding)
-    return chunks, embeddings_list
+
+    return processed_chunks, embeddings_list
 
 
 def find_split_point(embed, line_content, max_size, header):
