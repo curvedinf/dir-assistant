@@ -80,6 +80,11 @@ The user is currently working in the following directory (CWD): {os.getcwd()}"""
     artifact_excludable_factor = config["ARTIFACT_EXCLUDABLE_FACTOR"]
     api_context_cache_ttl = config["API_CONTEXT_CACHE_TTL"]
     rag_optimizer_weights = config["RAG_OPTIMIZER_WEIGHTS"]
+    # Index settings
+    index_concurrent_files = config["INDEX_CONCURRENT_FILES"]
+    index_max_files_per_minute = config["INDEX_MAX_FILES_PER_MINUTE"]
+    index_chunk_workers = config["INDEX_CHUNK_WORKERS"]
+    index_max_chunk_requests_per_minute = config["INDEX_MAX_CHUNK_REQUESTS_PER_MINUTE"]
     # Check for basic missing model configs
     if active_model_is_local:
         if config["LLM_MODEL"] == "":
@@ -146,7 +151,15 @@ see readme for more information. Exiting..."""
             sys.stdout.write(f"{Style.RESET_ALL}")
         sys.stdout.flush()
     index, chunks = create_file_index(
-        embed, ignore_paths, embed_chunk_size, extra_dirs, verbose
+        embed,
+        ignore_paths,
+        embed_chunk_size,
+        extra_dirs,
+        verbose,
+        index_concurrent_files,
+        index_max_files_per_minute,
+        index_chunk_workers,
+        index_max_chunk_requests_per_minute,
     )
     # Set up the system instructions
     system_instructions_full = f"""{system_instructions}
