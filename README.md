@@ -65,6 +65,8 @@ prompt to an LLM called CGRAG (Contextually Guided Retrieval-Augmented Generatio
 16. [Acknowledgements](#acknowledgements)
 
 ## New Features
+* The embedding index is now separated by embedding model. This means you can switch between
+embedding models without needing to re-index files.
 * File artifact context optimization for maximal utilization of LLM context caching. 
 This can drastically reduce API LLM expenses and processing time if context prefix
 caching is supported by your LLM provider.

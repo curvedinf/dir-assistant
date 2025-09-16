@@ -10,3 +10,6 @@ class BaseEmbed:
 
     def count_tokens(self, text):
         return 0
+
+    def get_config(self):
+        return {}
