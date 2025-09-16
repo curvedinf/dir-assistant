@@ -26,6 +26,9 @@ prompt to an LLM called CGRAG (Contextually Guided Retrieval-Augmented Generatio
 [this blog post](https://medium.com/@djangoist/how-to-create-accurate-llm-responses-on-large-code-repositories-presenting-cgrag-a-new-feature-of-e77c0ffe432d) for more information about how it works.
 - Context optimization for utilizing LLM context caching to reduce cost and latency.
 - Optionally configure a separate, faster LLM for the CGRAG guidance step to reduce cost and latency.
+### New Features
+- The embedding index is now separated by embedding model. This means you can switch between
+embedding models without needing to re-index files.
 
 ## Linked Documentation
 1. [Install](docs/install.md)

@@ -65,3 +65,6 @@ class LiteLlmEmbed(BaseEmbed):
             model=self.lite_llm_embed_completion_options["model"],
             messages=[{"role": "user", "content": text_to_embed}],
         )
+
+    def get_config(self):
+        return self.lite_llm_embed_completion_options

@@ -1,3 +1,5 @@
+import hashlib
+import json
 import os
 import sys
 
@@ -38,13 +40,14 @@ def get_text_files(directory=".", ignore_paths=[]):
     return text_files
 
 
-def get_files_with_contents(directory, ignore_paths, cache_db, verbose):
+def get_files_with_contents(directory, ignore_paths, cache_db, embed_config, verbose):
     text_files = get_text_files(directory, ignore_paths)
     files_with_contents = []
     with SqliteDict(cache_db, autocommit=True) as cache:
         for filepath in text_files:
             file_stat = os.stat(filepath)
-            file_info = cache.get(filepath)
+            cache_key = f"{embed_config}-{filepath}"
+            file_info = cache.get(cache_key)
             if file_info and file_info["mtime"] == file_stat.st_mtime:
                 files_with_contents.append(file_info)
             else:
@@ -62,7 +65,7 @@ def get_files_with_contents(directory, ignore_paths, cache_db, verbose):
                     "contents": contents,
                     "mtime": file_stat.st_mtime,
                 }
-                cache[filepath] = file_info
+                cache[cache_key] = file_info
                 files_with_contents.append(file_info)
     return files_with_contents
 
@@ -78,14 +81,18 @@ def create_file_index(
     index_chunk_workers=1,
     index_max_chunk_requests_per_minute=60,
 ):
+    config_str = json.dumps(embed.get_config(), sort_keys=True)
+    embed_config = hashlib.sha256(config_str.encode("utf-8")).hexdigest()
     cache_db = get_file_path(CACHE_PATH, INDEX_CACHE_FILENAME)
     # Start with current directory
-    files_with_contents = get_files_with_contents(".", ignore_paths, cache_db, verbose)
+    files_with_contents = get_files_with_contents(
+        ".", ignore_paths, cache_db, embed_config, verbose
+    )
     # Add files from additional folders
     for folder in extra_dirs:
         if os.path.exists(folder):
             folder_files = get_files_with_contents(
-                folder, ignore_paths, cache_db, verbose
+                folder, ignore_paths, cache_db, embed_config, verbose
             )
             files_with_contents.extend(folder_files)
         else:
@@ -117,7 +124,8 @@ def create_file_index(
         def process_file_concurrently(item):
             with SqliteDict(cache_db, autocommit=True) as cache:
                 filepath = item["filepath"]
-                cached_chunks = cache.get(f"{filepath}_chunks")
+                cache_key = f"{embed_config}-{filepath}_chunks"
+                cached_chunks = cache.get(cache_key)
 
                 if cached_chunks and cached_chunks["mtime"] == item["mtime"]:
                     if verbose:
@@ -135,7 +143,7 @@ def create_file_index(
                     index_chunk_workers,
                     index_max_chunk_requests_per_minute,
                 )
-                cache[f"{filepath}_chunks"] = {
+                cache[cache_key] = {
                     "chunks": file_chunks,
                     "embeddings": file_embeddings,
                     "mtime": item["mtime"],
