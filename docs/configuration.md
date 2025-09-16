@@ -15,7 +15,7 @@ This document provides a comprehensive guide to configuring `dir-assistant`.
 3. [Embedding Model Configuration](#embedding-model-configuration)
 4. [Hardware Platform Selection](#optional-select-a-hardware-platform)
 5. [General Configuration](#general-configuration-local-and-api-mode)
-   - [RAG Caching and Context Optimization](#rag-caching-and-context-optimization)
+   - [Context Caching Optimization](#context-caching-optimization)
 
 ---
 
