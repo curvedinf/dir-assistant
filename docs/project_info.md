@@ -9,13 +9,13 @@ This document contains general information about the `dir-assistant` project, in
 4. [Additional Help](#additional-help)
 5. [Acknowledgements](#acknowledgements)
 
----
+
 
 ## New Features
 - The embedding index is now separated by embedding model. This means you can switch between
 embedding models without needing to re-index files.
 
----
+
 
 ## Upgrading
 Some version upgrades may have incompatibility issues in the embedding index cache. Use this command to delete the
@@ -24,18 +24,18 @@ index cache so it may be regenerated:
 dir-assistant clear
 ```
 
----
+
 
 ## Limitations
 - Dir-assistant only detects and reads text files at this time.
 
----
+
 
 ## Additional Help
 Use the `-h` argument with any command or subcommand to view more information. If your problem is beyond the scope of
 the helptext, please report a Github issue.
 
----
+
 
 ## Acknowledgements
 - Local LLMs are run via the fantastic [llama-cpp-python](https://github.com/abetlen/llama-cpp-python) package
