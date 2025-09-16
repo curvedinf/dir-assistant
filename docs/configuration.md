@@ -242,10 +242,7 @@ The optimizer follows a three-tiered strategy to construct the best possible art
     *   **Excludable Artifacts**: The least relevant artifacts, which can be swapped out to improve cache hits.
     The `ARTIFACT_EXCLUDABLE_FACTOR` setting controls this division. For example, a value of `0.2` means the top 80% of artifacts are "core," and the bottom 20% are "excludable."
 
-2.  **Prefix Matching with Swapping**: The optimizer then searches through previously cached prefixes. This list of prefixes includes every prefix combination from every previous prompt. It looks for the longest prefix that meets two conditions:
-    *   It must contain all **core artifacts**.
-    *   The number of new artifacts it introduces (those not in the initial RAG results) must be less than or equal to the number of available **excludable artifacts**.
-    This allows `dir-assistant` to "swap" less relevant files from the current query for files from a cached prefix, thereby reconstructing the cached context and achieving a cache hit. If multiple prefixes are viable, the one with the most historical hits is chosen. If the cached prefix is small enough, excludable artifacts from this prompt are backfilled in.
+2.  **Prefix Matching with Swapping**: The optimizer then searches through previously cached prefixes, which includes every permutation from every previous prompt. It looks for the longest prefix that meets two conditions: It must contain all **core artifacts**; The number of new artifacts it introduces (those not in the initial RAG results) must be less than or equal to the number of available **excludable artifacts**. If the chosen prefix is small enough, excludable artifacts from this prompt are backfilled in.
 
 3.  **Fallback Sorting**: If no suitable cached prefix can be constructed, the optimizer falls back to a default sorting algorithm. The default sorting algorithm attempts to predict which artifacts will be most reusable to future prompts by scoring attributes of their usage history (frequency, position, stability) and their embedding vector cosine similarity. This mechanism attempts to make the current context maximally reusable for future prompts.
 
