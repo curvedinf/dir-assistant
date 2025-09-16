@@ -30,13 +30,6 @@ prompt to an LLM called CGRAG (Contextually Guided Retrieval-Augmented Generatio
 - The embedding index is now separated by embedding model. This means you can switch between
 embedding models without needing to re-index files.
 
-## Linked Documentation
-1. [Install](docs/install.md)
-2. [Usage](docs/usage.md)
-3. [Configuration](docs/configuration.md)
-4. [Project Information](docs/project_info.md)
-5. [Contributors](CONTRIBUTORS.md)
-
 ## Quickstart
 In this section are recipes to run `dir-assistant` in basic capacity to get you started quickly.
 ### Quickstart Chat with Local Default Model
@@ -208,3 +201,10 @@ dir-assistant setkey GEMINI_API_KEY xxxxxYOURAPIKEYHERExxxxx
 cd directory/to/chat/with
 dir-assistant -s "Describe the files in this directory"
 ```
+
+## More Documentation
+1. [Install](docs/install.md)
+2. [Usage](docs/usage.md)
+3. [Configuration](docs/configuration.md)
+4. [Project Information](docs/project_info.md)
+5. [Contributors](CONTRIBUTORS.md)
