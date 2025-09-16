@@ -32,7 +32,12 @@ embedding models without needing to re-index files.
 
 ## Quickstart
 In this section are recipes to run `dir-assistant` in basic capacity to get you started quickly.
-### Quickstart Chat with Local Default Model
+1. [Local Model](#Local-Model)
+1. [Gemini](#Gemini)
+1. [Claude](#Claude)
+1. [GPT5](#GPT5)
+1. [Automation Usage](#Automation-Usage)
+### Local Model
 To get started locally, you can download a default llm model. Default configuration with this model requires
 3GB of memory on most hardware. You will be able to adjust the configuration to fit higher or lower memory
 requirements. To run via CPU:
@@ -75,7 +80,7 @@ pipx install dir-assistant[recommended]
 ...
 dir-assistant platform cuda --pipx
 ```
-### Quickstart Chat with API Model (Google Gemini)
+### Gemini
 To get started using an API model, you can use Google Gemini 1.5 Flash, which is currently free.
 To begin, you need to sign up for [Google AI Studio](https://aistudio.google.com/) and
 [create an API key](https://aistudio.google.com/app/apikey). After you create your API key,
@@ -104,7 +109,7 @@ dir-assistant setkey GEMINI_API_KEY xxxxxYOURAPIKEYHERExxxxx
 cd directory/to/chat/with
 dir-assistant
 ```
-### Quickstart Chat with API Model (Anthropic Claude)
+### Claude
 To get started quickly with Anthropic's Claude models (e.g., Claude 3.7 Sonnet):
 1.  Obtain an API key from [Anthropic](https://console.anthropic.com/).
 2.  Install `dir-assistant` and set your API key:
@@ -142,7 +147,7 @@ dir-assistant setkey ANTHROPIC_API_KEY xxxxxYOURAPIKEYHERExxxxx
 cd directory/to/chat/with
 dir-assistant
 ```
-### Quickstart Chat with API Model (OpenAI)
+### GPT5
 To get started quickly with OpenAI's models (e.g., GPT-4o):
 1.  Obtain an API key from [OpenAI](https://platform.openai.com/api-keys).
 2.  Install `dir-assistant` and set your API key:
@@ -180,7 +185,7 @@ dir-assistant setkey OPENAI_API_KEY xxxxxYOURAPIKEYHERExxxxx
 cd directory/to/chat/with
 dir-assistant
 ```
-### Quickstart Non-interactive Prompt with API Model
+### Automation Usage
 The non-interactive mode of `dir-assistant` allows you to create scripts which analyze
 your files without user interaction.
 To get started using an API model, you can use Google Gemini 1.5 Flash, which is currently free.
