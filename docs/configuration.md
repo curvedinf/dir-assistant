@@ -17,7 +17,7 @@ This document provides a comprehensive guide to configuring `dir-assistant`.
 5. [General Configuration](#general-configuration-local-and-api-mode)
    - [Context Caching Optimization](#context-caching-optimization)
 
----
+
 
 ## API Configuration
 If you wish to use an API LLM, you will need to configure `dir-assistant` accordingly.
@@ -136,7 +136,7 @@ api_base = "http://localhost:1234/v1" # URL to your server's OpenAI-compatible e
 ```
 Ensure that `ACTIVE_MODEL_IS_LOCAL` is set to `false`. The `model` name should be what your custom server expects. Some servers might also require an `api_key` even if hosted locally.
 
----
+
 
 ## Local LLM Configuration
 ### Local LLM Model Download
@@ -187,7 +187,7 @@ easily.
 performance.
 For other tips about tuning Llama.cpp, explore their documentation and do some google searches.
 
----
+
 
 ## Embedding Model Configuration
 You must use an embedding model regardless of whether you are running an LLM via local or API mode, but you can also
@@ -206,7 +206,7 @@ dir-assistant models
 Note: The embedding model will be hardware accelerated after using the `platform` subcommand. To disable
 hardware acceleration, change `n_gpu_layers = -1` to `n_gpu_layers = 0` in the config.
 
----
+
 
 ## Optional: Select A Hardware Platform
 By default `dir-assistant` is installed with CPU-only compute support. It will work properly without this step,
