@@ -12,11 +12,8 @@ This document contains general information about the `dir-assistant` project, in
 ---
 
 ## New Features
-* File artifact context optimization for maximal utilization of LLM context caching.
-This can drastically reduce API LLM expenses and processing time if context prefix
-caching is supported by your LLM provider.
-* Separate configuration options for the CGRAG API model so you can now use a quicker and less expensive
-model for the CGRAG guidance step.
+- The embedding index is now separated by embedding model. This means you can switch between
+embedding models without needing to re-index files.
 
 ---
 
