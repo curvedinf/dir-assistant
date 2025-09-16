@@ -10,8 +10,12 @@ from dir_assistant.assistant.base_embed import BaseEmbed
 
 class LlamaCppEmbed(BaseEmbed):
     def __init__(self, model_path, embed_options):
+        self.model_path = model_path
+        self.embed_options = embed_options
         try:
-            self.embed = Llama(model_path=model_path, embedding=True, **embed_options)
+            self.embed = Llama(
+                model_path=self.model_path, embedding=True, **self.embed_options
+            )
         except NameError:
             sys.stderr.write(
                 "You currently have ACTIVE_EMBED_IS_LOCAL set to true but have not installed llama-cpp-python. "
@@ -30,3 +34,6 @@ class LlamaCppEmbed(BaseEmbed):
 
     def count_tokens(self, text):
         return len(self.embed.tokenize(bytes(text, "utf-8")))
+
+    def get_config(self):
+        return {"model_path": self.model_path, "embed_options": self.embed_options}
