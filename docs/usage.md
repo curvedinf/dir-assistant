@@ -19,8 +19,6 @@ This document provides a guide to using `dir-assistant`, including quickstart ex
    - [Optimized Settings for Coding Assistance](#optimized-settings-for-coding-assistance)
 4. [Examples](#examples)
 
----
-
 ## Quickstart
 In this section are recipes to run `dir-assistant` in basic capacity to get you started quickly.
 ### Quickstart Chat with Local Default Model
@@ -193,7 +191,7 @@ cd directory/to/chat/with
 dir-assistant -s "Describe the files in this directory"
 ```
 
----
+
 
 ## Running
 ```shell
@@ -280,7 +278,7 @@ DIR_ASSISTANT__LLM_MODEL="model2.gguf" dir-assistant -s "What does this codebase
 DIR_ASSISTANT__CONTEXT_FILE_RATIO=0.8 dir-assistant
 ```
 
----
+
 
 ## General Usage Tips
 Dir-assistant is a powerful tool with many configuration options. This section provides some
@@ -353,7 +351,7 @@ rope_freq_scale = 0.75
 n_gpu_layers = -1
 ```
 
----
+
 
 ## Examples
 See [examples](https://github.com/curvedinf/dir-assistant/tree/main/examples).
