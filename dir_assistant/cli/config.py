@@ -172,7 +172,7 @@ def load_config(skip_environment_vars=False):
 def config(args, config_dict):
     # List the current configuration
     config_file_path = get_file_path(CONFIG_PATH, CONFIG_FILENAME)
-    print(f"Configuration file: {config_file_path}\\n")
+    print(f"Configuration file: {config_file_path}")
     print(toml.dumps(config_dict))
 
 
