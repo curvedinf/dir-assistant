@@ -24,11 +24,12 @@ primarily for use as a coding aid and automation tool.
 - Uses a unique method for finding the most important files to include when submitting your
 prompt to an LLM called CGRAG (Contextually Guided Retrieval-Augmented Generation). You can read 
 [this blog post](https://medium.com/@djangoist/how-to-create-accurate-llm-responses-on-large-code-repositories-presenting-cgrag-a-new-feature-of-e77c0ffe432d) for more information about how it works.
-- Context optimization for utilizing LLM context caching to reduce cost and latency.
+- Context caching optimization to reduce cost and latency.
 - Optionally configure a separate, faster LLM for the CGRAG guidance step to reduce cost and latency.
 ### New Features
-- The embedding index is now separated by embedding model. This means you can switch between
-embedding models without needing to re-index files.
+- The embedding index is now separated by model in the database. This means you can switch between embedding models without needing to re-index files.
+- Indexing is now parallelized and faster.
+- Fixed a bug where the context optimizer was not utilizing the whole context
 
 ## Quickstart
 In this section are recipes to run `dir-assistant` in basic capacity to get you started quickly.
