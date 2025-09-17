@@ -2,12 +2,10 @@ import hashlib
 import json
 import os
 import sys
-
 import numpy as np
 from faiss import IndexFlatL2
 from sqlitedict import SqliteDict
 from wove import weave, flatten
-
 from dir_assistant.cli.config import (
     CACHE_PATH,
     HISTORY_FILENAME,
@@ -17,14 +15,9 @@ from dir_assistant.cli.config import (
     STORAGE_PATH,
     get_file_path,
 )
-
 TEXT_CHARS = bytearray({7, 8, 9, 10, 12, 13, 27} | set(range(0x20, 0x100)) - {0x7F})
-
-
 def is_text_file(filepath):
     return not bool(open(filepath, "rb").read(1024).translate(None, TEXT_CHARS))
-
-
 def get_text_files(directory=".", ignore_paths=[]):
     text_files = []
     for root, dirs, files in os.walk(directory):
@@ -38,8 +31,6 @@ def get_text_files(directory=".", ignore_paths=[]):
             ):
                 text_files.append(filepath)
     return text_files
-
-
 def get_files_with_contents(directory, ignore_paths, cache_db, embed_config, verbose):
     text_files = get_text_files(directory, ignore_paths)
     files_with_contents = []
@@ -68,8 +59,6 @@ def get_files_with_contents(directory, ignore_paths, cache_db, embed_config, ver
                 cache[cache_key] = file_info
                 files_with_contents.append(file_info)
     return files_with_contents
-
-
 def create_file_index(
     embed,
     ignore_paths,
@@ -126,13 +115,11 @@ def create_file_index(
                 filepath = item["filepath"]
                 cache_key = f"{embed_config}-{filepath}_chunks"
                 cached_chunks = cache.get(cache_key)
-
                 if cached_chunks and cached_chunks["mtime"] == item["mtime"]:
                     if verbose:
                         sys.stdout.write(f"Using cached embeddings for {filepath}\n")
                         sys.stdout.flush()
                     return cached_chunks["chunks"], cached_chunks["embeddings"]
-
                 contents = item["contents"]
                 file_chunks, file_embeddings = process_file(
                     embed,
@@ -149,29 +136,21 @@ def create_file_index(
                     "mtime": item["mtime"],
                 }
                 return file_chunks, file_embeddings
-
     # w.result.process_file_concurrently is a list of (chunks, embeddings) tuples
     processed_results = w.result.process_file_concurrently
-
     # Separate the chunks and embeddings from the processed results
     all_chunks = flatten([res[0] for res in processed_results if res])
     all_embeddings = flatten([res[1] for res in processed_results if res])
-
     if verbose:
         sys.stdout.write("Creating index from embeddings...\n")
         sys.stdout.flush()
-
     if not all_embeddings:
         # Handle case with no embeddings to avoid error on np.array
         return None, []
-
     embeddings = np.array(all_embeddings)
     index = IndexFlatL2(embeddings.shape[1])
     index.add(embeddings)
-
     return index, all_chunks
-
-
 def process_file(
     embed,
     filepath,
@@ -185,7 +164,6 @@ def process_file(
     raw_chunks = []
     current_chunk = ""
     start_line_number = 1
-
     for line_number, line in enumerate(lines, start=1):
         line_content = line
         while line_content:
@@ -193,7 +171,6 @@ def process_file(
             chunk_header = f"---------------\n\nUser file '{filepath}' lines {start_line_number}-{line_number}:\n\n"
             proposed_text = chunk_header + proposed_chunk
             chunk_tokens = embed.count_tokens(proposed_text)
-
             if chunk_tokens <= embed_chunk_size:
                 current_chunk = proposed_chunk
                 break
@@ -216,7 +193,6 @@ def process_file(
                     line_content = line_content.strip()
                     if not line_content:
                         break
-
     if current_chunk:
         chunk_header = f"---------------\n\nUser file '{filepath}' lines {start_line_number}-{len(lines)}:\n\n"
         raw_chunks.append(
@@ -225,11 +201,9 @@ def process_file(
                 "filepath": filepath,
             }
         )
-
     if verbose:
         sys.stdout.write(f"Creating embeddings for {filepath}\n")
         sys.stdout.flush()
-
     with weave() as w:
         @w.do(
             raw_chunks,
@@ -239,17 +213,13 @@ def process_file(
         def create_embedding_concurrently(item):
             embedding = embed.create_embedding(item["text"])
             return item, embedding
-
     processed_chunks = []
     embeddings_list = []
     for chunk_info, embedding in w.result.create_embedding_concurrently:
         chunk_info["tokens"] = embed.count_tokens(chunk_info["text"])
         processed_chunks.append(chunk_info)
         embeddings_list.append(embedding)
-
     return processed_chunks, embeddings_list
-
-
 def find_split_point(embed, line_content, max_size, header):
     low = 0
     high = len(line_content)
@@ -260,14 +230,12 @@ def find_split_point(embed, line_content, max_size, header):
         else:
             high = mid
     return low - 1
-
-
-def search_index(embed, index, query, all_chunks):
+def search_index(embed, index, query, all_chunks, max_k=100):
     query_embedding = embed.create_embedding(query)
     try:
         distances, indices = index.search(
-            np.array([query_embedding]), 100
-        )  # 819,200 tokens max with default embedding
+            np.array([query_embedding]), max_k
+        )  # max_k nearest neighbors
     except AssertionError as e:
         sys.stderr.write(
             f"Assertion error during index search. Did you change your embedding model? "
@@ -278,8 +246,6 @@ def search_index(embed, index, query, all_chunks):
         (all_chunks[index], distances[0][iter]) for iter, index in enumerate(indices[0]) if index != -1
     ]
     return relevant_chunks
-
-
 def clear(args, config_dict):
     files = [
         get_file_path(CACHE_PATH, INDEX_CACHE_FILENAME),
