@@ -69,7 +69,6 @@ class BaseAssistant:
     def close(self):
         """Cleanly close any open resources."""
         self.cache_manager.close()
-
     def initialize_history(self):
         system_instructions_tokens = self.count_tokens(
             self.system_instructions, role="system"
@@ -81,13 +80,10 @@ class BaseAssistant:
                 "tokens": system_instructions_tokens,
             }
         ]
-
     def call_completion(self, chat_history, is_cgrag_call=False):
         raise NotImplementedError
-
     def count_tokens(self, text, role="user"):
         raise NotImplementedError
-
     def build_relevant_full_text(self, user_input):
         """
         Identifies relevant text chunks, pre-culs a candidate pool based on token
@@ -95,6 +91,8 @@ class BaseAssistant:
         """
         # Compute dynamic max_k
         max_k = int(self.context_size * self.context_file_ratio // 500)
+        if self.verbose and self.chat_mode:
+            print(f"Computed max_k: {max_k}")
         # 1. Get an initial list of nearest neighbors from the search index.
         k_nearest_neighbors = search_index(
             self.embed, self.index, user_input, self.chunks, max_k=max_k
@@ -217,6 +215,9 @@ class BaseAssistant:
                 chunk_total_tokens += chunk_tokens
                 final_artifacts_in_context.append(chunk["text"])
         self.last_optimized_artifacts = final_artifacts_in_context
+        if self.verbose and self.chat_mode:
+            print(f"Total tokens in relevant_full_text: {chunk_total_tokens}")
+            print(f"Context fully filled: {chunk_total_tokens >= target_tokens}")
         return relevant_full_text
     def get_color_prefix(self, brightness, color):
         if self.no_color:
@@ -440,33 +441,11 @@ Perform the user request above.
             }
         ]
     def create_thinking_context(self, write_to_stdout):
-
-
-if write_to_stdout and self.hide_thinking and self.chat_mode:
+        if write_to_stdout and self.hide_thinking and self.chat_mode:
             if not self.no_color:
                 sys.stdout.write(self.get_color_prefix(Style.BRIGHT, Fore.WHITE))
             sys.stdout.write("(thinking...)")
             if not self.no_color:
                 sys.stdout.write(self.get_color_suffix())
-            sys.stdout.flush()
-        return {
-            "thinking_start_finished": not self.hide_thinking,
-            "thinking_end_finished": not self.hide_thinking,
-            "delta_after_thinking_finished": None,
-        }
-    def is_done_thinking(self, context, content):
-        if not context["thinking_start_finished"]:
-            if len(content) > len(self.thinking_start_pattern) + 20:
-                context["thinking_start_finished"] = True
-                if self.thinking_start_pattern not in content:
-                    context["thinking_end_finished"] = True
-                    context["delta_after_thinking_finished"] = content
-            return False
-        elif not context["thinking_end_finished"]:
-            if self.thinking_end_pattern in content:
-                context["thinking_end_finished"] = True
-                delta_after_thinking_finished_parts = content.split(
-                    self.thinking_end_pattern
-                )
-                context["delta_after_thinking_finished"] = (
+
 
