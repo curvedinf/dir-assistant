@@ -430,8 +430,10 @@ Perform the user request above.
             False,
         )["content"]
         return self.remove_thinking_message(output)
+
     def create_empty_history(self, role="user"):
         return {"role": role, "content": "", "tokens": 0}
+
     def create_one_off_prompt_history(self, prompt):
         return [
             {
@@ -440,82 +442,44 @@ Perform the user request above.
                 "tokens": self.count_tokens(prompt, role="user"),
             }
         ]
+
+    def create_thinking_context(self, write_to_stdout):
+        if write_to_stdout and self.hide_thinking and self.chat_mode:
             if not self.no_color:
                 sys.stdout.write(self.get_color_prefix(Style.BRIGHT, Fore.WHITE))
             sys.stdout.write("(thinking...)")
             if not self.no_color:
                 sys.stdout.write(self.get_color_suffix())
-│   321 -            sys.stdout.flush()                                                                                                                      │
-│   322 -        return {                                                                                                                                    │
-│   323 -            "thinking_start_finished": not self.hide_thinking,                                                                                      │
-│   324 -            "thinking_end_finished": not self.hide_thinking,                                                                                        │
-│   325 -            "delta_after_thinking_finished": None,                                                                                                  │
-│   326 -        }                                                                                                                                           │
-│   327                                                                                                                                                      │
-│   328 -    def is_done_thinking(self, context, content):                                                                                                   │
-│   329 -        if not context["thinking_start_finished"]:                                                                                                  │
-│   330 -            if len(content) > len(self.thinking_start_pattern) + 20:                                                                                │
-│   331 -                context["thinking_start_finished"] = True                                                                                           │
-│   332 -                if self.thinking_start_pattern not in content:                                                                                      │
-│   333 -                    context["thinking_end_finished"] = True                                                                                         │
-│   334 -                    context["delta_after_thinking_finished"] = content                                                                              │
-│   335 -            return False                                                                                                                            │
-│   336 -        elif not context["thinking_end_finished"]:                                                                                                  │
-│   337 -            if self.thinking_end_pattern in content:                                                                                                │
-│   338 -                context["thinking_end_finished"] = True                                                                                             │
-│   339 -                delta_after_thinking_finished_parts = content.split(                                                                                │
-│   340 -                    self.thinking_end_pattern                                                                                                       │
-│   341 -                )                                                                                                                                   │
-│   342 -                context["delta_after_thinking_finished"] = (                                                                                        │
-│   343 -                    delta_after_thinking_finished_parts[-1]                                                                                         │
-│   344 -                )                                                                                                                                   │
-│   345 -            return False                                                                                                                            │
-│   346 -        return True                                                                                                                                 │
-│   347                                                                                                                                                      │
-│   348 -    def get_extra_delta_after_thinking(self, context, write_to_stdout):                                                                             │
-│   349 -        if context["delta_after_thinking_finished"] is not None:                                                                                    │
-│   350 -            output = context["delta_after_thinking_finished"]                                                                                       │
-│   351 -            context["delta_after_thinking_finished"] = None                                                                                         │
-│   352 -            return output                                                                                                                           │
-│   353 -        return None
+            sys.stdout.flush()
+        return {
+            "thinking_start_finished": not self.hide_thinking,
+            "thinking_end_finished": not self.hide_thinking,
+            "delta_after_thinking_finished": None,
+        }
 
-def create_thinking_context(self, write_to_stdout):
-    if write_to_stdout and self.hide_thinking and self.chat_mode:
-        if not self.no_color:
-            sys.stdout.write(self.get_color_prefix(Style.BRIGHT, Fore.WHITE))
-        sys.stdout.write("(thinking...)")
-        if not self.no_color:
-            sys.stdout.write(self.get_color_suffix())
-        sys.stdout.flush()
-    return {
-        "thinking_start_finished": not self.hide_thinking,
-        "thinking_end_finished": not self.hide_thinking,
-        "delta_after_thinking_finished": None,
-    }
-
-def is_done_thinking(self, context, content):
-    if not context["thinking_start_finished"]:
-        if len(content) > len(self.thinking_start_pattern) + 20:
-            context["thinking_start_finished"] = True
-            if self.thinking_start_pattern not in content:
+    def is_done_thinking(self, context, content):
+        if not context["thinking_start_finished"]:
+            if len(content) > len(self.thinking_start_pattern) + 20:
+                context["thinking_start_finished"] = True
+                if self.thinking_start_pattern not in content:
+                    context["thinking_end_finished"] = True
+                    context["delta_after_thinking_finished"] = content
+            return False
+        elif not context["thinking_end_finished"]:
+            if self.thinking_end_pattern in content:
                 context["thinking_end_finished"] = True
-                context["delta_after_thinking_finished"] = content
-        return False
-    elif not context["thinking_end_finished"]:
-        if self.thinking_end_pattern in content:
-            context["thinking_end_finished"] = True
-            delta_after_thinking_finished_parts = content.split(
-                self.thinking_end_pattern
-            )
-            context["delta_after_thinking_finished"] = (
-                delta_after_thinking_finished_parts[-1]
-            )
-        return False
-    return True
+                delta_after_thinking_finished_parts = content.split(
+                    self.thinking_end_pattern
+                )
+                context["delta_after_thinking_finished"] = (
+                    delta_after_thinking_finished_parts[-1]
+                )
+            return False
+        return True
 
-def get_extra_delta_after_thinking(self, context, write_to_stdout):
-    if context["delta_after_thinking_finished"] is not None:
-        output = context["delta_after_thinking_finished"]
-        context["delta_after_thinking_finished"] = None
-        return output
-    return None
+    def get_extra_delta_after_thinking(self, context, write_to_stdout):
+        if context["delta_after_thinking_finished"] is not None:
+            output = context["delta_after_thinking_finished"]
+            context["delta_after_thinking_finished"] = None
+            return output
+        return None

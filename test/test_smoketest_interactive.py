@@ -23,7 +23,7 @@ def test_smoketest_interactive():
 
         # Modify the environment for the subprocess
         new_env["DIR_ASSISTANT__VERBOSE"] = "true"
-        new_env["DIR_ASSISTANT__LITELLM_MODEL"] = "gpt-4o-mini"
+        new_env["DIR_ASSISTANT__LITELLM_MODEL"] = "gemini/gemini-2.5-flash-lite"
         new_env["DIR_ASSISTANT__LITELLM_CONTEXT_SIZE"] = "10000"
         # Use the current embed model so we don't have to reindex
 
