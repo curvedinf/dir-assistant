@@ -245,12 +245,12 @@ historical_hits = 1.0 # Used to tie-break between equally long prefixes
 ### Indexing Performance Options
 The indexing process in `dir-assistant` can be tuned for performance, especially when dealing with large numbers of files or API-based embedding models. The following settings control concurrency and rate limiting during file processing and embedding generation:
 
-- `INDEX_CONCURRENT_FILES`: Controls the number of files processed concurrently during indexing. Default: 10. Increase for faster indexing on multi-core systems, but monitor resource usage.
+- `INDEX_CONCURRENT_FILES`: The number of files processed concurrently during indexing. Default: 10.
 - `INDEX_MAX_FILES_PER_MINUTE`: Sets the maximum number of files to process per minute to respect API rate limits. Default: 600.
-- `INDEX_CHUNK_WORKERS`: Number of concurrent workers for generating embeddings for file chunks. Default: 10.
+- `INDEX_CHUNK_WORKERS`: Number of concurrent processes for generating embeddings per file. Default: 10.
 - `INDEX_MAX_CHUNK_REQUESTS_PER_MINUTE`: Maximum embedding requests per minute for chunks. Default: 600.
 
-To configure these, add them to the `[DIR_ASSISTANT]` section in your config file:
+File workers and chunk workers are multiplicative, so the total max concurrency for the indexing process in terms of number of embedding calls is `INDEX_CONCURRENT_FILES * INDEX_CHUNK_WORKERS`. Likewise, the max embedding rate is `INDEX_MAX_FILES_PER_MINUTE * INDEX_MAX_CHUNK_REQUESTS_PER_MINUTE`. To rate limit appropriately for a rate limited API, start by setting both `PER_MINUTE` settings to the square root of the target rate limit. To configure these settings, add them to the `[DIR_ASSISTANT]` section in your config file:
 
 ```toml
 [DIR_ASSISTANT]
