@@ -1,7 +1,5 @@
 # Configuration
-
 This document provides a comprehensive guide to configuring `dir-assistant`.
-
 ## Table of Contents
 1. [API Configuration](#api-configuration)
    - [General API Settings](#general-api-settings)
@@ -16,9 +14,7 @@ This document provides a comprehensive guide to configuring `dir-assistant`.
 4. [Hardware Platform Selection](#optional-select-a-hardware-platform)
 5. [General Configuration](#general-configuration-local-and-api-mode)
    - [Context Caching Optimization](#context-caching-optimization)
-
-
-
+   - [Indexing Performance Options](#indexing-performance-options)
 ## API Configuration
 If you wish to use an API LLM, you will need to configure `dir-assistant` accordingly.
 ### General API Settings
@@ -98,20 +94,16 @@ OpenAI models like GPT-4o offer a balance of performance and cutting-edge featur
 When using CGRAG (`USE_CGRAG = true`), `dir-assistant` performs two calls to the LLM:
 1.  **Guidance Call**: A first call to generate a list of relevant concepts to improve file retrieval.
 2.  **Response Call**: A second call with the improved context to generate the final answer.
-
 You can optionally specify a different, often faster and cheaper, model for the initial guidance call. This can significantly reduce API costs and improve response times without sacrificing the quality of the final answer, which is still handled by your primary model.
-
 To configure a separate model for CGRAG, add the `LITELLM_CGRAG_COMPLETION_OPTIONS` section to your config file (`dir-assistant config open`):
 ```toml
 [DIR_ASSISTANT]
 # ... other settings
 USE_CGRAG = true
-
 # Main model for generating the final, high-quality response
 [DIR_ASSISTANT.LITELLM_COMPLETION_OPTIONS]
 model = "anthropic/claude-3-7-sonnet-20240729"
 timeout = 600
-
 # Optional: A faster, cheaper model for the initial CGRAG guidance step
 [DIR_ASSISTANT.LITELLM_CGRAG_COMPLETION_OPTIONS]
 model = "gemini/gemini-1.5-flash-latest"
@@ -135,9 +127,6 @@ api_base = "http://localhost:1234/v1" # URL to your server's OpenAI-compatible e
 # api_key = "sk-xxxxxxxxxx" # If your custom server requires an API key, set it here or as an environment variable
 ```
 Ensure that `ACTIVE_MODEL_IS_LOCAL` is set to `false`. The `model` name should be what your custom server expects. Some servers might also require an `api_key` even if hosted locally.
-
-
-
 ## Local LLM Configuration
 ### Local LLM Model Download
 If you want to use a local LLM directly within `dir-assistant` using `llama-cpp-python`,
@@ -186,9 +175,6 @@ easily.
 * `n_batch` must be smaller than the `n_ctx` of a model, but setting it higher will probably improve
 performance.
 For other tips about tuning Llama.cpp, explore their documentation and do some google searches.
-
-
-
 ## Embedding Model Configuration
 You must use an embedding model regardless of whether you are running an LLM via local or API mode, but you can also
 choose whether the embedding model is local or API using the `ACTIVE_EMBED_IS_LOCAL` setting. Generally local embedding
@@ -205,9 +191,6 @@ dir-assistant models
 ```
 Note: The embedding model will be hardware accelerated after using the `platform` subcommand. To disable
 hardware acceleration, change `n_gpu_layers = -1` to `n_gpu_layers = 0` in the config.
-
-
-
 ## Optional: Select A Hardware Platform
 By default `dir-assistant` is installed with CPU-only compute support. It will work properly without this step,
 but if you would like to hardware accelerate `dir-assistant`, use the command below to compile
@@ -227,25 +210,18 @@ dir-assistant platform cuda --pipx
 System dependencies may be required for the `platform` command and are outside the scope of these instructions.
 If you have any issues building `llama-cpp-python`, the project's install instructions may offer more
 info: https://github.com/abetlen/llama-cpp-python
-
 ## General Configuration (Local and API Mode)
 ### Context Caching Optimization
 `dir-assistant` includes a system to optimize the context sent to your LLM server, aiming to maximize the utilization of context caching implemented in many LLM servers. Context caching reduces latency and cost by reusing computation from previous prompts. For this to work, the beginning of a new prompt must exactly match the beginning of a previous one.
-
 In `dir-assistant`, the context is primarily composed of chunks of your files, known as RAG artifacts. Context optimization's goal is to order these artifacts consistently to create stable "prefixes" (the initial sequence of artifacts) that the LLM system can cache.
-
 #### Optimization Strategy
 The optimizer follows a three-tiered strategy to construct the best possible artifact list for caching:
-
 1.  **Core vs. Excludable Artifacts**: First, it divides the initial RAG results (based on semantic relevance) into two groups:
     *   **Core Artifacts**: The most relevant artifacts that *must* be included in the context.
     *   **Excludable Artifacts**: The least relevant artifacts, which can be swapped out to improve cache hits.
     The `ARTIFACT_EXCLUDABLE_FACTOR` setting controls this division. For example, a value of `0.2` means the top 80% of artifacts are "core," and the bottom 20% are "excludable."
-
 2.  **Prefix Matching with Swapping**: The optimizer then searches through previously cached prefixes, which includes every permutation from every previous prompt. It looks for the longest prefix that meets two conditions: It must contain all **core artifacts**; The number of new artifacts it introduces (those not in the initial RAG results) must be less than or equal to the number of available **excludable artifacts**. If the chosen prefix is small enough, excludable artifacts from this prompt are backfilled in.
-
 3.  **Fallback Sorting**: If no suitable cached prefix can be constructed, the optimizer falls back to a default sorting algorithm. The default sorting algorithm attempts to predict which artifacts will be most reusable to future prompts by scoring attributes of their usage history (frequency, position, stability) and their embedding vector cosine similarity. This mechanism attempts to make the current context maximally reusable for future prompts.
-
 #### Context Caching Optimization Settings
 You can tune the optimizer's behavior through the following settings in your configuration file (`dir-assistant config open`):
 ```toml
@@ -254,11 +230,9 @@ You can tune the optimizer's behavior through the following settings in your con
 # by artifacts from a cached prefix. A value of 0.2 means the bottom
 # 20% of semantically relevant files can be swapped out.
 ARTIFACT_EXCLUDABLE_FACTOR = 0.2
-
 # The time-to-live (in seconds) for a cached context prefix.
 # Default is 3600 (1 hour). Set to your LLM server's TTL.
 API_CONTEXT_CACHE_TTL = 3600
-
 # Weights used by the optimizer to score and reorder file artifacts in the
 # fallback sorting scenario. Adjusting these can change how aggressively
 # the optimizer prioritizes different factors.
@@ -267,4 +241,29 @@ frequency = 1.0
 position = 1.0
 stability = 1.0
 historical_hits = 1.0 # Used to tie-break between equally long prefixes
+```
+### Indexing Performance Options
+The indexing process in `dir-assistant` can be tuned for performance, especially when dealing with large numbers of files or API-based embedding models. The following settings control concurrency and rate limiting during file processing and embedding generation:
+
+- `INDEX_CONCURRENT_FILES`: Controls the number of files processed concurrently during indexing. Default: 10. Increase for faster indexing on multi-core systems, but monitor resource usage.
+
+- `INDEX_MAX_FILES_PER_MINUTE`: Sets the maximum number of files to process per minute to respect API rate limits. Default: 600.
+
+- `INDEX_CHUNK_WORKERS`: Number of concurrent workers for generating embeddings for file chunks. Default: 10.
+
+- `INDEX_MAX_CHUNK_REQUESTS_PER_MINUTE`: Maximum embedding requests per minute for chunks. Default: 600.
+
+To configure these, add them to the `[DIR_ASSISTANT]` section in your config file:
+
+```toml
+[DIR_ASSISTANT]
+
+INDEX_CONCURRENT_FILES = 20
+
+INDEX_MAX_FILES_PER_MINUTE = 1200
+
+INDEX_CHUNK_WORKERS = 20
+
+INDEX_MAX_CHUNK_REQUESTS_PER_MINUTE = 1200
+
 ```
