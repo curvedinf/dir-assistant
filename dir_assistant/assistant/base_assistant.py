@@ -1,8 +1,6 @@
 import sys
-
 import numpy as np
 from colorama import Fore, Style
-
 from dir_assistant.assistant.cache_manager import CacheManager
 from dir_assistant.assistant.index import search_index
 from dir_assistant.assistant.rag_optimizer import RagOptimizer
@@ -13,13 +11,11 @@ from dir_assistant.cli.config import (
     get_file_path,
 )
 
-
 class BaseAssistant:
     """
     A base class for LLM assistants that enables inclusion of local files in the LLM context. Files
     are collected recursively from the current directory.
     """
-
     def __init__(
         self,
         system_instructions,
@@ -70,7 +66,6 @@ class BaseAssistant:
             weights=self.rag_optimizer_weights,
             artifact_excludable_factor=self.artifact_excludable_factor,
         )
-
     def close(self):
         """Cleanly close any open resources."""
         self.cache_manager.close()
@@ -98,11 +93,12 @@ class BaseAssistant:
         Identifies relevant text chunks, pre-culs a candidate pool based on token
         limits, optimizes the pool for caching, and builds the final context string.
         """
+        # Compute dynamic max_k
+        max_k = int(self.context_size * self.context_file_ratio // 500)
         # 1. Get an initial list of nearest neighbors from the search index.
         k_nearest_neighbors = search_index(
-            self.embed, self.index, user_input, self.chunks
+            self.embed, self.index, user_input, self.chunks, max_k=max_k
         )
-
         # 2. Pre-cull candidates to create a token-aware pool for the optimizer.
         # This is the primary change: culling before optimizing.
         candidate_pool = []
@@ -113,19 +109,15 @@ class BaseAssistant:
         optimizer_pool_limit = (
                 self.context_size * self.context_file_ratio * optimizer_candidate_pool_ratio
         )
-
         for neighbor in k_nearest_neighbors:
             chunk_text = neighbor[0].get("text", "") + "\n\n"
             chunk_tokens = self.count_tokens(chunk_text, role="user")
-
             # Stop adding candidates when the pool reaches the desired token limit.
             if total_candidate_tokens + chunk_tokens > optimizer_pool_limit and candidate_pool:
                 break
-
             # The optimizer will need the distance, so we keep the full neighbor object.
             candidate_pool.append(neighbor[0])
             total_candidate_tokens += chunk_tokens
-
         # 3. Gather historical and cache metadata for the optimizer.
         # This logic is preserved from the original implementation.
         prompt_history = self.cache_manager.get_prompt_history()
@@ -159,13 +151,11 @@ class BaseAssistant:
                 "positions": hist_meta["positions"],
                 "last_modified_timestamp": last_modified,
             }
-
         if self.verbose and self.chat_mode:
             print(f"K nearest neighbors: {len(k_nearest_neighbors)}")
             print(f"Pre-culled candidates for optimizer: {len(candidate_pool)}")
             print(f"Prompt history: {len(prompt_history)}")
             print(f"Prefix cache metadata: {len(prefix_cache_metadata)}")
-
         # 4. Run the optimizer on the pre-culled candidate pool.
         # The optimizer input is now the smaller, more relevant candidate list.
         optimizer_input = [
@@ -181,41 +171,32 @@ class BaseAssistant:
                 prefix_cache_metadata=prefix_cache_metadata,
             )
         )
-
         if self.verbose and self.chat_mode:
             print(f"Optimized artifacts before final cull: {len(optimized_artifacts)}")
             print(f"Matched prefix size: {len(matched_prefix.split())}")
-
         self.last_matched_prefix = matched_prefix
         self.last_optimized_artifacts = optimized_artifacts
-
         # 5. Build the final text, performing a strict culling on the *optimized* list.
         # This final loop ensures the hard context limit is never exceeded.
         relevant_full_text = ""
         final_artifacts_in_context = []
         chunk_total_tokens = 0
-
         # An efficient lookup map is better than iterating with next() repeatedly.
         chunk_map = {c["text"]: c for c in self.chunks}
-
         for artifact in optimized_artifacts:
             chunk = chunk_map.get(artifact)
             if not chunk:
                 continue
-
             chunk_text = chunk["text"] + "\n\n"
             chunk_tokens = self.count_tokens(chunk_text, role="user")
-
             if (
                     chunk_total_tokens + chunk_tokens
                     > self.context_size * self.context_file_ratio
             ):
                 break  # The context is full.
-
             relevant_full_text += chunk_text
             chunk_total_tokens += chunk_tokens
             final_artifacts_in_context.append(artifact)
-
         self.last_optimized_artifacts = final_artifacts_in_context
         return relevant_full_text
 
@@ -276,12 +257,10 @@ class BaseAssistant:
     def create_prompt(self, user_input):
         return f"""If this is the final part of this prompt, this is the actual request to respond to. All information
 above should be considered supplementary to this request to help answer it.
-
 User request:
 <---------------------------->
 {user_input}
 <---------------------------->
-
 Perform the user request above.
 """
 
