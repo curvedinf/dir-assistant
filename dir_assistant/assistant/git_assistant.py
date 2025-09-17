@@ -1,12 +1,8 @@
 import os
 import sys
-
 from colorama import Fore, Style
 from prompt_toolkit import prompt
-
 from dir_assistant.assistant.cgrag_assistant import CGRAGAssistant
-
-
 class GitAssistant(CGRAGAssistant):
     def __init__(
         self,
@@ -49,7 +45,6 @@ class GitAssistant(CGRAGAssistant):
             thinking_end_pattern,
         )
         self.commit_to_git = commit_to_git
-
     def create_prompt(self, user_input):
         if not self.commit_to_git:
             return super().create_prompt(user_input)
@@ -57,9 +52,7 @@ class GitAssistant(CGRAGAssistant):
             # Ask the LLM if a diff commit is appropriate
             should_diff_output = self.run_one_off_completion(
                 f"""Does the prompt below request changes to files? 
-
 Respond only with one word: "YES" or "NO". Do not respond with additional words or characters, only "YES" or "NO".
-
 User prompt:
 <---------------------------->
 {user_input}
@@ -75,19 +68,16 @@ User prompt:
             if self.should_diff:
                 return f"""If this is the final part of this prompt, this is the actual request to respond to. All information
 above should be considered supplementary to this request to help answer it.
-
 User Prompt (RESPOND TO THIS PROMPT BY CREATING A FILE WITH THE SPECIFICATIONS BELOW):
 <---------------------------->
 {user_input}
 <---------------------------->
-
 Given the user prompt and included file snippets above, respond with the contents of a single file that has
 the changes the user prompt requested. Do not provide an introduction, summary, or conclusion. Do not write
 any additional text other than the file contents. Only respond with the file's contents. Markdown and other
 formatting is NOT ALLOWED. Add the filename of the file as the first line of the response. It is okay to 
 create a new file. Always respond with the entire contents of the new version of the file. File snippets are
 NOT ALLOWED. Ensure white space and new lines are consistent with the original.
-
 Example response:
 <---------------------------->
 /home/user/hello_project/hello_world.py
@@ -97,7 +87,6 @@ if __name__ == "__main__":
 """
             else:
                 return user_input
-
     def run_post_stream_processes(self, user_input, stream_output):
         if (
             not self.commit_to_git or not self.should_diff
@@ -120,16 +109,14 @@ if __name__ == "__main__":
             )
             output_lines = stream_output.split("\n")
             changed_filepath = output_lines[0].strip()
-
             # Security: Validate the filepath to prevent path traversal attacks
-            if ".." in changed_filepath or os.path.isabs(changed_filepath):
+            if ".." in changed_filepath:
                 if self.chat_mode:
                     self.write_error_message(
                         f"Error: Invalid file path '{changed_filepath}'. "
                         "Path must be relative and within the project directory."
                     )
                 return True  # Abort the operation
-
             abs_path = os.path.abspath(changed_filepath)
             if not abs_path.startswith(os.getcwd()):
                 if self.chat_mode:
@@ -138,7 +125,6 @@ if __name__ == "__main__":
                         "Attempted to write outside the project directory."
                     )
                 return True  # Abort the operation
-
             file_content_lines = []
             if len(output_lines) > 1:
                 file_content_lines = output_lines[1:]
@@ -176,7 +162,6 @@ if __name__ == "__main__":
                 )
                 sys.stdout.flush()
         return True
-
     def stream_chat(self, user_input):
         self.git_apply_error = None
         super().stream_chat(user_input)
