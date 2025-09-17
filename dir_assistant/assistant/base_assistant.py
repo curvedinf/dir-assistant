@@ -1,7 +1,3 @@
-# Paste the entire modified base_assistant.py content here, with changes:
-# In build_relevant_full_text, change optimizer_candidate_pool_ratio = 3.0
-# After the final loop, if chunk_total_tokens < target, add more from sorted remaining chunks.
-
 import sys
 import numpy as np
 from colorama import Fore, Style
@@ -73,6 +69,7 @@ class BaseAssistant:
     def close(self):
         """Cleanly close any open resources."""
         self.cache_manager.close()
+
     def initialize_history(self):
         system_instructions_tokens = self.count_tokens(
             self.system_instructions, role="system"
@@ -84,10 +81,13 @@ class BaseAssistant:
                 "tokens": system_instructions_tokens,
             }
         ]
+
     def call_completion(self, chat_history, is_cgrag_call=False):
         raise NotImplementedError
+
     def count_tokens(self, text, role="user"):
         raise NotImplementedError
+
     def build_relevant_full_text(self, user_input):
         """
         Identifies relevant text chunks, pre-culs a candidate pool based on token
@@ -440,7 +440,9 @@ Perform the user request above.
             }
         ]
     def create_thinking_context(self, write_to_stdout):
-        if write_to_stdout and self.hide_thinking and self.chat_mode:
+
+
+if write_to_stdout and self.hide_thinking and self.chat_mode:
             if not self.no_color:
                 sys.stdout.write(self.get_color_prefix(Style.BRIGHT, Fore.WHITE))
             sys.stdout.write("(thinking...)")
@@ -467,3 +469,4 @@ Perform the user request above.
                     self.thinking_end_pattern
                 )
                 context["delta_after_thinking_finished"] = (
+
