@@ -87,7 +87,7 @@ class BaseAssistant:
         raise NotImplementedError
     def count_tokens(self, text, role="user"):
         raise NotImplementedError
-    def build_relevant_full_text(self, user_input):
+    def build_relevant_full_text(self, user_input, cutoff):
         """
         Identifies relevant text chunks, pre-culs a candidate pool based on token
         limits, optimizes the pool for caching, and builds the final context string.
@@ -100,6 +100,10 @@ class BaseAssistant:
         k_nearest_neighbors = search_index(
             self.embed, self.index, user_input, self.chunks, max_k=max_k
         )
+        # Filter based on the relevancy cutoff
+        k_nearest_neighbors = [
+            neighbor for neighbor in k_nearest_neighbors if neighbor[1] <= cutoff
+        ]
         # 2. Pre-cull candidates to create a token-aware pool for the optimizer.
         # This is the primary change: culling before optimizing.
         candidate_pool = []
@@ -297,7 +301,9 @@ Perform the user request above.
         self.write_assistant_thinking_message()
     def run_stream_processes(self, user_input, one_off=False):
         prompt = self.create_prompt(user_input)
-        relevant_full_text = self.build_relevant_full_text(user_input)
+        relevant_full_text = self.build_relevant_full_text(
+            user_input, self.artifact_relevancy_cutoff
+        )
         return self.run_basic_chat_stream(prompt, relevant_full_text, one_off)
     def run_post_stream_processes(self, user_input, stream_output):
         return True

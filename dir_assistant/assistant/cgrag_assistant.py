@@ -104,7 +104,9 @@ function, and variable names as applicable to answering the user prompt.
 """
     def run_stream_processes(self, user_input, one_off=False):
         if self.use_cgrag:
-            cgrag_relevant_full_text = self.build_relevant_full_text(user_input)
+            cgrag_relevant_full_text = self.build_relevant_full_text(
+                user_input, self.artifact_relevancy_cgrag_cutoff
+            )
             cgrag_prompt = self.create_cgrag_prompt(user_input)
             cgrag_history = copy.deepcopy(self.chat_history)
             cgrag_prompt_history = self.create_user_history(
@@ -121,9 +123,13 @@ function, and variable names as applicable to answering the user prompt.
                 output_history["content"]
             )
             combined_query = f"Original prompt:\n{user_input}\nNeeded information:\n{output_history['content']}"
-            relevant_full_text = self.build_relevant_full_text(combined_query)
+            relevant_full_text = self.build_relevant_full_text(
+                combined_query, self.artifact_relevancy_cutoff
+            )
             self.print_cgrag_output(output_history["content"])
         else:
-            relevant_full_text = self.build_relevant_full_text(user_input)
+            relevant_full_text = self.build_relevant_full_text(
+                user_input, self.artifact_relevancy_cutoff
+            )
         prompt = self.create_prompt(user_input)
         return self.run_basic_chat_stream(prompt, relevant_full_text, one_off)
