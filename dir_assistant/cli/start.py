@@ -22,7 +22,7 @@ def display_startup_art(commit_to_git, no_color=False):
  |  __ \\_   _|  __ \\
  | |  | || | | |__) |
  | |  | || | |  _  /
- | |__| || |_| | \\ \\\n |_____/_____|_|_ \\_\\__ _____  _____ _______       _   _ _______ 
+ | |__| || |_| | \ \\\n |_____/_____|_|_ \\_\\__ _____  _____ _______       _   _ _______ 
      /\\    / ____/ ____|_   _|/ ____|__   __|/\\   | \\ | |__   __|
     /  \\  | (___| (___   | | | (___    | |  /  \\  |  \\| |  | |   
    / /\\ \\  \\___ \\\\___ \\  | |  \\___ \\   | | / /\\ \\ | . ` |  | |   
@@ -80,6 +80,8 @@ The user is currently working in the following directory (CWD): {os.getcwd()}"""
     artifact_excludable_factor = config["ARTIFACT_EXCLUDABLE_FACTOR"]
     api_context_cache_ttl = config["API_CONTEXT_CACHE_TTL"]
     rag_optimizer_weights = config["RAG_OPTIMIZER_WEIGHTS"]
+    artifact_relevancy_cutoff = config["ARTIFACT_RELEVANCY_CUTOFF"]
+    artifact_relevancy_cgrag_cutoff = config["ARTIFACT_RELEVANCY_CGRAG_CUTOFF"]
     # Index settings
     index_concurrent_files = config["INDEX_CONCURRENT_FILES"]
     index_max_files_per_minute = config["INDEX_MAX_FILES_PER_MINUTE"]
@@ -184,6 +186,8 @@ the user refers to files, always assume they want to know about the files they p
             chunks,
             context_file_ratio,
             artifact_excludable_factor,
+            artifact_relevancy_cutoff,
+            artifact_relevancy_cgrag_cutoff,
             api_context_cache_ttl,
             rag_optimizer_weights,
             output_acceptance_retries,
@@ -219,6 +223,8 @@ the user refers to files, always assume they want to know about the files they p
             chunks,
             context_file_ratio,
             artifact_excludable_factor,
+            artifact_relevancy_cutoff,
+            artifact_relevancy_cgrag_cutoff,
             api_context_cache_ttl,
             rag_optimizer_weights,
             output_acceptance_retries,

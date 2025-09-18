@@ -10,7 +10,6 @@ from dir_assistant.cli.config import (
     PROMPT_HISTORY_FILENAME,
     get_file_path,
 )
-
 class BaseAssistant:
     """
     A base class for LLM assistants that enables inclusion of local files in the LLM context. Files
@@ -24,6 +23,8 @@ class BaseAssistant:
         chunks,
         context_file_ratio,
         artifact_excludable_factor,
+        artifact_relevancy_cutoff,
+        artifact_relevancy_cgrag_cutoff,
         api_context_cache_ttl,
         rag_optimizer_weights,
         output_acceptance_retries,
@@ -40,6 +41,8 @@ class BaseAssistant:
         self.chunks = chunks
         self.context_file_ratio = context_file_ratio
         self.artifact_excludable_factor = artifact_excludable_factor
+        self.artifact_relevancy_cutoff = artifact_relevancy_cutoff
+        self.artifact_relevancy_cgrag_cutoff = artifact_relevancy_cgrag_cutoff
         self.api_context_cache_ttl = api_context_cache_ttl
         self.rag_optimizer_weights = rag_optimizer_weights
         self.context_size = 8192
@@ -430,10 +433,8 @@ Perform the user request above.
             False,
         )["content"]
         return self.remove_thinking_message(output)
-
     def create_empty_history(self, role="user"):
         return {"role": role, "content": "", "tokens": 0}
-
     def create_one_off_prompt_history(self, prompt):
         return [
             {
@@ -442,7 +443,6 @@ Perform the user request above.
                 "tokens": self.count_tokens(prompt, role="user"),
             }
         ]
-
     def create_thinking_context(self, write_to_stdout):
         if write_to_stdout and self.hide_thinking and self.chat_mode:
             if not self.no_color:
@@ -456,7 +456,6 @@ Perform the user request above.
             "thinking_end_finished": not self.hide_thinking,
             "delta_after_thinking_finished": None,
         }
-
     def is_done_thinking(self, context, content):
         if not context["thinking_start_finished"]:
             if len(content) > len(self.thinking_start_pattern) + 20:
@@ -476,7 +475,6 @@ Perform the user request above.
                 )
             return False
         return True
-
     def get_extra_delta_after_thinking(self, context, write_to_stdout):
         if context["delta_after_thinking_finished"] is not None:
             output = context["delta_after_thinking_finished"]
