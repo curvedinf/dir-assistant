@@ -2,10 +2,8 @@ from os import environ, getenv, makedirs
 from os.path import expanduser, join
 from platform import system
 from subprocess import run
-
 import toml
 from dynaconf import Dynaconf
-
 VERSION = "1.7.0"
 CONFIG_FILENAME = "config.toml"
 CONFIG_PATH = join(expanduser("~"), ".config", "dir-assistant")
@@ -15,7 +13,6 @@ INDEX_CACHE_FILENAME = "index_cache.sqlite"
 PREFIX_CACHE_FILENAME = "prefix_cache.sqlite"
 PROMPT_HISTORY_FILENAME = "prompt_history.sqlite"
 HISTORY_FILENAME = "history.pth"  # pth = prompt toolkit history
-
 CONFIG_DEFAULTS = {
     "SYSTEM_INSTRUCTIONS": "You are a helpful AI assistant.",
     "GLOBAL_IGNORES": [
@@ -29,6 +26,8 @@ CONFIG_DEFAULTS = {
     ],
     "CONTEXT_FILE_RATIO": 0.9, # 90% of the prompt will be file text, 10% will be prompt history
     "ARTIFACT_EXCLUDABLE_FACTOR": 0.1,  # 10% of the most distant artifacts can be replaced
+    "ARTIFACT_RELEVANCY_CUTOFF": 1.5,
+    "ARTIFACT_RELEVANCY_CGRAG_CUTOFF": 1.5,
     "API_CONTEXT_CACHE_TTL": 3600,  # 1 hour
     "RAG_OPTIMIZER_WEIGHTS": {
         "frequency": 1.0, # how much to value artifacts that appear frequently in past prompts
@@ -46,8 +45,7 @@ CONFIG_DEFAULTS = {
     "VERBOSE": False,
     "NO_COLOR": False,
     "HIDE_THINKING": True,
-    "THINKING_START_PATTERN": "<think>",
-    "THINKING_END_PATTERN": "</think>",
+    "THINKING_START_PATTERN": "",
     "MODELS_PATH": join(expanduser("~"), ".local", "share", "dir-assistant", "models"),
     "EMBED_MODEL": "",
     "LLM_MODEL": "",
@@ -91,19 +89,13 @@ CONFIG_DEFAULTS = {
     "INDEX_CHUNK_WORKERS": 10,
     "INDEX_MAX_CHUNK_REQUESTS_PER_MINUTE": 600,
 }
-
-
 def get_file_path(path, filename):
     expanded_path = expanduser(path)
     makedirs(expanded_path, exist_ok=True)
     return join(expanded_path, filename)
-
-
 def save_config(config_dict):
     with open(get_file_path(CONFIG_PATH, CONFIG_FILENAME), "w") as config_file:
         toml.dump(config_dict, config_file)
-
-
 def check_defaults(config_dict, defaults_dict):
     for key, value in defaults_dict.items():
         if key not in config_dict:
@@ -111,11 +103,8 @@ def check_defaults(config_dict, defaults_dict):
         elif isinstance(value, dict) and isinstance(config_dict.get(key), dict):
             check_defaults(config_dict[key], value)
     return config_dict
-
-
 def set_environment_overrides(config_dict):
     """Replace config values with environment variable overrides"""
-
     def _override_config(config_branch, prefix=""):
         for key, value in config_branch.items():
             env_key = f"{prefix}__{key}" if prefix else key
@@ -124,10 +113,7 @@ def set_environment_overrides(config_dict):
             elif env_key in environ:
                 config_branch[key] = coerce_setting_string_value(environ[env_key])
         return config_branch
-
     return _override_config(config_dict)
-
-
 def coerce_setting_string_value(value_str):
     """Convert string values to appropriate Python types"""
     # Handle boolean values
@@ -141,8 +127,6 @@ def coerce_setting_string_value(value_str):
         return float(value_str)
     # Keep as string if no other type matches
     return value_str
-
-
 def load_config(skip_environment_vars=False):
     config_object = Dynaconf(
         settings_files=[get_file_path(CONFIG_PATH, CONFIG_FILENAME)]
@@ -151,31 +135,23 @@ def load_config(skip_environment_vars=False):
     # If the config file is malformed, insert the DIR_ASSISTANT key
     if "DIR_ASSISTANT" not in config_dict.keys():
         config_dict["DIR_ASSISTANT"] = {}
-
     # Check for missing config options (maybe after a version upgrade)
     config_dict["DIR_ASSISTANT"] = check_defaults(
         config_dict["DIR_ASSISTANT"], CONFIG_DEFAULTS
     )
-
     save_config(config_dict)
-
     # Set any env-overridden config values
     config_dict = set_environment_overrides(config_dict)
-
     # Set LiteLLM API keys only if not already set in environment
     for key, value in config_dict["DIR_ASSISTANT"]["LITELLM_API_KEYS"].items():
         if key.endswith("_API_KEY") and value and key not in environ:
             environ[key] = value
     return config_dict
-
-
 def config(args, config_dict):
     # List the current configuration
     config_file_path = get_file_path(CONFIG_PATH, CONFIG_FILENAME)
     print(f"Configuration file: {config_file_path}")
     print(toml.dumps(config_dict))
-
-
 def config_open(args):
     config_file_path = get_file_path(CONFIG_PATH, CONFIG_FILENAME)
     editor = (
