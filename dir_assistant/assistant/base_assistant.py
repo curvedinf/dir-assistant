@@ -101,7 +101,7 @@ class BaseAssistant:
             self.embed, self.index, user_input, self.chunks, max_k=max_k
         )
         # Filter based on the relevancy cutoff
-        k_nearest_neighbors = [
+        k_nearest_neighbors_filtered = [
             neighbor for neighbor in k_nearest_neighbors if neighbor[1] <= cutoff
         ]
         # 2. Pre-cull candidates to create a token-aware pool for the optimizer.
@@ -114,14 +114,14 @@ class BaseAssistant:
         optimizer_pool_limit = (
                 self.context_size * self.context_file_ratio * optimizer_candidate_pool_ratio
         )
-        for neighbor in k_nearest_neighbors:
+        for neighbor in k_nearest_neighbors_filtered:
             chunk_text = neighbor[0].get("text", "") + "\n\n"
             chunk_tokens = self.count_tokens(chunk_text, role="user")
             # Stop adding candidates when the pool reaches the desired token limit.
             if total_candidate_tokens + chunk_tokens > optimizer_pool_limit and candidate_pool:
                 break
             # The optimizer will need the distance, so we keep the full neighbor object.
-            candidate_pool.append(neighbor[0])
+            candidate_pool.append(neighbor)
             total_candidate_tokens += chunk_tokens
         # 3. Gather historical and cache metadata for the optimizer.
         # This logic is preserved from the original implementation.
@@ -157,17 +157,16 @@ class BaseAssistant:
                 "last_modified_timestamp": last_modified,
             }
         if self.verbose and self.chat_mode:
-            print(f"K nearest neighbors: {len(k_nearest_neighbors)}")
+            print(f"K nearest neighbors: {len(k_nearest_neighbors_filtered)}")
             print(f"Pre-culled candidates for optimizer: {len(candidate_pool)}")
             print(f"Prompt history: {len(prompt_history)}")
             print(f"Prefix cache metadata: {len(prefix_cache_metadata)}")
         # 4. Run the optimizer on the pre-culled candidate pool.
         # The optimizer input is now the smaller, more relevant candidate list.
         optimizer_input = [
-            (chunk.get("text", ""), chunk.get("distance", i))
-            for i, chunk in enumerate(candidate_pool)
+            (chunk.get("text", ""), distance)
+            for chunk, distance in candidate_pool
         ]
-        #print("optimizer input first", optimizer_input[0])
         optimized_artifacts, matched_prefix = (
             self.rag_optimizer.optimize_rag_for_caching(
                 k_nearest_neighbors_with_distances=optimizer_input,
@@ -206,7 +205,7 @@ class BaseAssistant:
         # If still under target after optimization, add more from original candidates sorted by distance
         if chunk_total_tokens < target_tokens:
             remaining_candidates = []
-            for neighbor in k_nearest_neighbors:
+            for neighbor in k_nearest_neighbors_filtered:
                 art_id = neighbor[0].get('text', '')
                 if art_id not in final_artifacts_in_context:
                     remaining_candidates.append(neighbor)
