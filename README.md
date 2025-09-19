@@ -27,7 +27,7 @@ prompt to an LLM called CGRAG (Contextually Guided Retrieval-Augmented Generatio
 - Context caching optimization to reduce cost and latency.
 - Optionally configure a separate, faster LLM for the CGRAG guidance step to reduce cost and latency.
 ### New Features
-- The embedding index is now separated by model in the database. This means you can switch between embedding models without needing to re-index files.
+- The embedding index is now separated by model in the database. This means you can switch between embedding models without needing to re-index files if you switch back.
 - Indexing is now parallelized and faster.
 - Fixed a bug where the context optimizer was not utilizing the whole context
 
