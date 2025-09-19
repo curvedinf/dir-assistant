@@ -13,6 +13,7 @@ This document provides a comprehensive guide to configuring `dir-assistant`.
 3. [Embedding Model Configuration](#embedding-model-configuration)
 4. [Hardware Platform Selection](#optional-select-a-hardware-platform)
 5. [General Configuration](#general-configuration-local-and-api-mode)
+   - [Artifact Relevancy Filtering](#artifact-relevancy-filtering)
    - [Context Caching Optimization](#context-caching-optimization)
    - [Indexing Performance Options](#indexing-performance-options)
 ## API Configuration
@@ -211,6 +212,23 @@ System dependencies may be required for the `platform` command and are outside t
 If you have any issues building `llama-cpp-python`, the project's install instructions may offer more
 info: https://github.com/abetlen/llama-cpp-python
 ## General Configuration (Local and API Mode)
+### Artifact Relevancy Filtering
+`dir-assistant` uses a vector search to find the most relevant file chunks (artifacts) to include in the LLM's context. The `ARTIFACT_RELEVANCY_CUTOFF` and `ARTIFACT_RELEVANCY_CGRAG_CUTOFF` settings allow you to filter these artifacts based on their relevance score (distance), improving the signal-to-noise ratio of the context.
+
+- `ARTIFACT_RELEVANCY_CUTOFF`: This setting applies to the main LLM call that generates the final response. Only artifacts with a distance score *less than or equal to* this value will be considered for inclusion in the context.
+- `ARTIFACT_RELEVANCY_CGRAG_CUTOFF`: If CGRAG is enabled, this cutoff is used for the initial guidance call. It allows you to set a stricter (or looser) relevancy requirement for the CGRAG step.
+
+A lower value makes the filtering stricter, including only the most relevant files. A higher value is more permissive. Setting this too low might exclude useful information, while setting it too high may include irrelevant noise that confuses the LLM. The default value of `1.5` is a balanced starting point.
+
+To configure these settings, add them to the `[DIR_ASSISTANT]` section in your config file:
+```toml
+[DIR_ASSISTANT]
+# Set the relevancy cutoff for the main RAG process.
+ARTIFACT_RELEVANCY_CUTOFF = 1.5
+
+# Set a different cutoff for the CGRAG guidance step.
+ARTIFACT_RELEVANCY_CGRAG_CUTOFF = 1.2 # Stricter for CGRAG
+```
 ### Context Caching Optimization
 `dir-assistant` includes a system to optimize the context sent to your LLM server, aiming to maximize the utilization of context caching implemented in many LLM servers. Context caching reduces latency and cost by reusing computation from previous prompts. For this to work, the beginning of a new prompt must exactly match the beginning of a previous one.
 In `dir-assistant`, the context is primarily composed of chunks of your files, known as RAG artifacts. Context optimization's goal is to order these artifacts consistently to create stable "prefixes" (the initial sequence of artifacts) that the LLM system can cache.
@@ -244,14 +262,11 @@ historical_hits = 1.0 # Used to tie-break between equally long prefixes
 ```
 ### Indexing Performance Options
 The indexing process in `dir-assistant` can be tuned for performance, especially when dealing with large numbers of files or API-based embedding models. The following settings control concurrency and rate limiting during file processing and embedding generation:
-
 - `INDEX_CONCURRENT_FILES`: The number of files processed concurrently during indexing. Default: 10.
 - `INDEX_MAX_FILES_PER_MINUTE`: Sets the maximum number of files to process per minute to respect API rate limits. Default: 600.
 - `INDEX_CHUNK_WORKERS`: Number of concurrent processes for generating embeddings per file. Default: 10.
 - `INDEX_MAX_CHUNK_REQUESTS_PER_MINUTE`: Maximum embedding requests per minute for chunks. Default: 600.
-
 File workers and chunk workers are multiplicative, so the total max concurrency for the indexing process in terms of number of embedding calls is `INDEX_CONCURRENT_FILES * INDEX_CHUNK_WORKERS`. Likewise, the max embedding rate is `INDEX_MAX_FILES_PER_MINUTE * INDEX_MAX_CHUNK_REQUESTS_PER_MINUTE`. To rate limit appropriately for a rate limited API, start by setting both `PER_MINUTE` settings to the square root of the target rate limit. To configure these settings, add them to the `[DIR_ASSISTANT]` section in your config file:
-
 ```toml
 [DIR_ASSISTANT]
 INDEX_CONCURRENT_FILES = 20
