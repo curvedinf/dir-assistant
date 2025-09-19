@@ -43,13 +43,11 @@ Google's Gemini models, like Gemini 1.5 Flash or Gemini 1.5 Pro, are excellent c
     ```toml
     [DIR_ASSISTANT]
     ACTIVE_MODEL_IS_LOCAL = false
-    LITELLM_CONTEXT_SIZE = 200000 # Gemini 1.5 Flash default, Pro is 1M (can be 2M)
-    # LITELLM_MODEL_USES_SYSTEM_MESSAGE = false # Default, but some Gemini models might benefit if set to true
+    LITELLM_CONTEXT_SIZE = 200000
     [DIR_ASSISTANT.LITELLM_API_KEYS]
-    GEMINI_API_KEY = "your_gemini_key" # Or set via setkey command
+    GEMINI_API_KEY = "your_gemini_key"
     [DIR_ASSISTANT.LITELLM_COMPLETION_OPTIONS]
-    model = "gemini/gemini-1.5-flash-latest" # Default is gemini-1.5-flash-latest
-    # model = "gemini/gemini-1.5-pro-latest" # For higher capability
+    model = "gemini/gemini-2.5-flash"
     timeout = 600
     ```
     Refer to the [Quickstart for Gemini](usage.md#quickstart-chat-with-api-model-google-gemini) for a streamlined setup. The [Optimized Settings](usage.md#optimized-settings-for-coding-assistance) section also features a Gemini configuration.
@@ -61,14 +59,12 @@ Anthropic's Claude models are known for their strong reasoning and large context
     ```toml
     [DIR_ASSISTANT]
     ACTIVE_MODEL_IS_LOCAL = false
-    LITELLM_MODEL_USES_SYSTEM_MESSAGE = true # Claude models use system messages
-    LITELLM_CONTEXT_SIZE = 200000 # Claude 3.7 Sonnet supports 200K tokens
+    LITELLM_MODEL_USES_SYSTEM_MESSAGE = true
+    LITELLM_CONTEXT_SIZE = 200000
     [DIR_ASSISTANT.LITELLM_API_KEYS]
-    ANTHROPIC_API_KEY = "your_claude_key" # Or set via setkey command
+    ANTHROPIC_API_KEY = "your_claude_key"
     [DIR_ASSISTANT.LITELLM_COMPLETION_OPTIONS]
-    model = "anthropic/claude-3-7-sonnet-20240729" # Latest Sonnet model identifier
-    # model = "anthropic/claude-3-opus-20240229" # For highest capability
-    # model = "anthropic/claude-3-haiku-20240307" # For speed
+    model = "anthropic/claude-sonnet-4-20250514"
     timeout = 600
     ```
     Refer to the [Quickstart for Claude](usage.md#quickstart-chat-with-api-model-anthropic-claude) for a streamlined setup.
@@ -80,14 +76,12 @@ OpenAI models like GPT-4o offer a balance of performance and cutting-edge featur
     ```toml
     [DIR_ASSISTANT]
     ACTIVE_MODEL_IS_LOCAL = false
-    LITELLM_MODEL_USES_SYSTEM_MESSAGE = true # OpenAI models use system messages
-    LITELLM_CONTEXT_SIZE = 128000 # GPT-4o supports 128K tokens
+    LITELLM_MODEL_USES_SYSTEM_MESSAGE = true
+    LITELLM_CONTEXT_SIZE = 128000
     [DIR_ASSISTANT.LITELLM_API_KEYS]
-    OPENAI_API_KEY = "your_openai_key" # Or set via setkey command
+    OPENAI_API_KEY = "your_openai_key"
     [DIR_ASSISTANT.LITELLM_COMPLETION_OPTIONS]
-    model = "gpt-4o" # Latest flagship model
-    # model = "gpt-4-turbo"
-    # model = "gpt-3.5-turbo" # For cost-effectiveness
+    model = "gpt-5"
     timeout = 600
     ```
     Refer to the [Quickstart for OpenAI](usage.md#quickstart-chat-with-api-model-openai) for a streamlined setup.
@@ -99,15 +93,12 @@ You can optionally specify a different, often faster and cheaper, model for the 
 To configure a separate model for CGRAG, add the `LITELLM_CGRAG_COMPLETION_OPTIONS` section to your config file (`dir-assistant config open`):
 ```toml
 [DIR_ASSISTANT]
-# ... other settings
 USE_CGRAG = true
-# Main model for generating the final, high-quality response
 [DIR_ASSISTANT.LITELLM_COMPLETION_OPTIONS]
-model = "anthropic/claude-3-7-sonnet-20240729"
+model = "gemini/gemini-2.5-pro"
 timeout = 600
-# Optional: A faster, cheaper model for the initial CGRAG guidance step
 [DIR_ASSISTANT.LITELLM_CGRAG_COMPLETION_OPTIONS]
-model = "gemini/gemini-1.5-flash-latest"
+model = "gemini/gemini-2.5-flash"
 timeout = 300
 ```
 If the `LITELLM_CGRAG_COMPLETION_OPTIONS` section or its `model` key is not specified, `dir-assistant` will default to using the model defined in `LITELLM_COMPLETION_OPTIONS` for both calls. You can also set `LITELLM_CGRAG_CONTEXT_SIZE` to specify a different context size for the CGRAG model.
