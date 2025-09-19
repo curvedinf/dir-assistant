@@ -18,7 +18,7 @@ class TestArtifactRelevancyCutoff(unittest.TestCase):
         # Sample search results with varying distances, as returned by search_index
         self.mock_search_results = [
             (self.all_chunks[0], 0.5),  # Relevant for both cutoffs
-            (self.all_chunks[1], 1.0),  # Relevant for 1.5, not for 1.2
+            (self.all_chunks[1], 1.3),  # Relevant for 1.5, not for 1.2
             (self.all_chunks[2], 1.6),  # Not relevant for 1.5
             (self.all_chunks[3], 2.0),  # Not relevant for 1.5
         ]
