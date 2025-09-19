@@ -3,10 +3,263 @@ platform linux -- Python 3.12.5, pytest-8.4.0, pluggy-1.6.0
 rootdir: /home/chase/Projects/dir-assistant
 plugins: cov-6.2.1, anyio-4.9.0, asyncio-1.1.0, django-4.11.1
 asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
-collected 2 items
+collected 6 items
 
-test/test_git_assistant.py ..                                            [100%]
+test/test_artifact_cutoff.py FF
+test/test_git_assistant.py Apply these changes? (Y/N): 
+.Apply these changes? (Y/N): 
+.
+test/test_smoketest_interactive.py dir-assistant 1.7.0
+Released under MIT License
+https://github.com/curvedinf/dir-assistant
 
+[90mLoading embedding model...
+[0m[90mCreating file embeddings and index...
+[0mUsing cached embeddings for /home/chase/Projects/dir-assistant/smoketest.sh
+Using cached embeddings for /home/chase/Projects/dir-assistant/CONTRIBUTORS.md
+Using cached embeddings for /home/chase/Projects/dir-assistant/setup.py
+Using cached embeddings for /home/chase/Projects/dir-assistant/format-code.sh
+Using cached embeddings for /home/chase/Projects/dir-assistant/publish-test.sh
+Using cached embeddings for /home/chase/Projects/dir-assistant/install-local.sh
+Using cached embeddings for /home/chase/Projects/dir-assistant/LICENSE
+Creating embeddings for /home/chase/Projects/dir-assistant/test_output.txt
+Using cached embeddings for /home/chase/Projects/dir-assistant/README.md
+Using cached embeddings for /home/chase/Projects/dir-assistant/publish.sh
+Using cached embeddings for /home/chase/Projects/dir-assistant/docs/configuration.md
+Using cached embeddings for /home/chase/Projects/dir-assistant/docs/project_info.md
+Using cached embeddings for /home/chase/Projects/dir-assistant/docs/usage.md
+Using cached embeddings for /home/chase/Projects/dir-assistant/docs/install.md
+Using cached embeddings for /home/chase/Projects/dir-assistant/dir_assistant/__main__.py
+Using cached embeddings for /home/chase/Projects/dir-assistant/dir_assistant/__init__.py
+Using cached embeddings for /home/chase/Projects/dir-assistant/dir_assistant/main.py
+Using cached embeddings for /home/chase/Projects/dir-assistant/dir_assistant/cli/models.py
+Using cached embeddings for /home/chase/Projects/dir-assistant/dir_assistant/cli/start.py
+Using cached embeddings for /home/chase/Projects/dir-assistant/dir_assistant/cli/__init__.py
+Using cached embeddings for /home/chase/Projects/dir-assistant/dir_assistant/cli/platform_setup.py
+Using cached embeddings for /home/chase/Projects/dir-assistant/dir_assistant/cli/setkey.py
+Using cached embeddings for /home/chase/Projects/dir-assistant/dir_assistant/cli/config.py
+Using cached embeddings for /home/chase/Projects/dir-assistant/dir_assistant/assistant/base_assistant.py
+Using cached embeddings for /home/chase/Projects/dir-assistant/dir_assistant/assistant/cgrag_assistant.py
+Using cached embeddings for /home/chase/Projects/dir-assistant/dir_assistant/assistant/lite_llm_assistant.py
+Using cached embeddings for /home/chase/Projects/dir-assistant/dir_assistant/assistant/file_watcher.py
+Using cached embeddings for /home/chase/Projects/dir-assistant/dir_assistant/assistant/git_assistant.py
+Using cached embeddings for /home/chase/Projects/dir-assistant/dir_assistant/assistant/rag_optimizer.py
+Using cached embeddings for /home/chase/Projects/dir-assistant/dir_assistant/assistant/llama_cpp_embed.py
+Using cached embeddings for /home/chase/Projects/dir-assistant/dir_assistant/assistant/index.py
+Using cached embeddings for /home/chase/Projects/dir-assistant/dir_assistant/assistant/__init__.py
+Using cached embeddings for /home/chase/Projects/dir-assistant/dir_assistant/assistant/base_embed.py
+Using cached embeddings for /home/chase/Projects/dir-assistant/dir_assistant/assistant/lite_llm_embed.py
+Using cached embeddings for /home/chase/Projects/dir-assistant/dir_assistant/assistant/cache_manager.py
+Using cached embeddings for /home/chase/Projects/dir-assistant/dir_assistant/assistant/llama_cpp_assistant.py
+Using cached embeddings for /home/chase/Projects/dir-assistant/test/test_git_assistant.py
+Using cached embeddings for /home/chase/Projects/dir-assistant/test/test_artifact_cutoff.py
+Using cached embeddings for /home/chase/Projects/dir-assistant/test/test_smoketest_noninteractive.py
+Using cached embeddings for /home/chase/Projects/dir-assistant/test/utils.py
+Using cached embeddings for /home/chase/Projects/dir-assistant/test/__init__.py
+Using cached embeddings for /home/chase/Projects/dir-assistant/test/test_smoketest_interactive.py
+Using cached embeddings for /home/chase/Projects/dir-assistant/examples/reddit-stock-sentiment.sh
+Creating index from embeddings...
+[90mLoading remote LLM model...
+[0m[90mLiteLLM completion options: {'model': 'openrouter/openrouter/sonoma-sky-alpha', 'timeout': 600}[0m
+[90mLiteLLM context size: 10000[0m
+[90mLiteLLM CGRAG completion options: {'model': 'openrouter/openrouter/sonoma-dusk-alpha', 'timeout': 600}[0m
+[90mLiteLLM CGRAG context size: 70000[0m
+[1m[32m
+  _____ _____ _____                                              
+ |  __ \_   _|  __ \
+ | |  | || | | |__) |
+ | |  | || | |  _  /
+ | |__| || |_| | \ \
+ |_____/_____|_|_ \_\__ _____  _____ _______       _   _ _______ 
+     /\    / ____/ ____|_   _|/ ____|__   __|/\   | \ | |__   __|
+    /  \  | (___| (___   | | | (___    | |  /  \  |  \| |  | |   
+   / /\ \  \___ \\___ \  | |  \___ \   | | / /\ \ | . ` |  | |   
+  / ____ \ ____) |___) |_| |_ ____) |  | |/ ____ \| |\  |  | |   
+ /_/    \_\_____/_____/|_____|_____/   |_/_/    \_\_| \_|  |_|   
+[0m
+[1m[34mType 'exit' to quit the conversation.
+[1m[34mType 'undo' to roll back the last commit.
+
+[1m[31mYou (Press ALT-Enter, OPT-Enter, or CTRL-O to submit): 
+
+[0m[?12l[?25h[6n[?2004h[?1l[?25l[0m[?7l[0m[J[0m [?7h[0m[?12l[?25h[?25l[?7l[0mDescribe the purpose of this codebase.[0m
+[0m [0m
+[0mThen say roughly how many lines of code it has.[47D[47C[?7h[0m[?12l[?25h[?25l[?7l[2A[47D[0m[J[0mDescribe the purpose of this codebase.[0m
+[0m [0m
+[0mThen say roughly how many lines of code it has.[47D[0m
+[J[?7h[0m[?12l[?25h[?2004l
+[1m[33mFile changes detected. Index has been updated.[0m
+[1m[31mYou (Press ALT-Enter, OPT-Enter, or CTRL-O to submit): 
+
+[0m.
+test/test_smoketest_noninteractive.py ### What Does This Codebase Do?
+
+The `dir-assistant` codebase is an open-source Python CLI tool designed to enable users to **interact conversationally with the files and code in their current directory (or specified directories) using AI language models (LLMs)**. It essentially turns your local project directory into a searchable, queryable knowledge base, powered by retrieval-augmented generation (RAG) techniques. This allows you to ask natural-language questions about your codebase—such as "What does this function do?" or "Summarize the architecture"—and get context-aware responses based on the actual contents of your files.
+
+#### Key Features and Functionality
+1. **File Indexing and Embeddings**:
+   - Scans your directory (recursively, with configurable ignores) to create embeddings (vector representations) of file contents.
+   - Supports both **local embedding models** (via `llama-cpp-python` for offline use) and **remote APIs** (via `LiteLLM` for providers like OpenAI, Anthropic, or OpenRouter).
+   - Chunks large files intelligently to fit model context limits and caches embeddings for efficiency.
+   - Includes a file watcher that automatically updates the index when files change (e.g., during development).
+
+2. **Conversational AI Interface**:
+   - Launches an interactive chat session where you type prompts, and the AI responds by retrieving relevant file snippets and generating answers.
+   - Uses system prompts tailored to the directory (e.g., "The user is currently working in the following directory (CWD): /path/to/project").
+   - Supports streaming responses for a responsive feel.
+   - Special commands like `exit` to quit or `undo` to roll back the last Git commit (if Git integration is enabled).
+
+3. **LLM Integration**:
+   - **Local LLMs**: Runs models like Phi-3 or others via `llama-cpp-python`, with hardware acceleration support (CPU, CUDA, ROCm, Metal, etc.).
+   - **Remote LLMs**: Integrates with APIs via `LiteLLM` (supports 100+ providers). Configurable context sizes, timeouts, and options.
+   - Optional **CGRAG (Code Generation with Retrieval-Augmented Generation)** mode for more advanced code-related tasks, like generating or critiquing code changes.
+   - RAG optimization: Retrieves top-relevant file chunks, ranks them (with configurable weights and cutoffs), and injects them into the LLM prompt to avoid hallucinations.
+
+4. **Git Integration**:
+   - Can automatically commit AI-suggested changes to your repo (with user confirmation).
+   - Useful for iterative development, where the AI proposes edits, you review/apply them, and commit.
+
+5. **CLI Commands**:
+   - `dir-assistant start`: Launches the chat (default mode).
+   - `dir-assistant config`: Manage settings (print, open editor).
+   - `dir-assistant models`: Download/open models (e.g., embedding or LLM models).
+   - `dir-assistant platform`: Set up hardware acceleration (e.g., for GPU).
+   - `dir-assistant setkey`: Store API keys securely.
+   - `dir-assistant clear`: Reset caches/index.
+   - Flags like `--single-prompt` for non-interactive mode, `--verbose` for debugging, and `--ignore` for excluding files.
+
+6. **Configuration and Extensibility**:
+   - TOML-based config file (e.g., for model paths, API keys, context ratios, ignores).
+   - Highly tunable: Embedding chunk sizes, rate limits, verbosity, colors, thinking patterns (e.g., to hide/show AI "reasoning" steps).
+   - Built with libraries like `prompt_toolkit` for the REPL, `colorama` for output, and `litellm` for API handling.
+
+#### Use Cases
+- **Codebase Exploration**: Ask "What does this module do?" or "Find all references to database connections."
+- **Debugging/Refactoring**: "Suggest improvements to this function" or "Explain why this test is failing."
+- **Documentation**: Generate summaries or README updates based on file contents.
+- **Onboarding**: New team members can query the project without reading everything manually.
+- **Offline-Friendly**: Works fully locally if you download models, making it great for air-gapped environments.
+
+#### Technical Stack
+- **Core**: Python 3.x, `argparse` for CLI, `llama-cpp-python` for local inference, `LiteLLM` for remote.
+- **RAG Pipeline**: Custom embedding/indexing with caching, relevance scoring, and artifact exclusion (to avoid irrelevant noise).
+- **Other**: Git for version control, file watching via threads, history via `prompt_toolkit`.
+- **Dependencies**: Minimal; focuses on `llama-cpp-python` and `litellm` as backends.
+- **License**: MIT (as per startup output and standard practices).
+- **Repo**: Hosted on GitHub at [curvedinf/dir-assistant](https://github.com/curvedinf/dir-assistant).
+
+#### Rough Size Estimate
+Based on the provided files and test output (which indexes ~50 files across `dir_assistant/`, `test/`, `docs/`, etc.), the codebase has **roughly 5,000–7,000 lines of Python code** (excluding tests, docs, and configs). The core logic is concise but extensible, with heavy reliance on external libs for LLM handling.
+
+If you're working on this project (as per your CWD: `/home/chase/Projects/dir-assistant`), it looks like you're in development mode—perhaps running tests or extending features? Let me know if you need help with a specific part, like adding a new CLI command or tweaking the RAG optimizer!
+
+.
+
+=================================== FAILURES ===================================
+_______ TestArtifactRelevancyCutoff.test_base_assistant_relevancy_cutoff _______
+
+self = <test.test_artifact_cutoff.TestArtifactRelevancyCutoff testMethod=test_base_assistant_relevancy_cutoff>
+mock_search_index = <MagicMock name='search_index' id='130516170359632'>
+
+    @patch('dir_assistant.assistant.base_assistant.search_index')
+    def test_base_assistant_relevancy_cutoff(self, mock_search_index):
+        # Configure mock
+        mock_search_index.return_value = self.mock_search_results
+    
+        # Instantiate assistant
+        assistant = BaseAssistant(
+            system_instructions="test",
+            embed=self.mock_embed,
+            index=self.mock_index,
+            chunks=self.all_chunks,
+            context_file_ratio=0.8,
+            artifact_excludable_factor=0.1,
+            artifact_relevancy_cutoff=1.5,
+            artifact_relevancy_cgrag_cutoff=1.5, # not used by base assistant directly
+            api_context_cache_ttl=3600,
+            rag_optimizer_weights={},
+            output_acceptance_retries=1,
+            verbose=False,
+            no_color=True,
+            chat_mode=False,
+            hide_thinking=True,
+            thinking_start_pattern="",
+            thinking_end_pattern="",
+        )
+        assistant.context_size = 1000 # to avoid issues with token limits
+    
+        # Run the method under test, using the instance's cutoff
+>       relevant_text = assistant.build_relevant_full_text("test query", assistant.artifact_relevancy_cutoff)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test/test_artifact_cutoff.py:58: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+dir_assistant/assistant/base_assistant.py:119: in build_relevant_full_text
+    chunk_tokens = self.count_tokens(chunk_text, role="user")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <dir_assistant.assistant.base_assistant.BaseAssistant object at 0x76b429f8d1f0>
+text = 'chunk1_text\n\n\n\n', role = 'user'
+
+    def count_tokens(self, text, role="user"):
+>       raise NotImplementedError
+E       NotImplementedError
+
+dir_assistant/assistant/base_assistant.py:89: NotImplementedError
+______ TestArtifactRelevancyCutoff.test_cgrag_assistant_relevancy_cutoffs ______
+
+self = <test.test_artifact_cutoff.TestArtifactRelevancyCutoff testMethod=test_cgrag_assistant_relevancy_cutoffs>
+mock_search_index = <MagicMock name='search_index' id='130516055348944'>
+
+    @patch('dir_assistant.assistant.base_assistant.search_index')
+    def test_cgrag_assistant_relevancy_cutoffs(self, mock_search_index):
+        # Configure mock
+        mock_search_index.return_value = self.mock_search_results
+    
+        # Instantiate assistant with different cutoffs for regular and CGRAG
+        assistant = CGRAGAssistant(
+            system_instructions="test",
+            embed=self.mock_embed,
+            index=self.mock_index,
+            chunks=self.all_chunks,
+            context_file_ratio=0.8,
+            artifact_excludable_factor=0.1,
+            artifact_relevancy_cutoff=1.5,
+            artifact_relevancy_cgrag_cutoff=1.2, # Stricter cutoff for CGRAG
+            api_context_cache_ttl=3600,
+            rag_optimizer_weights={},
+            output_acceptance_retries=1,
+            use_cgrag=True,
+            print_cgrag=False,
+            verbose=False,
+            no_color=True,
+            chat_mode=False,
+            hide_thinking=True,
+            thinking_start_pattern="",
+            thinking_end_pattern="",
+        )
+        assistant.context_size = 1000
+    
+        # Test CGRAG cutoff (1.2)
+>       cgrag_text = assistant.build_relevant_full_text("test query for cgrag", cutoff=assistant.artifact_relevancy_cgrag_cutoff)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test/test_artifact_cutoff.py:99: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+dir_assistant/assistant/base_assistant.py:119: in build_relevant_full_text
+    chunk_tokens = self.count_tokens(chunk_text, role="user")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <dir_assistant.assistant.cgrag_assistant.CGRAGAssistant object at 0x76b4231de5d0>
+text = 'chunk1_text\n\n\n\n', role = 'user'
+
+    def count_tokens(self, text, role="user"):
+>       raise NotImplementedError
+E       NotImplementedError
+
+dir_assistant/assistant/base_assistant.py:89: NotImplementedError
 =============================== warnings summary ===============================
 ../../.pyenv/versions/deus-stulti/lib/python3.12/site-packages/faiss/loader.py:49
   /home/chase/.pyenv/versions/deus-stulti/lib/python3.12/site-packages/faiss/loader.py:49: DeprecationWarning: numpy.core._multiarray_umath is deprecated and has been renamed to numpy._core._multiarray_umath. The numpy._core namespace contains private NumPy internals and its use is discouraged, as NumPy internals can change without warning in any release. In practice, most real-world usage of numpy.core is to access functionality in the public NumPy API. If that is the case, use the public NumPy API. If not, you are using NumPy internals. If you would still like to access an internal attribute, use numpy._core._multiarray_umath.__cpu_features__.
@@ -22,4 +275,7 @@ test/test_git_assistant.py ..                                            [100%]
   <frozen importlib._bootstrap>:488: DeprecationWarning: builtin type swigvarlink has no __module__ attribute
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-======================== 2 passed, 4 warnings in 0.44s =========================
+=========================== short test summary info ============================
+FAILED test/test_artifact_cutoff.py::TestArtifactRelevancyCutoff::test_base_assistant_relevancy_cutoff
+FAILED test/test_artifact_cutoff.py::TestArtifactRelevancyCutoff::test_cgrag_assistant_relevancy_cutoffs
+=================== 2 failed, 4 passed, 4 warnings in 16.40s ===================
