@@ -104,24 +104,43 @@ function, and variable names as applicable to answering the user prompt.
 """
     def run_stream_processes(self, user_input, one_off=False):
         if self.use_cgrag:
-            cgrag_relevant_full_text = self.build_relevant_full_text(
-                user_input, self.artifact_relevancy_cgrag_cutoff
+            original_context_size = self.context_size
+            # Check if a separate CGRAG context size is available and valid
+            cgrag_context_size_available = (
+                hasattr(self, "cgrag_context_size") and self.cgrag_context_size
             )
-            cgrag_prompt = self.create_cgrag_prompt(user_input)
-            cgrag_history = copy.deepcopy(self.chat_history)
-            cgrag_prompt_history = self.create_user_history(
-                cgrag_prompt, cgrag_relevant_full_text
-            )
-            cgrag_history.append(cgrag_prompt_history)
-            self.cull_history_list(cgrag_history)
-            cgrag_generator = self.call_completion(cgrag_history, is_cgrag_call=True)
-            output_history = self.create_empty_history()
-            output_history = self.run_completion_generator(
-                cgrag_generator, output_history, self.print_cgrag
-            )
-            output_history["content"] = self.remove_thinking_message(
-                output_history["content"]
-            )
+
+            try:
+                # Temporarily set the context size for the CGRAG guidance step
+                if cgrag_context_size_available:
+                    self.context_size = self.cgrag_context_size
+
+                cgrag_relevant_full_text = self.build_relevant_full_text(
+                    user_input, self.artifact_relevancy_cgrag_cutoff
+                )
+                cgrag_prompt = self.create_cgrag_prompt(user_input)
+                cgrag_history = copy.deepcopy(self.chat_history)
+                cgrag_prompt_history = self.create_user_history(
+                    cgrag_prompt, cgrag_relevant_full_text
+                )
+                cgrag_history.append(cgrag_prompt_history)
+                self.cull_history_list(cgrag_history)
+                cgrag_generator = self.call_completion(
+                    cgrag_history, is_cgrag_call=True
+                )
+                output_history = self.create_empty_history()
+                output_history = self.run_completion_generator(
+                    cgrag_generator, output_history, self.print_cgrag
+                )
+                output_history["content"] = self.remove_thinking_message(
+                    output_history["content"]
+                )
+
+            finally:
+                # Always restore the original context size for the main response
+                if cgrag_context_size_available:
+                    self.context_size = original_context_size
+
             combined_query = f"Original prompt:\n{user_input}\nNeeded information:\n{output_history['content']}"
             relevant_full_text = self.build_relevant_full_text(
                 combined_query, self.artifact_relevancy_cutoff
