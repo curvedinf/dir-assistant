@@ -87,6 +87,9 @@ The user is currently working in the following directory (CWD): {os.getcwd()}"""
     index_max_files_per_minute = config["INDEX_MAX_FILES_PER_MINUTE"]
     index_chunk_workers = config["INDEX_CHUNK_WORKERS"]
     index_max_chunk_requests_per_minute = config["INDEX_MAX_CHUNK_REQUESTS_PER_MINUTE"]
+    if active_embed_is_local:
+        index_concurrent_files = 1
+        index_chunk_workers = 1
     # Check for basic missing model configs
     if active_model_is_local:
         if config["LLM_MODEL"] == "":
@@ -304,3 +307,4 @@ def start(args, config_dict):
             continue
         else:
             llm.stream_chat(user_input)
+
