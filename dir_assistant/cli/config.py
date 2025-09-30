@@ -85,10 +85,10 @@ CONFIG_DEFAULTS = {
         "model": "gemini/gemini-2.5-flash",
         "timeout": 600,
     },
-    "INDEX_CONCURRENT_FILES": 10,
-    "INDEX_MAX_FILES_PER_MINUTE": 600,
-    "INDEX_CHUNK_WORKERS": 10,
-    "INDEX_MAX_CHUNK_REQUESTS_PER_MINUTE": 600,
+    "INDEX_CONCURRENT_FILES": 20,
+    "INDEX_MAX_FILES_PER_MINUTE": 100_000_000,
+    "INDEX_CHUNK_WORKERS": 20,
+    "INDEX_MAX_CHUNK_REQUESTS_PER_MINUTE": 100_000_000,
 }
 def get_file_path(path, filename):
     expanded_path = expanduser(path)
