@@ -93,7 +93,8 @@ class BaseAssistant:
         limits, optimizes the pool for caching, and builds the final context string.
         """
         # Compute dynamic max_k
-        max_k = int(self.context_size * self.context_file_ratio // 500)
+        estimated_minimal_token_count = 100
+        max_k = int(self.context_size * self.context_file_ratio // estimated_minimal_token_count)
         if self.verbose and self.chat_mode:
             print(f"Computed max_k: {max_k}")
         # 1. Get an initial list of nearest neighbors from the search index.
@@ -157,7 +158,8 @@ class BaseAssistant:
                 "last_modified_timestamp": last_modified,
             }
         if self.verbose and self.chat_mode:
-            print(f"K nearest neighbors: {len(k_nearest_neighbors_filtered)}")
+            print(f"K nearest pre-cutoff count: {len(k_nearest_neighbors)}")
+            print(f"K nearest post-cutoff count: {len(k_nearest_neighbors_filtered)}")
             print(f"Pre-culled candidates for optimizer: {len(candidate_pool)}")
             print(f"Prompt history: {len(prompt_history)}")
             print(f"Prefix cache metadata: {len(prefix_cache_metadata)}")

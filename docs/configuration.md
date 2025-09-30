@@ -206,19 +206,18 @@ info: https://github.com/abetlen/llama-cpp-python
 ### Artifact Relevancy Filtering
 `dir-assistant` uses a vector search to find the most relevant file chunks (artifacts) to include in the LLM's context. The `ARTIFACT_RELEVANCY_CUTOFF` and `ARTIFACT_RELEVANCY_CGRAG_CUTOFF` settings allow you to filter these artifacts based on their relevance score (distance), improving the signal-to-noise ratio of the context.
 
-- `ARTIFACT_RELEVANCY_CUTOFF`: This setting applies to the main LLM call that generates the final response. Only artifacts with a distance score *less than or equal to* this value will be considered for inclusion in the context.
-- `ARTIFACT_RELEVANCY_CGRAG_CUTOFF`: If CGRAG is enabled, this cutoff is used for the initial guidance call. It allows you to set a stricter (or looser) relevancy requirement for the CGRAG step.
+- `ARTIFACT_RELEVANCY_CUTOFF`: This setting applies to the main LLM call that generates the final response. Only artifacts with a distance score *less than or equal to* this value will be considered for inclusion in the context. Default: `1.5`
+- `ARTIFACT_RELEVANCY_CGRAG_CUTOFF`: If CGRAG is enabled, this cutoff is used for the initial guidance call. It allows you to set a stricter (or looser) relevancy requirement for the CGRAG step. Default: `1.0`
 
-A lower value makes the filtering stricter, including only the most relevant files. A higher value is more permissive. Setting this too low might exclude useful information, while setting it too high may include irrelevant noise that confuses the LLM. The default value of `1.5` is a balanced starting point.
+These values can range from 0 to 2. A lower value makes the filtering stricter, including only the most relevant files. A higher value is more permissive. Setting this too low might exclude useful information, while setting it too high will bloat the context. The default value of `1.0` is a balanced starting point, which discards only moderately irrelevant artifacts.
 
 To configure these settings, add them to the `[DIR_ASSISTANT]` section in your config file:
 ```toml
 [DIR_ASSISTANT]
-# Set the relevancy cutoff for the main RAG process.
-ARTIFACT_RELEVANCY_CUTOFF = 1.5
-
-# Set a different cutoff for the CGRAG guidance step.
-ARTIFACT_RELEVANCY_CGRAG_CUTOFF = 1.2 # Stricter for CGRAG
+# Cast a wide net for the CGRAG guidance step.
+ARTIFACT_RELEVANCY_CGRAG_CUTOFF = 1.5 
+# Use a more narrow cutoff for the more expensive main LLM call.
+ARTIFACT_RELEVANCY_CUTOFF = 1.0
 ```
 ### Context Caching Optimization
 `dir-assistant` includes a system to optimize the context sent to your LLM server, aiming to maximize the utilization of context caching implemented in many LLM servers. Context caching reduces latency and cost by reusing computation from previous prompts. For this to work, the beginning of a new prompt must exactly match the beginning of a previous one.

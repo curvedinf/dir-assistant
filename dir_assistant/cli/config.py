@@ -4,7 +4,7 @@ from platform import system
 from subprocess import run
 import toml
 from dynaconf import Dynaconf
-VERSION = "1.7.0"
+VERSION = "1.8.1"
 CONFIG_FILENAME = "config.toml"
 CONFIG_PATH = join(expanduser("~"), ".config", "dir-assistant")
 STORAGE_PATH = join(expanduser("~"), ".local", "share", "dir-assistant")
@@ -27,7 +27,7 @@ CONFIG_DEFAULTS = {
     "CONTEXT_FILE_RATIO": 0.9, # 90% of the prompt will be file text, 10% will be prompt history
     "ARTIFACT_EXCLUDABLE_FACTOR": 0.1,  # 10% of the most distant artifacts can be replaced
     "ARTIFACT_RELEVANCY_CUTOFF": 1.5,
-    "ARTIFACT_RELEVANCY_CGRAG_CUTOFF": 1.5,
+    "ARTIFACT_RELEVANCY_CGRAG_CUTOFF": 1.0,
     "API_CONTEXT_CACHE_TTL": 3600,  # 1 hour
     "RAG_OPTIMIZER_WEIGHTS": {
         "frequency": 1.0, # how much to value artifacts that appear frequently in past prompts
