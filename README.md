@@ -37,8 +37,8 @@ In this section are recipes to run `dir-assistant` in basic capacity to get you 
 1. [Gemini](#Gemini)
 1. [Claude](#Claude)
 1. [GPT5](#GPT5)
-1. [Other Models](Other-Models)
-1. [Detailed Documentation](More-Documentation)
+1. [Other Models](#Other-Models)
+1. [Detailed Documentation](#More-Documentation)
 ### Local Model
 To get started locally, you can download a default llm model. Default configuration with this model requires
 3GB of memory on most hardware. You will be able to adjust the configuration to fit higher or lower memory
