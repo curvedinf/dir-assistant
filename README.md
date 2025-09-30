@@ -125,7 +125,7 @@ To get started quickly with Anthropic's Claude models (e.g., Claude 3.7 Sonnet):
     LITELLM_MODEL_USES_SYSTEM_MESSAGE = true
     LITELLM_CONTEXT_SIZE = 200000
     [DIR_ASSISTANT.LITELLM_COMPLETION_OPTIONS]
-    model = "anthropic/claude-3-7-sonnet-20240729"
+    model = "anthropic/claude-sonnet-4-5-20250929"
     ```
 4.  Navigate to your project directory and run:
     ```shell
@@ -148,7 +148,7 @@ dir-assistant setkey ANTHROPIC_API_KEY xxxxxYOURAPIKEYHERExxxxx
 cd directory/to/chat/with
 dir-assistant
 ```
-### GPT5
+### OpenAI
 To get started quickly with OpenAI's models (e.g., GPT-4o):
 1.  Obtain an API key from [OpenAI](https://platform.openai.com/api-keys).
 2.  Install `dir-assistant` and set your API key:
