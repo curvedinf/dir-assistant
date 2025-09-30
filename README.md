@@ -217,7 +217,7 @@ dir-assistant -s "Describe the files in this directory"
 
 ## Other Models
 
-`Dir-assistant` supports almost every local and API model. Almost all local models (except the bleeding edge) are supported via embedded `llama-cpp-python` integration, which supports GGUF format model files. Almost all API models are supported via LiteLLM integration, including generic OpenAI-compatible APIs like local servers. To learn how to use the model of your choice, view the [configuration docs](docs/configuration.md).
+`Dir-assistant` supports almost every local and API model. Almost all local GGUF models (except the bleeding edge) are supported via embedded `llama-cpp-python` integration. Almost all API models are supported via LiteLLM integration, including generic OpenAI-compatible APIs like local servers. To learn how to use the model of your choice, view the [configuration docs](docs/configuration.md).
 
 ## Detailed Documentation
 1. [Install](docs/install.md)

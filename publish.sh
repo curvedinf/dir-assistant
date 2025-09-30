@@ -15,7 +15,7 @@ echo "Formatting code..."
 ./format-code.sh
 
 echo "Running tests..."
-pytest
+./smoketest.sh
 
 if [ $? -ne 0 ]; then
     echo "Tests failed. Aborting publish."
