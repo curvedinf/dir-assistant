@@ -82,7 +82,7 @@ pipx install dir-assistant[recommended]
 dir-assistant platform cuda --pipx
 ```
 ### Gemini
-To get started using an API model, you can use Google Gemini 1.5 Flash, which is currently free.
+To get started using an API model, you can use Google Gemini 2.5 Flash, which is currently free.
 To begin, you need to sign up for [Google AI Studio](https://aistudio.google.com/) and
 [create an API key](https://aistudio.google.com/app/apikey). After you create your API key,
 enter the following commands:
@@ -111,7 +111,7 @@ cd directory/to/chat/with
 dir-assistant
 ```
 ### Claude
-To get started quickly with Anthropic's Claude models (e.g., Claude 3.7 Sonnet):
+To get started quickly with Anthropic's Claude models:
 1.  Obtain an API key from [Anthropic](https://console.anthropic.com/).
 2.  Install `dir-assistant` and set your API key:
     ```shell
@@ -149,7 +149,7 @@ cd directory/to/chat/with
 dir-assistant
 ```
 ### OpenAI
-To get started quickly with OpenAI's models (e.g., GPT-4o):
+To get started quickly with OpenAI's models:
 1.  Obtain an API key from [OpenAI](https://platform.openai.com/api-keys).
 2.  Install `dir-assistant` and set your API key:
     ```shell
