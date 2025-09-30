@@ -15,6 +15,13 @@ files in the current working directory so you can chat with them using a local o
 "chat with them", it is meant that their contents will automatically be included in the prompts sent 
 to the LLM, with the most contextually relevant files included first. `dir-assistant` is designed 
 primarily for use as a coding aid and automation tool.
+### Use Cases
+This tool is primarily aimed at developers and technical users who need to:
+*   Quickly understand a large or unfamiliar codebase.
+*   Get explanations for specific functions, classes, or modules.
+*   Ask high-level questions like "What is the main purpose of this application?".
+*   Perform targeted, highly accurate updates in large corpora of text/code.
+*   Automate file modifications, analysis, refactoring, or documentation tasks.
 ### Features
 - Includes an interactive chat mode and a single prompt non-interactive mode.
 - When enabled, it will automatically make file updates and commit to git.
