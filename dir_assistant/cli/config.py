@@ -2,9 +2,11 @@ from os import environ, getenv, makedirs
 from os.path import expanduser, join
 from platform import system
 from subprocess import run
+
 import toml
 from dynaconf import Dynaconf
-VERSION = "1.8.1"
+
+VERSION = "1.9.0"
 CONFIG_FILENAME = "config.toml"
 CONFIG_PATH = join(expanduser("~"), ".config", "dir-assistant")
 STORAGE_PATH = join(expanduser("~"), ".local", "share", "dir-assistant")
@@ -24,17 +26,17 @@ CONFIG_DEFAULTS = {
         ".idea/",
         "__pycache__",
     ],
-    "CONTEXT_FILE_RATIO": 0.9, # 90% of the prompt will be file text, 10% will be prompt history
+    "CONTEXT_FILE_RATIO": 0.9,  # 90% of the prompt will be file text, 10% will be prompt history
     "ARTIFACT_EXCLUDABLE_FACTOR": 0.1,  # 10% of the most distant artifacts can be replaced
-    "ARTIFACT_RELEVANCY_CUTOFF": 1.5,
-    "ARTIFACT_RELEVANCY_CGRAG_CUTOFF": 1.0,
+    "ARTIFACT_COSINE_CUTOFF": 0.3,
+    "ARTIFACT_COSINE_CGRAG_CUTOFF": 0.0,
     "API_CONTEXT_CACHE_TTL": 3600,  # 1 hour
     "RAG_OPTIMIZER_WEIGHTS": {
-        "frequency": 1.0, # how much to value artifacts that appear frequently in past prompts
-        "position": 1.0, # how much to penalize artifacts for appearing later in past prompts
-        "stability": 1.0, # how much to value artifacts that are stable
-        "historical_hits": 1.0, # how much to value prefix orderings that have appeared frequently in history
-        "cache_hits": 1.0, # how much to value prefix orderings that are currently in the active cache
+        "frequency": 1.0,  # how much to value artifacts that appear frequently in past prompts
+        "position": 1.0,  # how much to penalize artifacts for appearing later in past prompts
+        "stability": 1.0,  # how much to value artifacts that are stable
+        "historical_hits": 1.0,  # how much to value prefix orderings that have appeared frequently in history
+        "cache_hits": 1.0,  # how much to value prefix orderings that are currently in the active cache
     },
     "ACTIVE_MODEL_IS_LOCAL": False,
     "ACTIVE_EMBED_IS_LOCAL": False,
@@ -65,7 +67,7 @@ CONFIG_DEFAULTS = {
         "frequency_penalty": 1.1,
     },
     "LITELLM_CONTEXT_SIZE": 100_000,
-    "LITELLM_EMBED_CONTEXT_SIZE": 4_000,
+    "LITELLM_EMBED_CONTEXT_SIZE": 2_000,
     "LITELLM_MODEL_USES_SYSTEM_MESSAGE": False,
     "LITELLM_PASS_THROUGH_CONTEXT_SIZE": False,
     "LITELLM_EMBED_REQUEST_DELAY": 0,
@@ -94,13 +96,19 @@ CONFIG_DEFAULTS = {
     "INDEX_CHUNK_WORKERS": 20,
     "INDEX_MAX_CHUNK_REQUESTS_PER_MINUTE": 100_000_000,
 }
+
+
 def get_file_path(path, filename):
     expanded_path = expanduser(path)
     makedirs(expanded_path, exist_ok=True)
     return join(expanded_path, filename)
+
+
 def save_config(config_dict):
     with open(get_file_path(CONFIG_PATH, CONFIG_FILENAME), "w") as config_file:
         toml.dump(config_dict, config_file)
+
+
 def check_defaults(config_dict, defaults_dict):
     for key, value in defaults_dict.items():
         if key not in config_dict:
@@ -108,8 +116,11 @@ def check_defaults(config_dict, defaults_dict):
         elif isinstance(value, dict) and isinstance(config_dict.get(key), dict):
             check_defaults(config_dict[key], value)
     return config_dict
+
+
 def set_environment_overrides(config_dict):
     """Replace config values with environment variable overrides"""
+
     def _override_config(config_branch, prefix=""):
         for key, value in config_branch.items():
             env_key = f"{prefix}__{key}" if prefix else key
@@ -118,7 +129,10 @@ def set_environment_overrides(config_dict):
             elif env_key in environ:
                 config_branch[key] = coerce_setting_string_value(environ[env_key])
         return config_branch
+
     return _override_config(config_dict)
+
+
 def coerce_setting_string_value(value_str):
     """Convert string values to appropriate Python types"""
     # Handle boolean values
@@ -132,6 +146,8 @@ def coerce_setting_string_value(value_str):
         return float(value_str)
     # Keep as string if no other type matches
     return value_str
+
+
 def load_config(skip_environment_vars=False):
     config_object = Dynaconf(
         settings_files=[get_file_path(CONFIG_PATH, CONFIG_FILENAME)]
@@ -152,11 +168,15 @@ def load_config(skip_environment_vars=False):
         if key.endswith("_API_KEY") and value and key not in environ:
             environ[key] = value
     return config_dict
+
+
 def config(args, config_dict):
     # List the current configuration
     config_file_path = get_file_path(CONFIG_PATH, CONFIG_FILENAME)
     print(f"Configuration file: {config_file_path}")
     print(toml.dumps(config_dict))
+
+
 def config_open(args):
     config_file_path = get_file_path(CONFIG_PATH, CONFIG_FILENAME)
     editor = (

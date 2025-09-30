@@ -1,6 +1,8 @@
 import os
 import subprocess
+
 from dir_assistant.cli.models import MODELS_DEFAULT_EMBED, MODELS_DEFAULT_LLM
+
 
 def test_smoketest_local_noninteractive():
     """
@@ -17,6 +19,11 @@ def test_smoketest_local_noninteractive():
     new_env["DIR_ASSISTANT__ACTIVE_EMBED_IS_LOCAL"] = "true"
     new_env["DIR_ASSISTANT__LLM_MODEL"] = MODELS_DEFAULT_LLM
     new_env["DIR_ASSISTANT__EMBED_MODEL"] = MODELS_DEFAULT_EMBED
+
+    new_env["DIR_ASSISTANT__USE_CGRAG"] = "true"
+
+    new_env["DIR_ASSISTANT__LLAMA_CPP_OPTIONS__n_ctx"] = "10000"
+    new_env["DIR_ASSISTANT__LLAMA_CPP_EMBED_OPTIONS__n_ctx"] = "2000"
 
     result = subprocess.run(
         ["python", "-m", "dir_assistant", "-s", "What does this codebase do?"],

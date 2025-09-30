@@ -1,8 +1,12 @@
 import os
 import sys
+
 from colorama import Fore, Style
 from prompt_toolkit import prompt
+
 from dir_assistant.assistant.cgrag_assistant import CGRAGAssistant
+
+
 class GitAssistant(CGRAGAssistant):
     def __init__(
         self,
@@ -12,8 +16,8 @@ class GitAssistant(CGRAGAssistant):
         chunks,
         context_file_ratio,
         artifact_excludable_factor,
-        artifact_relevancy_cutoff,
-        artifact_relevancy_cgrag_cutoff,
+        artifact_cosine_cutoff,
+        artifact_cosine_cgrag_cutoff,
         api_context_cache_ttl,
         rag_optimizer_weights,
         output_acceptance_retries,
@@ -34,8 +38,8 @@ class GitAssistant(CGRAGAssistant):
             chunks,
             context_file_ratio,
             artifact_excludable_factor,
-            artifact_relevancy_cutoff,
-            artifact_relevancy_cgrag_cutoff,
+            artifact_cosine_cutoff,
+            artifact_cosine_cgrag_cutoff,
             api_context_cache_ttl,
             rag_optimizer_weights,
             output_acceptance_retries,
@@ -49,6 +53,7 @@ class GitAssistant(CGRAGAssistant):
             thinking_end_pattern,
         )
         self.commit_to_git = commit_to_git
+
     def create_prompt(self, user_input):
         if not self.commit_to_git:
             return super().create_prompt(user_input)
@@ -91,6 +96,7 @@ if __name__ == "__main__":
 """
             else:
                 return user_input
+
     def run_post_stream_processes(self, user_input, stream_output):
         if (
             not self.commit_to_git or not self.should_diff
@@ -166,6 +172,7 @@ if __name__ == "__main__":
                 )
                 sys.stdout.flush()
         return True
+
     def stream_chat(self, user_input):
         self.git_apply_error = None
         super().stream_chat(user_input)

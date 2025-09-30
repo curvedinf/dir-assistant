@@ -26,9 +26,9 @@ prompt to an LLM called CGRAG (Contextually Guided Retrieval-Augmented Generatio
 [this blog post](https://medium.com/@djangoist/how-to-create-accurate-llm-responses-on-large-code-repositories-presenting-cgrag-a-new-feature-of-e77c0ffe432d) for more information about how it works.
 - Automatically optimizes prompts for context caching optimization to reduce cost and latency. Typical use cases have 50-90% cache hits.
 ### New Features
-- The embedding index is now separated by model in the database. This means you can switch between embedding models without needing to re-index files if you switch back.
-- Indexing is now parallelized and faster.
-- Fixed a bug where the context optimizer was not utilizing the whole context
+- Switched from euclidean distance to cosine similarity for artifact relevancy filtering. When upgrading, you will need to run `dir-assistant clear`.
+- Added `ARTIFACT_COSINE_CUTOFF` and `ARTIFACT_COSINE_CGRAG_CUTOFF` to exclude artifacts with low cosine similarity.
+- Updated support for the latest version of `llama-cpp-python`.
 
 ## Quickstart
 In this section are recipes to run `dir-assistant` in basic capacity to get you started quickly.

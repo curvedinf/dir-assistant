@@ -1,8 +1,9 @@
+import json
 import time
 from collections import defaultdict
-import json
 
 from sqlitedict import SqliteDict
+
 
 class CacheManager:
     """
@@ -10,7 +11,12 @@ class CacheManager:
     and a prompt history for metadata computation, using SqliteDict for both.
     """
 
-    def __init__(self, prefix_cache_path: str, prompt_history_path: str, api_context_cache_ttl: int):
+    def __init__(
+        self,
+        prefix_cache_path: str,
+        prompt_history_path: str,
+        api_context_cache_ttl: int,
+    ):
         """
         Initializes the CacheManager.
 
@@ -33,8 +39,10 @@ class CacheManager:
         """
         now = time.time()
         expired_keys = [
-            key for key, value in self.prefix_cache.items()
-            if not isinstance(value, dict) or now - value.get("last_hit_timestamp", 0) >= self.api_context_cache_ttl
+            key
+            for key, value in self.prefix_cache.items()
+            if not isinstance(value, dict)
+            or now - value.get("last_hit_timestamp", 0) >= self.api_context_cache_ttl
         ]
 
         for key in expired_keys:
@@ -77,7 +85,10 @@ class CacheManager:
         """
         # Sorting by the key (timestamp) to maintain order
         return [
-            item for _, item in sorted(self.prompt_history.items(), key=lambda x: float(x[0]))
+            item
+            for _, item in sorted(
+                self.prompt_history.items(), key=lambda x: float(x[0])
+            )
         ]
 
     def compute_artifact_metadata_from_history(self) -> dict:

@@ -41,18 +41,18 @@ class RagOptimizer:
         avg_position = self._calculate_average(positions)
 
         final_score = (
-                (self.weights.get("frequency", 1.0) * frequency)
-                - (self.weights.get("position", 1.0) * avg_position)
-                + (self.weights.get("stability", 1.0) * stability_score)
+            (self.weights.get("frequency", 1.0) * frequency)
+            - (self.weights.get("position", 1.0) * avg_position)
+            + (self.weights.get("stability", 1.0) * stability_score)
         )
         return final_score
 
     def optimize_rag_for_caching(
-            self,
-            k_nearest_neighbors_with_distances,
-            prompt_history,
-            artifact_metadata,
-            prefix_cache_metadata,
+        self,
+        k_nearest_neighbors_with_distances,
+        prompt_history,
+        artifact_metadata,
+        prefix_cache_metadata,
     ):
         """
         Optimizes RAG artifacts by finding the longest possible cached prefix.
@@ -73,17 +73,17 @@ class RagOptimizer:
         # This initial input processing block is preserved for compatibility.
         processed_neighbors = []
         if k_nearest_neighbors_with_distances and isinstance(
-                k_nearest_neighbors_with_distances[0], dict
+            k_nearest_neighbors_with_distances[0], dict
         ):
             for i, chunk in enumerate(k_nearest_neighbors_with_distances):
                 processed_neighbors.append((chunk.get("text", ""), i))
         else:
             processed_neighbors = k_nearest_neighbors_with_distances
         if (
-                processed_neighbors
-                and isinstance(processed_neighbors[0], (list, tuple))
-                and len(processed_neighbors[0]) > 0
-                and isinstance(processed_neighbors[0][0], list)
+            processed_neighbors
+            and isinstance(processed_neighbors[0], (list, tuple))
+            and len(processed_neighbors[0]) > 0
+            and isinstance(processed_neighbors[0][0], list)
         ):
             processed_neighbors = [
                 (item[0][0], item[1]) for item in processed_neighbors if item[0]
@@ -191,9 +191,7 @@ class RagOptimizer:
 
             if remaining_slots > 0:
                 candidates_for_remainder = all_initial_artifacts - set(prefix_artifacts)
-                sorted_candidates = sorted(
-                    list(candidates_for_remainder), key=sort_key
-                )
+                sorted_candidates = sorted(list(candidates_for_remainder), key=sort_key)
                 final_artifacts.extend(sorted_candidates[:remaining_slots])
 
             return final_artifacts[:num_artifacts], best_prefix

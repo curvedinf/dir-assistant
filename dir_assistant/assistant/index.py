@@ -2,10 +2,12 @@ import hashlib
 import json
 import os
 import sys
+
 import numpy as np
-from faiss import IndexFlatL2
+from faiss import IndexFlatL2, IndexFlatIP, normalize_L2
 from sqlitedict import SqliteDict
-from wove import weave, flatten
+from wove import flatten, weave
+
 from dir_assistant.cli.config import (
     CACHE_PATH,
     HISTORY_FILENAME,
@@ -15,9 +17,14 @@ from dir_assistant.cli.config import (
     STORAGE_PATH,
     get_file_path,
 )
+
 TEXT_CHARS = bytearray({7, 8, 9, 10, 12, 13, 27} | set(range(0x20, 0x100)) - {0x7F})
+
+
 def is_text_file(filepath):
     return not bool(open(filepath, "rb").read(1024).translate(None, TEXT_CHARS))
+
+
 def get_text_files(directory=".", ignore_paths=[]):
     text_files = []
     for root, dirs, files in os.walk(directory):
@@ -31,6 +38,8 @@ def get_text_files(directory=".", ignore_paths=[]):
             ):
                 text_files.append(filepath)
     return text_files
+
+
 def get_files_with_contents(directory, ignore_paths, cache_db, embed_config, verbose):
     text_files = get_text_files(directory, ignore_paths)
     files_with_contents = []
@@ -59,6 +68,8 @@ def get_files_with_contents(directory, ignore_paths, cache_db, embed_config, ver
                 cache[cache_key] = file_info
                 files_with_contents.append(file_info)
     return files_with_contents
+
+
 def create_file_index(
     embed,
     ignore_paths,
@@ -105,6 +116,7 @@ def create_file_index(
             ".", ignore_paths, cache_db, verbose
         )
     with weave() as w:
+
         @w.do(
             files_with_contents,
             workers=index_concurrent_files,
@@ -136,6 +148,7 @@ def create_file_index(
                     "mtime": item["mtime"],
                 }
                 return file_chunks, file_embeddings
+
     # w.result.process_file_concurrently is a list of (chunks, embeddings) tuples
     processed_results = w.result.process_file_concurrently
     # Separate the chunks and embeddings from the processed results
@@ -147,10 +160,15 @@ def create_file_index(
     if not all_embeddings:
         # Handle case with no embeddings to avoid error on np.array
         return None, []
-    embeddings = np.array(all_embeddings)
-    index = IndexFlatL2(embeddings.shape[1])
+    embeddings = np.array(all_embeddings).astype('float32')
+    # Big change -- embeddings are now normalized if not already
+    normalize_L2(embeddings)
+    # Big change -- use inner product (dot product) instead of L2 distance
+    index = IndexFlatIP(embeddings.shape[1])
     index.add(embeddings)
     return index, all_chunks
+
+
 def process_file(
     embed,
     filepath,
@@ -205,6 +223,7 @@ def process_file(
         sys.stdout.write(f"Creating embeddings for {filepath}\n")
         sys.stdout.flush()
     with weave() as w:
+
         @w.do(
             raw_chunks,
             workers=index_chunk_workers,
@@ -213,6 +232,7 @@ def process_file(
         def create_embedding_concurrently(item):
             embedding = embed.create_embedding(item["text"])
             return item, embedding
+
     processed_chunks = []
     embeddings_list = []
     for chunk_info, embedding in w.result.create_embedding_concurrently:
@@ -220,6 +240,8 @@ def process_file(
         processed_chunks.append(chunk_info)
         embeddings_list.append(embedding)
     return processed_chunks, embeddings_list
+
+
 def find_split_point(embed, line_content, max_size, header):
     low = 0
     high = len(line_content)
@@ -230,22 +252,47 @@ def find_split_point(embed, line_content, max_size, header):
         else:
             high = mid
     return low - 1
-def search_index(embed, index, query, all_chunks, max_k=100):
+
+
+import numpy as np
+import sys
+
+import numpy as np
+import sys
+
+def search_index(embed, index, query, all_chunks, max_k=1000, max_distance=2.0):
+    """
+    Searches the FAISS index for vectors within a given distance and limits the results.
+    """
     query_embedding = embed.create_embedding(query)
+    query_vector = np.array([query_embedding]).astype('float32')
+    normalize_L2(query_vector)
+
     try:
-        distances, indices = index.search(
-            np.array([query_embedding]), max_k
-        )  # max_k nearest neighbors
-    except AssertionError as e:
+        lims, distances, indices = index.range_search(query_vector, max_distance)
+    except (AssertionError, RuntimeError) as e:
         sys.stderr.write(
-            f"Assertion error during index search. Did you change your embedding model? "
-            f"Run 'dir_assistant clear' and try again.'\n"
+            f"Error during index search: {e}. Did you change the embedding model? "
+            f"Try running 'dir_assistant clear'.\n"
         )
         raise e
+
+    # Slice both indices and distances to get the results for the first query
+    start, end = lims[0], lims[1]
+    result_indices = indices[start:end]
+    result_distances = distances[start:end]
+
+    # Use zip to correctly pair each chunk index with its distance
     relevant_chunks = [
-        (all_chunks[index], distances[0][iter]) for iter, index in enumerate(indices[0]) if index != -1
+        (all_chunks[int(idx)], dist)
+        for idx, dist in zip(result_indices, result_distances)
+        if idx != -1
     ]
-    return relevant_chunks
+
+    # Apply the max_k limit to the final list of results
+    return relevant_chunks[:max_k]
+
+
 def clear(args, config_dict):
     files = [
         get_file_path(CACHE_PATH, INDEX_CACHE_FILENAME),

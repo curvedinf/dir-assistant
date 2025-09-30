@@ -1,11 +1,13 @@
 import os
 import sys
+
 import litellm
 from colorama import Fore, Style
 from prompt_toolkit import prompt
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.keys import Keys
+
 from dir_assistant.assistant.file_watcher import start_file_watcher
 from dir_assistant.assistant.index import create_file_index
 from dir_assistant.assistant.lite_llm_assistant import LiteLLMAssistant
@@ -13,8 +15,11 @@ from dir_assistant.assistant.lite_llm_embed import LiteLlmEmbed
 from dir_assistant.assistant.llama_cpp_assistant import LlamaCppAssistant
 from dir_assistant.assistant.llama_cpp_embed import LlamaCppEmbed
 from dir_assistant.cli.config import HISTORY_FILENAME, STORAGE_PATH, get_file_path
+
 litellm.suppress_debug_info = True
 MODELS_PATH = os.path.expanduser("~/.local/share/dir-assistant/models")
+
+
 def display_startup_art(commit_to_git, no_color=False):
     sys.stdout.write(
         f"""{Style.RESET_ALL if no_color else Style.BRIGHT}{Style.RESET_ALL if no_color else Fore.GREEN}
@@ -36,6 +41,8 @@ def display_startup_art(commit_to_git, no_color=False):
     if commit_to_git:
         print(f"{color_prefix}Type 'undo' to roll back the last commit.")
     print("")
+
+
 def initialize_llm(args, config_dict, chat_mode=True):
     # Check if we're working with the full config dict or just DIR_ASSISTANT section
     config = (
@@ -80,8 +87,8 @@ The user is currently working in the following directory (CWD): {os.getcwd()}"""
     artifact_excludable_factor = config["ARTIFACT_EXCLUDABLE_FACTOR"]
     api_context_cache_ttl = config["API_CONTEXT_CACHE_TTL"]
     rag_optimizer_weights = config["RAG_OPTIMIZER_WEIGHTS"]
-    artifact_relevancy_cutoff = config["ARTIFACT_RELEVANCY_CUTOFF"]
-    artifact_relevancy_cgrag_cutoff = config["ARTIFACT_RELEVANCY_CGRAG_CUTOFF"]
+    artifact_cosine_cutoff = config["ARTIFACT_COSINE_CUTOFF"]
+    artifact_cosine_cgrag_cutoff = config["ARTIFACT_COSINE_CGRAG_CUTOFF"]
     # Index settings
     index_concurrent_files = config["INDEX_CONCURRENT_FILES"]
     index_max_files_per_minute = config["INDEX_MAX_FILES_PER_MINUTE"]
@@ -189,8 +196,8 @@ the user refers to files, always assume they want to know about the files they p
             chunks,
             context_file_ratio,
             artifact_excludable_factor,
-            artifact_relevancy_cutoff,
-            artifact_relevancy_cgrag_cutoff,
+            artifact_cosine_cutoff,
+            artifact_cosine_cgrag_cutoff,
             api_context_cache_ttl,
             rag_optimizer_weights,
             output_acceptance_retries,
@@ -226,8 +233,8 @@ the user refers to files, always assume they want to know about the files they p
             chunks,
             context_file_ratio,
             artifact_excludable_factor,
-            artifact_relevancy_cutoff,
-            artifact_relevancy_cgrag_cutoff,
+            artifact_cosine_cutoff,
+            artifact_cosine_cgrag_cutoff,
             api_context_cache_ttl,
             rag_optimizer_weights,
             output_acceptance_retries,
@@ -242,6 +249,8 @@ the user refers to files, always assume they want to know about the files they p
             thinking_end_pattern,
         )
     return llm
+
+
 def start(args, config_dict):
     single_prompt = args.single_prompt
     if single_prompt:
@@ -291,10 +300,12 @@ def start(args, config_dict):
         )
         # Configure key bindings for Option-Enter on macOS
         bindings = KeyBindings()
+
         @bindings.add(Keys.Escape, Keys.Enter)
         @bindings.add("escape", "enter")  # For Option-Enter on macOS
         def _(event):
             event.current_buffer.validate_and_handle()
+
         user_input = prompt("", multiline=True, history=history, key_bindings=bindings)
         if user_input.strip().lower() == "exit":
             break
@@ -307,4 +318,3 @@ def start(args, config_dict):
             continue
         else:
             llm.stream_chat(user_input)
-

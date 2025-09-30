@@ -1,11 +1,15 @@
 import os
 import sys
+
 from colorama import Fore, Style
+
 try:
     from llama_cpp import Llama
 except:
     pass
 from dir_assistant.assistant.git_assistant import GitAssistant
+
+
 class suppress_stdout_stderr(object):
     def __enter__(self):
         self.outnull_file = open(os.devnull, "w")
@@ -21,6 +25,7 @@ class suppress_stdout_stderr(object):
         sys.stdout = self.outnull_file
         sys.stderr = self.errnull_file
         return self
+
     def __exit__(self, *_):
         sys.stdout = self.old_stdout
         sys.stderr = self.old_stderr
@@ -30,6 +35,8 @@ class suppress_stdout_stderr(object):
         os.close(self.old_stderr_fileno)
         self.outnull_file.close()
         self.errnull_file.close()
+
+
 class LlamaCppAssistant(GitAssistant):
     def __init__(
         self,
@@ -41,8 +48,8 @@ class LlamaCppAssistant(GitAssistant):
         chunks,
         context_file_ratio,
         artifact_excludable_factor,
-        artifact_relevancy_cutoff,
-        artifact_relevancy_cgrag_cutoff,
+        artifact_cosine_cutoff,
+        artifact_cosine_cgrag_cutoff,
         api_context_cache_ttl,
         rag_optimizer_weights,
         output_acceptance_retries,
@@ -64,8 +71,8 @@ class LlamaCppAssistant(GitAssistant):
             chunks,
             context_file_ratio,
             artifact_excludable_factor,
-            artifact_relevancy_cutoff,
-            artifact_relevancy_cgrag_cutoff,
+            artifact_cosine_cutoff,
+            artifact_cosine_cgrag_cutoff,
             api_context_cache_ttl,
             rag_optimizer_weights,
             output_acceptance_retries,
@@ -105,6 +112,7 @@ class LlamaCppAssistant(GitAssistant):
             if not self.no_color:
                 sys.stdout.write(Fore.RESET)
             sys.stdout.flush()
+
     def call_completion(self, chat_history, is_cgrag_call=False):
         if self.verbose:
             return self.llm.create_chat_completion(
@@ -115,6 +123,7 @@ class LlamaCppAssistant(GitAssistant):
                 return self.llm.create_chat_completion(
                     messages=chat_history, stream=True, **self.completion_options
                 )
+
     def count_tokens(
         self, text, role=None
     ):  # Added role=None for signature compatibility

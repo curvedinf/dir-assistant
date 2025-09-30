@@ -82,11 +82,16 @@ Creating index from embeddings...
 
 [1m[31mYou (Press ALT-Enter, OPT-Enter, or CTRL-O to submit): 
 
-[0m[?12l[?25h[6n[?2004h[?1l[?25l[0m[?7l[0m[J[0m [?7h[0m[?12l[?25h[?25l[?7l[0mDescribe the purpose of this codebase.[0m
-[0m [0m
-[0mThen say roughly how many lines of code it has.[47D[47C[?7h[0m[?12l[?25h[?25l[?7l[2A[47D[0m[J[0mDescribe the purpose of this codebase.[0m
-[0m [0m
-[0mThen say roughly how many lines of code it has.[47D[0m
+[0m[?12l[?25h[6n[?2004h[?1l[?25l[0m[?7l[0m[J[0m [?7h[0m[?12l[?25h[?25l[?7l[0mDescribe the purpose of this codebase.[0m
+
+[0m [0m
+
+[0mThen say roughly how many lines of code it has.[47D[47C[?7h[0m[?12l[?25h[?25l[?7l[2A[47D[0m[J[0mDescribe the purpose of this codebase.[0m
+
+[0m [0m
+
+[0mThen say roughly how many lines of code it has.[47D[0m
+
 [J[?7h[0m[?12l[?25h[?2004l
 [1m[33mFile changes detected. Index has been updated.[0m
 [1m[31mYou (Press ALT-Enter, OPT-Enter, or CTRL-O to submit): 
@@ -156,8 +161,8 @@ Here's how the provided files contribute to the functionality:
    - **Key Components**:
      - **Initialization**: Adds `use_cgrag` (enable/disable) and `print_cgrag` (show guidance output).
      - **CGRAG Flow (`run_stream_processes`)**:
-       - If enabled: Stage 1—Use looser cutoff (`artifact_relevancy_cgrag_cutoff`) to get broad context, generate "guidance" via LLM: "What info is needed to answer this?" (e.g., lists concepts/classes/functions).
-       - Stage 2—Combine original prompt + guidance into a "combined_query", re-retrieve with stricter cutoff (`artifact_relevancy_cutoff`).
+       - If enabled: Stage 1—Use looser cutoff (`artifact_cosine_cgrag_cutoff`) to get broad context, generate "guidance" via LLM: "What info is needed to answer this?" (e.g., lists concepts/classes/functions).
+       - Stage 2—Combine original prompt + guidance into a "combined_query", re-retrieve with stricter cutoff (`artifact_cosine_cutoff`).
        - Falls back to standard RAG if disabled.
      - **UI Tweaks**: Custom thinking messages (e.g., "generating contextual guidance..."), optional printing of guidance (blue for CGRAG, green for final assistant response).
      - **Prompting**: `create_cgrag_prompt` crafts a meta-prompt to extract "needed information" (keeps ~20 items, focuses on code entities).
