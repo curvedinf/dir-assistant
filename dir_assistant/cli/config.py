@@ -87,8 +87,8 @@ CONFIG_DEFAULTS = {
     },
     "LITELLM_EMBED_COMPLETION_OPTIONS": {
         "model": "gemini/text-embedding-004",
-        "timeout": 600
-    }
+        "timeout": 600,
+    },
     "INDEX_CONCURRENT_FILES": 20,
     "INDEX_MAX_FILES_PER_MINUTE": 100_000_000,
     "INDEX_CHUNK_WORKERS": 20,
