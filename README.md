@@ -37,7 +37,8 @@ In this section are recipes to run `dir-assistant` in basic capacity to get you 
 1. [Gemini](#Gemini)
 1. [Claude](#Claude)
 1. [GPT5](#GPT5)
-1. [Automation Usage](#Automation-Usage)
+1. [Other Models](Other-Models)
+1. [Detailed Documentation](More-Documentation)
 ### Local Model
 To get started locally, you can download a default llm model. Default configuration with this model requires
 3GB of memory on most hardware. You will be able to adjust the configuration to fit higher or lower memory
@@ -212,7 +213,7 @@ dir-assistant -s "Describe the files in this directory"
 
 `Dir-assistant` supports almost every local and API model. Almost all local models are supported via embedded `llama-cpp-python` integration, which supports GGUF format model files. Almost all API models are supported via LiteLLM integration, including generic OpenAI-compatible APIs like local servers. To learn how to use the model of your choice, view the [configuration docs](docs/configuration.md).
 
-## More Documentation
+## Detailed Documentation
 1. [Install](docs/install.md)
 2. [Usage](docs/usage.md)
 3. [Configuration](docs/configuration.md)
