@@ -251,7 +251,7 @@ position = 1.0
 stability = 1.0
 historical_hits = 1.0 # Used to tie-break between equally long prefixes
 ```
-### Indexing Currency Options
+### Indexing Concurrency Options
 The indexing process in `dir-assistant` can be tuned for performance, especially when dealing with large numbers of files or API-based embedding models. The following settings control concurrency and rate limiting during file processing and embedding generation:
 
 - `INDEX_CONCURRENT_FILES`: The number of files processed concurrently during indexing. Default: 20.
