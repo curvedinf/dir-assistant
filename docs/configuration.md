@@ -15,7 +15,7 @@ This document provides a comprehensive guide to configuring `dir-assistant`.
 5. [General Configuration](#general-configuration-local-and-api-mode)
    - [Artifact Relevancy Filtering](#artifact-relevancy-filtering)
    - [Context Caching Optimization](#context-caching-optimization)
-   - [Indexing Performance Options](#indexing-performance-options)
+   - [Indexing Concurrency Options](#indexing-concurrency-options)
 ## API Configuration
 If you wish to use an API LLM, you will need to configure `dir-assistant` accordingly.
 ### General API Settings
