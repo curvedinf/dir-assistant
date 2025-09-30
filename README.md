@@ -24,7 +24,7 @@ primarily for use as a coding aid and automation tool.
 - Uses a unique method for finding the most important files to include when submitting your
 prompt to an LLM called CGRAG (Contextually Guided Retrieval-Augmented Generation). You can read 
 [this blog post](https://medium.com/@djangoist/how-to-create-accurate-llm-responses-on-large-code-repositories-presenting-cgrag-a-new-feature-of-e77c0ffe432d) for more information about how it works.
-- Automatically optimizes prompts for context caching optimization to reduce cost and latency.
+- Automatically optimizes prompts for context caching optimization to reduce cost and latency. Typical use cases will have 50-90% cache hits.
 ### New Features
 - The embedding index is now separated by model in the database. This means you can switch between embedding models without needing to re-index files if you switch back.
 - Indexing is now parallelized and faster.
