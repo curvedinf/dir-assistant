@@ -251,17 +251,19 @@ position = 1.0
 stability = 1.0
 historical_hits = 1.0 # Used to tie-break between equally long prefixes
 ```
-### Indexing Performance Options
+### Indexing Currency Options
 The indexing process in `dir-assistant` can be tuned for performance, especially when dealing with large numbers of files or API-based embedding models. The following settings control concurrency and rate limiting during file processing and embedding generation:
+
 - `INDEX_CONCURRENT_FILES`: The number of files processed concurrently during indexing. Default: 20.
-- `INDEX_MAX_FILES_PER_MINUTE`: Sets the maximum number of files to process per minute to respect API rate limits. Default: 100000000.
+- `INDEX_MAX_FILES_PER_MINUTE`: Sets the maximum number of files to process per minute. Default: 100000000.
 - `INDEX_CHUNK_WORKERS`: Number of concurrent processes for generating embeddings per file. Default: 20.
-- `INDEX_MAX_CHUNK_REQUESTS_PER_MINUTE`: Maximum embedding requests per minute for chunks. Default: 100000000.
-File workers and chunk workers are multiplicative, so the total max concurrency for the indexing process in terms of number of embedding calls is `INDEX_CONCURRENT_FILES * INDEX_CHUNK_WORKERS`. Likewise, the max embedding rate is `INDEX_MAX_FILES_PER_MINUTE * INDEX_MAX_CHUNK_REQUESTS_PER_MINUTE`. To rate limit appropriately for a rate limited API, start by setting both `PER_MINUTE` settings to the square root of the target rate limit. To configure these settings, add them to the `[DIR_ASSISTANT]` section in your config file:
+- `INDEX_MAX_CHUNK_REQUESTS_PER_MINUTE`: Maximum embedding requests per file. Default: 100000000.
+
+Each file has a separate limit of chunk workers, so the total maximum concurrency is `INDEX_CONCURRENT_FILES * INDEX_CHUNK_WORKERS`. Likewise, the max embedding rate is `INDEX_MAX_FILES_PER_MINUTE * INDEX_MAX_CHUNK_REQUESTS_PER_MINUTE`. To rate limit appropriately for a rate limited API, use a config that limits both rates appropriately. For instance to limit for 100 requests per minute, try the following:
 ```toml
 [DIR_ASSISTANT]
-INDEX_CONCURRENT_FILES = 20
-INDEX_MAX_FILES_PER_MINUTE = 1200
-INDEX_CHUNK_WORKERS = 20
-INDEX_MAX_CHUNK_REQUESTS_PER_MINUTE = 1200
+INDEX_CONCURRENT_FILES = 2
+INDEX_MAX_FILES_PER_MINUTE = 10
+INDEX_CHUNK_WORKERS = 2
+INDEX_MAX_CHUNK_REQUESTS_PER_MINUTE = 10
 ```
