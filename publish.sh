@@ -23,12 +23,12 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "Making release commit..."
-RELEASE_VERSION=$(cat setup.py | grep version | cut -d "'" -f 2)
+RELEASE_VERSION=$(grep 'version=' setup.py | cut -d '"' -f 2)
 git add .
-git commit -m "Release v$(RELEASE_VERSION)"
-git tag "v$(cat setup.py | grep version | cut -d "'" -f 2)"
+git commit -m "Release ${RELEASE_VERSION}"
+git tag "${RELEASE_VERSION}"
 git push origin main
-git push origin "v$(RELEASE_VERSION)"
+git push origin "${RELEASE_VERSION}"
 
 echo "Cleaning up old distribution files..."
 rm -rf dist
