@@ -24,8 +24,7 @@ primarily for use as a coding aid and automation tool.
 - Uses a unique method for finding the most important files to include when submitting your
 prompt to an LLM called CGRAG (Contextually Guided Retrieval-Augmented Generation). You can read 
 [this blog post](https://medium.com/@djangoist/how-to-create-accurate-llm-responses-on-large-code-repositories-presenting-cgrag-a-new-feature-of-e77c0ffe432d) for more information about how it works.
-- Context caching optimization to reduce cost and latency.
-- Optionally configure a separate, faster LLM for the CGRAG guidance step to reduce cost and latency.
+- Automatically optimizes prompts for context caching optimization to reduce cost and latency. Typical use cases have 50-90% cache hits.
 ### New Features
 - The embedding index is now separated by model in the database. This means you can switch between embedding models without needing to re-index files if you switch back.
 - Indexing is now parallelized and faster.
@@ -37,7 +36,8 @@ In this section are recipes to run `dir-assistant` in basic capacity to get you 
 1. [Gemini](#Gemini)
 1. [Claude](#Claude)
 1. [GPT5](#GPT5)
-1. [Automation Usage](#Automation-Usage)
+1. [Other Models](#Other-Models)
+1. [Detailed Documentation](#Detailed-Documentation)
 ### Local Model
 To get started locally, you can download a default llm model. Default configuration with this model requires
 3GB of memory on most hardware. You will be able to adjust the configuration to fit higher or lower memory
@@ -125,7 +125,7 @@ To get started quickly with Anthropic's Claude models (e.g., Claude 3.7 Sonnet):
     LITELLM_MODEL_USES_SYSTEM_MESSAGE = true
     LITELLM_CONTEXT_SIZE = 200000
     [DIR_ASSISTANT.LITELLM_COMPLETION_OPTIONS]
-    model = "anthropic/claude-3-7-sonnet-20240729"
+    model = "anthropic/claude-sonnet-4-5-20250929"
     ```
 4.  Navigate to your project directory and run:
     ```shell
@@ -148,7 +148,7 @@ dir-assistant setkey ANTHROPIC_API_KEY xxxxxYOURAPIKEYHERExxxxx
 cd directory/to/chat/with
 dir-assistant
 ```
-### GPT5
+### OpenAI
 To get started quickly with OpenAI's models (e.g., GPT-4o):
 1.  Obtain an API key from [OpenAI](https://platform.openai.com/api-keys).
 2.  Install `dir-assistant` and set your API key:
@@ -163,7 +163,7 @@ To get started quickly with OpenAI's models (e.g., GPT-4o):
     LITELLM_MODEL_USES_SYSTEM_MESSAGE = true
     LITELLM_CONTEXT_SIZE = 128000
     [DIR_ASSISTANT.LITELLM_COMPLETION_OPTIONS]
-    model = "gpt-4o"
+    model = "gpt-5"
     ```
 4.  Navigate to your project directory and run:
     ```shell
@@ -208,7 +208,11 @@ cd directory/to/chat/with
 dir-assistant -s "Describe the files in this directory"
 ```
 
-## More Documentation
+## Other Models
+
+`Dir-assistant` supports almost every local and API model. Almost all local models (except the bleeding edge) are supported via embedded `llama-cpp-python` integration, which supports GGUF format model files. Almost all API models are supported via LiteLLM integration, including generic OpenAI-compatible APIs like local servers. To learn how to use the model of your choice, view the [configuration docs](docs/configuration.md).
+
+## Detailed Documentation
 1. [Install](docs/install.md)
 2. [Usage](docs/usage.md)
 3. [Configuration](docs/configuration.md)
