@@ -5,7 +5,7 @@ import time
 from test.utils import ALT_ENTER, read_until, send_input
 
 
-def test_smoketest_noninteractive():
+def test_smoketest_api_noninteractive():
     """
     Smoke test for the dir-assistant CLI application in a virtual terminal environment.
     This test verifies that dir-assistant can handle multi-line prompts submitted via Alt-Enter,
