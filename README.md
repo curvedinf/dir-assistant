@@ -163,7 +163,7 @@ To get started quickly with OpenAI's models (e.g., GPT-4o):
     LITELLM_MODEL_USES_SYSTEM_MESSAGE = true
     LITELLM_CONTEXT_SIZE = 128000
     [DIR_ASSISTANT.LITELLM_COMPLETION_OPTIONS]
-    model = "gpt-4o"
+    model = "gpt-5"
     ```
 4.  Navigate to your project directory and run:
     ```shell
