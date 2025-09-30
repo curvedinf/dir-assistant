@@ -5,9 +5,9 @@ from subprocess import run
 from dir_assistant.cli.config import get_file_path, save_config
 
 MODELS_DEFAULT_EMBED = "nomic-embed-text-v1.5.Q5_K_M.gguf"
-MODELS_DEFAULT_LLM = "Qwen3-4B-Instruct-2507-IQ4_XS.gguf"
+MODELS_DEFAULT_LLM = "Qwen3-0.6B-IQ4_XS.gguf"
 MODELS_DEFAULT_EMBED_URL = f"https://huggingface.co/nomic-ai/nomic-embed-text-v1.5-GGUF/resolve/main/nomic-embed-text-v1.5.Q5_K_M.gguf?download=true"
-MODELS_DEFAULT_LLM_URL = f"https://huggingface.co/unsloth/Qwen3-4B-Instruct-2507-GGUF/resolve/main/Qwen3-4B-Instruct-2507-IQ4_XS.gguf?download=true"
+MODELS_DEFAULT_LLM_URL = f"https://huggingface.co/unsloth/Qwen3-0.6B-GGUF/resolve/main/Qwen3-0.6B-IQ4_XS.gguf?download=true"
 
 
 def open_directory(path):
