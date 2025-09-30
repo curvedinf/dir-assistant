@@ -109,7 +109,12 @@ class BaseAssistant:
         )
         # 1. Get an initial list of nearest neighbors from the search index.
         k_nearest_neighbors = search_index(
-            self.embed, self.index, user_input, self.chunks, max_k=max_k, max_distance=cutoff
+            self.embed,
+            self.index,
+            user_input,
+            self.chunks,
+            max_k=max_k,
+            max_distance=cutoff,
         )
         # 2. Pre-cull candidates to create a token-aware pool for the optimizer.
         # This is the primary change: culling before optimizing.

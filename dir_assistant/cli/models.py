@@ -9,6 +9,7 @@ MODELS_DEFAULT_LLM = "Qwen3-4B-Instruct-2507-IQ4_XS.gguf"
 MODELS_DEFAULT_EMBED_URL = f"https://huggingface.co/nomic-ai/nomic-embed-text-v2-moe-GGUF/resolve/main/nomic-embed-text-v2-moe.Q5_K_M.gguf?download=true"
 MODELS_DEFAULT_LLM_URL = f"https://huggingface.co/unsloth/Qwen3-4B-Instruct-2507-GGUF/resolve/main/Qwen3-4B-Instruct-2507-IQ4_XS.gguf?download=true"
 
+
 def open_directory(path):
     system_name = system()
     if system_name == "Windows":

@@ -4,7 +4,7 @@ import os
 import sys
 
 import numpy as np
-from faiss import IndexFlatL2, IndexFlatIP, normalize_L2
+from faiss import IndexFlatIP, IndexFlatL2, normalize_L2
 from sqlitedict import SqliteDict
 from wove import flatten, weave
 
@@ -160,7 +160,7 @@ def create_file_index(
     if not all_embeddings:
         # Handle case with no embeddings to avoid error on np.array
         return None, []
-    embeddings = np.array(all_embeddings).astype('float32')
+    embeddings = np.array(all_embeddings).astype("float32")
     # Big change -- embeddings are now normalized if not already
     normalize_L2(embeddings)
     # Big change -- use inner product (dot product) instead of L2 distance
@@ -254,18 +254,17 @@ def find_split_point(embed, line_content, max_size, header):
     return low - 1
 
 
-import numpy as np
 import sys
 
 import numpy as np
-import sys
+
 
 def search_index(embed, index, query, all_chunks, max_k=1000, max_distance=2.0):
     """
     Searches the FAISS index for vectors within a given distance and limits the results.
     """
     query_embedding = embed.create_embedding(query)
-    query_vector = np.array([query_embedding]).astype('float32')
+    query_vector = np.array([query_embedding]).astype("float32")
     normalize_L2(query_vector)
 
     try:
