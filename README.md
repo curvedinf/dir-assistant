@@ -208,6 +208,10 @@ cd directory/to/chat/with
 dir-assistant -s "Describe the files in this directory"
 ```
 
+## Other Models
+
+`Dir-assistant` supports almost every local and API model. Almost all local models are supported via embedded `llama-cpp-python` integration, which supports GGUF format model files. Almost all API models are supported via LiteLLM integration, including generic OpenAI-compatible APIs like local servers. To learn how to use the model of your choice, view the [configuration docs](docs/configuration.md).
+
 ## More Documentation
 1. [Install](docs/install.md)
 2. [Usage](docs/usage.md)
