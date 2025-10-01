@@ -1,9 +1,8 @@
 import os
 import sys
-
+import subprocess
 from colorama import Fore, Style
 from prompt_toolkit import prompt
-
 from dir_assistant.assistant.cgrag_assistant import CGRAGAssistant
 
 
@@ -112,11 +111,6 @@ if __name__ == "__main__":
         if self.chat_mode:
             sys.stdout.write("\n")
         if "y" in apply_changes:
-            # Commit any user-generated changes
-            os.system("git add .")
-            os.system(
-                f'git commit -m "Automatic commit of user changes (dir-assistant)"'
-            )
             output_lines = stream_output.split("\n")
             changed_filepath = output_lines[0].strip()
             # Security: Validate the filepath to prevent path traversal attacks
@@ -160,12 +154,38 @@ if __name__ == "__main__":
             except Exception as e:
                 if self.chat_mode:
                     sys.stdout.write(
-                        f"\n{self.get_color_prefix(Style.BRIGHT, Fore.RED)}Error while committing changes, skipping commit: {e}{self.get_color_suffix()}\n\n"
+                        f"\n{self.get_color_prefix(Style.BRIGHT, Fore.RED)}Error while writing file, skipping commit: {e}{self.get_color_suffix()}\n\n"
                     )
                     sys.stdout.flush()
                 return True
-            os.system("git add .")
-            os.system(f'git commit -m "{user_input.strip()}"')
+            subprocess.run(["git", "add", "."], check=False)
+            commit_message = user_input.strip()
+            commit_result = subprocess.run(
+                ["git", "commit", "-m", commit_message],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            if commit_result.returncode != 0:
+                fallback_message = "AI-generated changes (dir-assistant)"
+                if self.chat_mode:
+                    sys.stdout.write(
+                        f"\n{self.get_color_prefix(Style.BRIGHT, Fore.YELLOW)}Commit with original prompt failed. Using generic commit message instead.{self.get_color_suffix()}\n"
+                    )
+                    if self.verbose:
+                        self.write_debug_message(
+                            f"Git error: {commit_result.stderr.strip()}"
+                        )
+                fallback_result = subprocess.run(
+                    ["git", "commit", "-m", fallback_message],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                if fallback_result.returncode != 0 and self.chat_mode:
+                    self.write_error_message(
+                        f"Fallback commit also failed: {fallback_result.stderr.strip()}"
+                    )
             if self.chat_mode:
                 sys.stdout.write(
                     f"\n{self.get_color_prefix(Style.BRIGHT, Fore.GREEN)}Changes committed.{self.get_color_suffix()}\n\n"
