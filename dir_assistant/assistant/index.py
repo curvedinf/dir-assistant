@@ -6,7 +6,7 @@ import sys
 import numpy as np
 from faiss import IndexFlatIP, IndexFlatL2, normalize_L2
 from sqlitedict import SqliteDict
-from wove import flatten, weave, denone
+from wove import denone, flatten, weave
 
 from dir_assistant.cli.config import (
     CACHE_PATH,
@@ -116,6 +116,7 @@ def create_file_index(
             ".", ignore_paths, cache_db, verbose
         )
     with weave() as w:
+
         @w.do(
             files_with_contents,
             workers=index_concurrent_files,
@@ -123,13 +124,17 @@ def create_file_index(
         )
         def processed_files(item):
             try:
-                with SqliteDict(cache_db, autocommit=True, timeout=10, journal_mode="WAL") as cache:
+                with SqliteDict(
+                    cache_db, autocommit=True, timeout=10, journal_mode="WAL"
+                ) as cache:
                     filepath = item["filepath"]
                     cache_key = f"{embed_config}-{filepath}_chunks"
                     cached_chunks = cache.get(cache_key)
                     if cached_chunks and cached_chunks["mtime"] == item["mtime"]:
                         if verbose:
-                            sys.stdout.write(f"Using cached embeddings for {filepath}\n")
+                            sys.stdout.write(
+                                f"Using cached embeddings for {filepath}\n"
+                            )
                             sys.stdout.flush()
                         return cached_chunks["chunks"], cached_chunks["embeddings"]
                     contents = item["contents"]

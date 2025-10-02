@@ -78,17 +78,17 @@ CONFIG_DEFAULTS = {
     },
     # https://docs.litellm.ai/docs/completion/input#input-params-1
     "LITELLM_COMPLETION_OPTIONS": {
-        "model": "gemini/gemini-2.5-flash",
+        "model": "gemini/gemini-flash-lite-latest",
         "timeout": 600,
     },
     "LITELLM_CGRAG_CONTEXT_SIZE": 200_000,
     "LITELLM_CGRAG_PASS_THROUGH_CONTEXT_SIZE": False,
     "LITELLM_CGRAG_COMPLETION_OPTIONS": {
-        "model": "gemini/gemini-2.5-flash",
+        "model": "gemini/gemini-flash-lite-latest",
         "timeout": 600,
     },
     "LITELLM_EMBED_COMPLETION_OPTIONS": {
-        "model": "gemini/text-embedding-004",
+        "model": "gemini/gemini-embedding-001",
         "timeout": 600,
     },
     "INDEX_CONCURRENT_FILES": 20,

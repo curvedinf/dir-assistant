@@ -26,10 +26,10 @@ def test_smoketest_api_noninteractive():
     new_env["DIR_ASSISTANT__LITELLM_EMBED_CONTEXT_SIZE"] = "2000"
 
     new_env["DIR_ASSISTANT__LITELLM_COMPLETION_OPTIONS__model"] = (
-        "gemini/gemini-2.5-flash-lite"
+        "gemini/gemini-flash-lite-latest"
     )
     new_env["DIR_ASSISTANT__LITELLM_CGRAG_COMPLETION_OPTIONS__model"] = (
-        "gemini/gemini-2.5-flash-lite"
+        "gemini/gemini-flash-lite-latest"
     )
     new_env["DIR_ASSISTANT__LITELLM_EMBED_COMPLETION_OPTIONS__model"] = (
         "voyage/voyage-3.5-lite"

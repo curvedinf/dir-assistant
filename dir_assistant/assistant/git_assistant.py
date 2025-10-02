@@ -1,8 +1,10 @@
 import os
-import sys
 import subprocess
+import sys
+
 from colorama import Fore, Style
 from prompt_toolkit import prompt
+
 from dir_assistant.assistant.cgrag_assistant import CGRAGAssistant
 
 
