@@ -27,8 +27,8 @@ class CacheManager:
         """
         self.api_context_cache_ttl = api_context_cache_ttl
 
-        self.prefix_cache = SqliteDict(prefix_cache_path, autocommit=True)
-        self.prompt_history = SqliteDict(prompt_history_path, autocommit=True)
+        self.prefix_cache = SqliteDict(prefix_cache_path, autocommit=True, timeout=10, journal_mode="WAL")
+        self.prompt_history = SqliteDict(prompt_history_path, autocommit=True, timeout=10, journal_mode="WAL")
 
     def get_non_expired_prefixes(self) -> dict:
         """

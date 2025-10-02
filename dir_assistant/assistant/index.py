@@ -6,7 +6,7 @@ import sys
 import numpy as np
 from faiss import IndexFlatIP, IndexFlatL2, normalize_L2
 from sqlitedict import SqliteDict
-from wove import flatten, weave
+from wove import flatten, weave, denone
 
 from dir_assistant.cli.config import (
     CACHE_PATH,
@@ -43,7 +43,7 @@ def get_text_files(directory=".", ignore_paths=[]):
 def get_files_with_contents(directory, ignore_paths, cache_db, embed_config, verbose):
     text_files = get_text_files(directory, ignore_paths)
     files_with_contents = []
-    with SqliteDict(cache_db, autocommit=True) as cache:
+    with SqliteDict(cache_db, autocommit=True, timeout=10, journal_mode="WAL") as cache:
         for filepath in text_files:
             file_stat = os.stat(filepath)
             cache_key = f"{embed_config}-{filepath}"
@@ -116,44 +116,45 @@ def create_file_index(
             ".", ignore_paths, cache_db, verbose
         )
     with weave() as w:
-
         @w.do(
             files_with_contents,
             workers=index_concurrent_files,
             limit_per_minute=index_max_files_per_minute,
         )
-        def process_file_concurrently(item):
-            with SqliteDict(cache_db, autocommit=True) as cache:
-                filepath = item["filepath"]
-                cache_key = f"{embed_config}-{filepath}_chunks"
-                cached_chunks = cache.get(cache_key)
-                if cached_chunks and cached_chunks["mtime"] == item["mtime"]:
-                    if verbose:
-                        sys.stdout.write(f"Using cached embeddings for {filepath}\n")
-                        sys.stdout.flush()
-                    return cached_chunks["chunks"], cached_chunks["embeddings"]
-                contents = item["contents"]
-                file_chunks, file_embeddings = process_file(
-                    embed,
-                    filepath,
-                    contents,
-                    embed_chunk_size,
-                    verbose,
-                    index_chunk_workers,
-                    index_max_chunk_requests_per_minute,
-                )
-                cache[cache_key] = {
-                    "chunks": file_chunks,
-                    "embeddings": file_embeddings,
-                    "mtime": item["mtime"],
-                }
-                return file_chunks, file_embeddings
+        def processed_files(item):
+            try:
+                with SqliteDict(cache_db, autocommit=True, timeout=10, journal_mode="WAL") as cache:
+                    filepath = item["filepath"]
+                    cache_key = f"{embed_config}-{filepath}_chunks"
+                    cached_chunks = cache.get(cache_key)
+                    if cached_chunks and cached_chunks["mtime"] == item["mtime"]:
+                        if verbose:
+                            sys.stdout.write(f"Using cached embeddings for {filepath}\n")
+                            sys.stdout.flush()
+                        return cached_chunks["chunks"], cached_chunks["embeddings"]
+                    contents = item["contents"]
+                    file_chunks, file_embeddings = process_file(
+                        embed,
+                        filepath,
+                        contents,
+                        embed_chunk_size,
+                        verbose,
+                        index_chunk_workers,
+                        index_max_chunk_requests_per_minute,
+                    )
+                    cache[cache_key] = {
+                        "chunks": file_chunks,
+                        "embeddings": file_embeddings,
+                        "mtime": item["mtime"],
+                    }
+                    return file_chunks, file_embeddings
+            except Exception as e:
+                return None
 
-    # w.result.process_file_concurrently is a list of (chunks, embeddings) tuples
-    processed_results = w.result.process_file_concurrently
     # Separate the chunks and embeddings from the processed results
-    all_chunks = flatten([res[0] for res in processed_results if res])
-    all_embeddings = flatten([res[1] for res in processed_results if res])
+    results = denone(w.result.final)
+    all_chunks = flatten([res[0] for res in results if res])
+    all_embeddings = flatten([res[1] for res in results if res])
     if verbose:
         sys.stdout.write("Creating index from embeddings...\n")
         sys.stdout.flush()
